@@ -1,0 +1,34 @@
+const express = require("express");
+const authRoutes = require("../modules/auth/auth.routes");
+const userRoutes = require("../modules/users/users.routes");
+const trainerRoutes = require("../modules/trainers/trainers.routes");
+const trainerCertificateRoutes = require("../modules/trainerCertificates/trainerCertificates.routes");
+const trainerReviewRoutes = require("../modules/reviews/reviews.routes");
+const connectionRoutes = require("../modules/trainerConnections/trainerConnections.routes");
+const exerciseRoutes = require("../modules/exercises/exercises.routes");
+const taxonomyRoutes = require("../modules/exerciseTaxonomy/exerciseTaxonomy.routes");
+const favoriteRoutes = require("../modules/favorites/favorites.routes");
+const workoutPlanRoutes = require("../modules/workoutPlans/workoutPlans.routes");
+const notificationRoutes = require("../modules/notifications/notifications.routes");
+const adminRoutes = require("../modules/admin/admin.routes");
+
+const router = express.Router();
+
+router.get("/health", (_req, res) => {
+  res.json({ success: true, data: { status: "ok" }, message: "OK" });
+});
+
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
+router.use("/trainers", trainerRoutes);
+router.use("/trainers", trainerCertificateRoutes);
+router.use("/trainers", trainerReviewRoutes);
+router.use("/trainer-connection-requests", connectionRoutes);
+router.use("/exercises", exerciseRoutes);
+router.use("/exercise-taxonomy", taxonomyRoutes);
+router.use("/favorites", favoriteRoutes);
+router.use("/workout-plans", workoutPlanRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/admin", adminRoutes);
+
+module.exports = router;
