@@ -1,0 +1,88 @@
+﻿Problem Statement for FiFB
+Web-based fitness platform for beginner gym users
+1. Project overview
+FiFB là một nền tảng web-based hỗ trợ người mới bắt đầu tập gym tiếp cận thông tin bài tập, tìm kiếm huấn luyện viên phù hợp, quản lý bài tập yêu thích và xây dựng workout plan cá nhân theo cách rõ ràng, an toàn và dễ sử dụng. Trong phạm vi MVP, hệ thống chưa tích hợp AI vào chức năng chính thức, nhưng dữ liệu và kiến trúc cần được thiết kế đủ sạch và đủ mở để có thể tích hợp các tính năng AI trong tương lai.
+FiFB dự kiến sử dụng React hoặc Next.js cho frontend, Node.js cho backend nghiệp vụ chính, Supabase/PostgreSQL cho xác thực, cơ sở dữ liệu, lưu trữ file và phân quyền dữ liệu. FastAPI hoặc Flask có thể được bổ sung như một AI service độc lập ở giai đoạn sau, khi hệ thống cần chatbot, recommendation, nhận diện thiết bị hoặc phân tích tư thế.
+2. Problem to solve
+Vấn đề chính mà FiFB cần giải quyết là sự thiếu hụt một nền tảng tập trung dành cho người mới tập gym. Người dùng thường gặp khó khăn khi phải tự tìm bài tập, hiểu đúng nhóm cơ tác động, xác định thiết bị cần dùng và thực hiện động tác theo đúng trình tự. Các nguồn thông tin hiện có thường rời rạc, không được chuẩn hóa, khiến người mới dễ chọn sai bài tập hoặc tập sai kỹ thuật khi không có hỗ trợ từ Trainer.
+FiFB hướng đến việc cung cấp một hệ thống thống nhất, trong đó User có thể tra cứu thư viện bài tập đã được chuẩn hóa, xem hình ảnh động hoặc GIF minh họa, đọc hướng dẫn từng bước, lọc bài tập theo nhóm cơ, bộ phận cơ thể hoặc thiết bị, lưu bài tập yêu thích và đưa bài tập vào workout plan cá nhân.
+3. Stakeholders and roles
+Tất cả người tham gia hệ thống đều bắt đầu từ một tài khoản người dùng chung. Trainer được hiểu là một User có thêm Trainer profile và quyền nghiệp vụ dành cho Trainer. Admin là tài khoản có quyền quản trị hệ thống.
+User có thể tự quản lý tài khoản, tìm kiếm bài tập, lưu bài tập yêu thích, tạo workout plan, tìm Trainer, gửi yêu cầu kết nối, theo dõi trạng thái yêu cầu và đánh giá Trainer sau khi có quan hệ kết nối phù hợp.
+Trainer có toàn bộ khả năng cơ bản của User, đồng thời có thêm quyền xem và xử lý yêu cầu kết nối, nhận đánh giá từ học viên, gửi chứng chỉ PT để được xác minh tích xanh, và đề xuất bài tập mới vào hệ thống. Trainer có thể từ chối yêu cầu kết nối ngay cả khi hệ thống không giới hạn số lượng học viên.
+Admin chịu trách nhiệm quản trị tài khoản, khóa hoặc mở khóa tài khoản, CRUD thư viện bài tập, duyệt hoặc từ chối bài tập do Trainer đề xuất, duyệt chứng chỉ Trainer nếu có, và theo dõi lịch sử thao tác quan trọng.
+4. Account and access control
+Hệ thống cần hỗ trợ đăng ký, đăng nhập, đăng xuất, đổi mật khẩu, cập nhật thông tin cá nhân và khôi phục mật khẩu. Bảng profiles lưu thông tin nghiệp vụ của người dùng.
+Phân quyền cần đảm bảo User, Trainer và Admin chỉ truy cập đúng dữ liệu và chức năng được phép. Vì Trainer là User có thêm quyền, hệ thống nên thiết kế Trainer profile như phần mở rộng của profile người dùng thay vì tách Trainer thành một loại tài khoản hoàn toàn độc lập.
+Tài khoản có thể có các trạng thái như active, locked hoặc disabled. Các thao tác nhạy cảm như khóa tài khoản, mở khóa tài khoản, duyệt bài tập, từ chối bài tập hoặc cập nhật trạng thái quan trọng cần được ghi vào audit log.
+5. Exercise library
+Thư viện bài tập là thành phần trung tâm của FiFB. Mỗi bài tập cần có dữ liệu rõ ràng, nhất quán và đủ thông tin để người mới hiểu mục đích cũng như cách thực hiện. Cấu trúc bài tập cần bao gồm mã định danh, tên bài tập, đường dẫn GIF minh họa, nhóm cơ chính, bộ phận cơ thể, thiết bị sử dụng, nhóm cơ phụ và danh sách hướng dẫn từng bước.
+Vì hệ thống sử dụng Supabase/PostgreSQL, các dữ liệu như nhóm cơ, bộ phận cơ thể và thiết bị nên được chuẩn hóa thành bảng riêng để hỗ trợ lọc, tìm kiếm, kiểm soát trùng lặp và mở rộng dữ liệu sau này. Danh sách hướng dẫn nên được tách thành bảng exercise_instructions để giữ đúng thứ tự từng bước.
+Bài tập có thể do Admin tạo trực tiếp hoặc do Trainer đề xuất. Bài tập do Trainer đề xuất phải ở trạng thái pending trước khi được Admin duyệt. User chỉ nhìn thấy bài tập active. Khi bài tập không còn phù hợp, hệ thống nên chuyển sang inactive thay vì xóa cứng để giữ toàn vẹn lịch sử dữ liệu.
+6. Exercise data structure
+Cấu trúc tối thiểu của dữ liệu bài tập trong FiFB gồm các trường sau:
+Field
+	Type
+	Purpose
+	exercise_id
+	uuid
+	Mã định danh duy nhất của bài tập trong database.
+	external_exercise_code
+	text
+	Mã tham chiếu nếu bài tập được import từ nguồn ngoài, ví dụ EIeI8Vf.
+	name
+	text
+	Tên bài tập, ví dụ barbell bench press.
+	gif_url
+	text
+	Đường dẫn GIF minh họa động tác. Có thể lưu file trong Supabase Storage.
+	target_muscles
+	many-to-many
+	Nhóm cơ chính được tác động, ví dụ pectorals.
+	body_parts
+	many-to-many
+	Bộ phận cơ thể liên quan, ví dụ chest.
+	equipments
+	many-to-many
+	Thiết bị sử dụng, ví dụ barbell.
+	secondary_muscles
+	many-to-many
+	Nhóm cơ phụ hỗ trợ, ví dụ triceps và shoulders.
+	instructions
+	one-to-many
+	Danh sách hướng dẫn theo từng bước, có step_order.
+	status
+	enum
+	pending, active, inactive hoặc rejected.
+	created_by
+	uuid
+	Người tạo bài tập, có thể là Admin hoặc Trainer.
+	reviewed_by
+	uuid
+	Admin duyệt hoặc từ chối bài tập.
+	rejection_reason
+	text
+	Lý do từ chối nếu bài tập bị rejected.
+	7. Trainer verification and reviews
+Trainer có thể có hoặc không có tích xanh. Tích xanh thể hiện Trainer đã được xác minh bằng chứng chỉ PT phù hợp. Hệ thống cần lưu trạng thái xác minh của Trainer như unverified, pending, verified hoặc rejected.
+Học viên có thể đánh giá Trainer thông qua rating và bình luận. Để tránh đánh giá không hợp lệ, hệ thống nên chỉ cho phép User đánh giá Trainer khi User đã từng có quan hệ kết nối được approve với Trainer đó. Review nên có rating từ 1 đến 5, comment, người đánh giá và thời điểm tạo.
+8. User-Trainer connection workflow
+Luồng kết nối giữa User và Trainer cần minh bạch. Khi User gửi yêu cầu kết nối, request ở trạng thái pending. Trainer có thể approve hoặc reject request. User chỉ được cancel request khi request vẫn pending. Khi Trainer approve, hệ thống tạo một quan hệ user_trainer_connection để thể hiện kết nối đã được thiết lập.
+Trainer không bị giới hạn số lượng học viên trong phạm vi hiện tại, nhưng vẫn có quyền từ chối bất kỳ yêu cầu kết nối nào dựa trên mục tiêu, lịch làm việc hoặc đánh giá chuyên môn của Trainer.
+9. Favorite exercises and workout plans
+User có thể lưu bài tập yêu thích để truy cập lại nhanh hơn. Chức năng này nên được thiết kế bằng bảng favorite_exercises với khóa chính kết hợp user_id và exercise_id để tránh lưu trùng một bài tập nhiều lần cho cùng một User.
+User có thể tạo workout plan cá nhân gồm nhiều bài tập. Mỗi workout plan có tiêu đề, mô tả, người sở hữu, người tạo và danh sách bài tập theo thứ tự. Mỗi item trong plan có thể lưu số set, số rep, thời gian nghỉ và ghi chú. Trong MVP, workout plan được quản lý thủ công; AI recommendation chưa nằm trong phạm vi triển khai chính thức.
+10. Notification policy
+FiFB phân biệt hai loại thông báo. Với các thao tác đơn giản như tạo thành công, cập nhật thành công, lỗi nhập liệu hoặc thao tác thất bại tức thời, hệ thống chỉ cần hiển thị thông báo trên giao diện web dưới dạng toast, alert hoặc inline message, không cần lưu database.
+Với các sự kiện quan trọng như request được approve hoặc reject, bài tập do Trainer đề xuất được duyệt hoặc bị từ chối, tài khoản bị khóa hoặc mở khóa, chứng chỉ Trainer được duyệt hoặc bị từ chối, hệ thống nên tạo notification trong database để hiển thị trên web và gửi email đến Gmail của người dùng nếu có email hợp lệ.
+Email delivery nên được tách ra để ghi nhận trạng thái gửi như pending, sent hoặc failed, giúp hệ thống kiểm tra lại khi gửi thất bại.
+11. Non-functional requirements
+Hệ thống cần phản hồi nhanh với các thao tác web cơ bản, bảo vệ mật khẩu thông qua Supabase Auth, kiểm tra quyền truy cập theo role và RLS, đồng thời ngăn người dùng truy cập dữ liệu ngoài phạm vi được phép.
+Cơ sở dữ liệu cần có index cho các trường thường lọc như exercise status, muscle, body part, equipment, trainer verification status, connection request status và workout plan owner. Các thao tác quan trọng cần được ghi audit log để phục vụ kiểm tra khi có lỗi hoặc tranh chấp dữ liệu.
+Hệ thống cần ưu tiên soft delete hoặc chuyển trạng thái inactive cho dữ liệu nghiệp vụ quan trọng như bài tập, quan hệ kết nối hoặc workout plan, thay vì xóa cứng ngay lập tức.
+12. MVP scope and future extensions
+Phạm vi hiện tại của FiFB tập trung vào quản lý tài khoản, phân quyền, thư viện bài tập, tìm kiếm và lọc bài tập, bài tập yêu thích, workout plan thủ công, User tìm Trainer, Trainer xử lý yêu cầu kết nối, đánh giá Trainer, xác minh Trainer bằng chứng chỉ PT, Trainer đề xuất bài tập và Admin CRUD/duyệt nội dung.
+Các tính năng như chatbot AI, nhận diện thiết bị, phân tích tư thế, tạo giáo án tự động bằng AI, thanh toán online hoặc marketplace sản phẩm gym chưa thuộc phạm vi bắt buộc của MVP. Tuy nhiên, hệ thống cần giữ dữ liệu bài tập có cấu trúc để dễ mở rộng sang AI hoặc recommendation sau này.
+13. Success criteria
+FiFB được xem là đạt mục tiêu khi người mới tập gym có thể dễ dàng tìm kiếm, hiểu và lưu bài tập; tạo workout plan cá nhân; tìm và gửi yêu cầu kết nối đến Trainer; Trainer có thể tiếp nhận hoặc từ chối yêu cầu rõ ràng; học viên có thể đánh giá Trainer; Admin có thể kiểm soát tài khoản, chất lượng bài tập và trạng thái xác minh Trainer.
+Thành công của hệ thống không nằm ở số lượng tính năng AI, mà nằm ở việc tạo ra một nền tảng đủ đơn giản cho người mới sử dụng, đủ kiểm soát cho Admin vận hành, đủ minh bạch cho Trainer và đủ linh hoạt để mở rộng khi dự án sẵn sàng tích hợp AI.

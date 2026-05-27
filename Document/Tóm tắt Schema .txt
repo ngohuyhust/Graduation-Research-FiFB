@@ -1,0 +1,36 @@
+﻿Đây là thiết kế schema chuẩn của hệ thống.
+Tech Stack: Node.js (Core Backend), React (Frontend), Flask (AI Services), PostgreSQL. Security: RLS enabled trên mọi bảng (Backend truy cập qua service_role/direct DB, không dùng client-side auth). Custom Auth (JWT sinh ở Backend, DB chỉ lưu hash token).
+1. USERS & AUTHENTICATION
+* app_users: Quản lý tài khoản.
+   * Fields: id, email (unique), password_hash, role (user, trainer, admin), status (active, locked, disabled, pending_verification), fitness_goal, experience_level (beginner, intermediate, advanced).
+* user_sessions: Lưu refresh/session token. Fields: user_id, refresh_token_hash (unique), expires_at.
+* password_reset_tokens & email_verification_tokens: Lưu hash của token. Fields: user_id, token_hash, expires_at.
+2. TRAINER SYSTEM
+* trainer_profiles: 1-1 với app_users (ràng buộc role='trainer'). Fields: trainer_id, specialization, years_of_experience, is_verified (Admin duyệt).
+* trainer_certificates: Bằng cấp PT. Fields: trainer_id, status (pending, approved, rejected - bắt buộc có lý do nếu reject), reviewed_by (ràng buộc role='admin').
+* trainer_reviews: User đánh giá Trainer (1 user - 1 trainer/review). Fields: rating (1-5), comment.
+3. USER - TRAINER CONNECTIONS
+* trainer_connection_requests: User gửi yêu cầu cho PT. Fields: user_id, trainer_id, goal_snapshot, status (pending, approved, rejected, cancelled). Unique pending request per pair.
+* user_trainer_connections: Mối quan hệ chính thức. Fields: user_id, trainer_id, status (active, ended). Unique active connection per pair.
+4. EXERCISE LIBRARY (Core Domain for AI)
+* Taxonomy: Bảng body_parts, equipments, muscles (đều có field name).
+* exercises: Kho bài tập.
+   * Fields: external_id, source (exercisedb_v1, admin, trainer_submission), instructions (JSONB array), raw_data (JSONB), status (pending, active, inactive, rejected).
+   * Ràng buộc: Source admin -> created_by là admin. Source trainer_submission -> created_by là trainer. Reviewer phải là admin.
+* Mapping Tables (Many-to-Many với exercises):
+   * exercise_body_parts & exercise_equipments.
+   * exercise_muscles: Có thêm muscle_role (target, secondary).
+* Views: exercise_library_view & active_exercise_library_view (Tổng hợp sẵn body_parts, equipments, muscles dưới dạng mảng JSON phục vụ AI/API đọc nhanh).
+5. WORKOUT & TRACKING
+* favorite_exercises: user_id, exercise_id.
+* workout_plans: Kế hoạch tập. Fields: owner_id, created_by (có thể là PT), visibility (private, trainer_visible, public).
+* workout_plan_items: Chi tiết bài tập trong plan. Fields: day_number, sort_order (Unique per plan_id + day + order), sets, reps, duration_seconds, rest_seconds.
+6. SYSTEM LOGS & NOTIFICATIONS
+* notifications: Thông báo in-app. Fields: recipient_id, type, title, is_important.
+* email_deliveries: Log gửi mail thực tế (Link với notifications nếu quan trọng). Fields: status (pending, sent, failed).
+* audit_logs: Lưu dấu vết thao tác. Fields: actor_id, action, entity_type, old_values (JSONB), new_values (JSONB).
+7. KEY DATABASE TRIGGERS (Tự động hóa ở DB)
+* Mọi bảng đều tự động cập nhật updated_at.
+* Chặn insert trainer_profiles nếu user không có role trainer.
+* Người duyệt bài tập/chứng chỉ (reviewer) bắt buộc phải có role admin.
+* Tính nhất quán của Exercise Creator: Kiểm tra đúng role (admin/trainer) tương ứng với nguồn (source) tạo bài tập.

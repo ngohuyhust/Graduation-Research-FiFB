@@ -1,0 +1,9 @@
+﻿Summary 1:
+Supabase PostgreSQL lưu dữ liệu nghiệp vụ lâu dài
+Redis lưu session/token/rate limit
+Node.js backend xử lý auth, phân quyền và nghiệp vụ
+Frontend chỉ gọi backend API
+Exercise Library chuẩn hóa bằng taxonomy many-to-many
+Trainer là User có thêm hồ sơ Trainer
+Admin quản lý tài khoản, bài tập, chứng chỉ và audit
+AI để giai đoạn sau, chưa đưa vào MVP
