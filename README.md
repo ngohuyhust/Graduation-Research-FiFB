@@ -37,7 +37,7 @@ Edit `server/.env`:
 - `DATABASE_URL`
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
-- SMTP values if using email verification/password reset
+- SendGrid values if using email verification/password reset
 - Redis values if `REDIS_DISABLED=false`
 
 PowerShell blocks `npm.ps1` on this machine, so use `npm.cmd`.
