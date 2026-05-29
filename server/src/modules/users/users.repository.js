@@ -7,10 +7,19 @@ const selectable = `
 
 async function createUser(client, user) {
   const result = await client.query(
-    `INSERT INTO app_users (email, password_hash, full_name, role, status, fitness_goal, experience_level)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO app_users (email, password_hash, full_name, phone, role, status, fitness_goal, experience_level)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING ${selectable}`,
-    [user.email, user.passwordHash, user.fullName || null, user.role || "user", user.status, user.fitnessGoal || null, user.experienceLevel || null],
+    [
+      user.email,
+      user.passwordHash,
+      user.fullName || null,
+      user.phone,
+      user.role || "user",
+      user.status,
+      user.fitnessGoal || null,
+      user.experienceLevel || null,
+    ],
   );
   return result.rows[0];
 }

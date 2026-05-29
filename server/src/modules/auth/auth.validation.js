@@ -6,6 +6,7 @@ const registerSchema = z.object({
   email: z.string().email().max(320),
   password,
   fullName: z.string().min(1).max(120).optional(),
+  phone: z.string().trim().min(1).max(40),
   role: z.enum(["user", "trainer"]).default("user"),
   fitnessGoal: z.string().max(500).optional(),
   experienceLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),

@@ -8,6 +8,15 @@ describe("request schemas", () => {
     const parsed = authSchemas.registerSchema.safeParse({
       email: "demo@example.com",
       password: "short",
+      phone: "0900000000",
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  test("register requires phone", () => {
+    const parsed = authSchemas.registerSchema.safeParse({
+      email: "demo@example.com",
+      password: "password123",
     });
     expect(parsed.success).toBe(false);
   });
