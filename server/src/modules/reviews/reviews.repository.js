@@ -5,7 +5,7 @@ function pageOffset({ page, limit }) {
 }
 
 async function hasConnection(userId, trainerId) {
-  const result = await query("SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2", [userId, trainerId]);
+  const result = await query("SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2 AND status = 'active'", [userId, trainerId]);
   return Boolean(result.rows[0]);
 }
 
@@ -16,7 +16,7 @@ async function findMine(userId, trainerId) {
 
 async function updateMine(userId, trainerId, payload) {
   const result = await query(
-    "UPDATE trainer_reviews SET rating = $3, comment = $4 WHERE user_id = $1 AND trainer_id = $2 RETURNING *",
+    "UPDATE trainer_reviews SET rating = $3, comment = $4, updated_at = now() WHERE user_id = $1 AND trainer_id = $2 RETURNING *",
     [userId, trainerId, payload.rating, payload.comment || null],
   );
   return result.rows[0];

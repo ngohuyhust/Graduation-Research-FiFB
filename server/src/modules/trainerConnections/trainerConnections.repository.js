@@ -10,6 +10,17 @@ async function findActiveConnection(client, userId, trainerId) {
   return result.rows[0] || null;
 }
 
+async function findTrainerProfile(client, trainerId) {
+  const result = await client.query(
+    `SELECT tp.trainer_id
+     FROM trainer_profiles tp
+     JOIN app_users u ON u.id = tp.trainer_id
+     WHERE tp.trainer_id = $1 AND u.role = 'trainer' AND u.status = 'active' AND u.deleted_at IS NULL`,
+    [trainerId],
+  );
+  return result.rows[0] || null;
+}
+
 async function createRequest(client, userId, payload) {
   const result = await client.query(
     `INSERT INTO trainer_connection_requests (user_id, trainer_id, goal_snapshot, message)
@@ -21,7 +32,7 @@ async function createRequest(client, userId, payload) {
 
 async function cancel(userId, id) {
   const result = await query(
-    `UPDATE trainer_connection_requests SET status = 'cancelled', cancelled_at = now()
+    `UPDATE trainer_connection_requests SET status = 'cancelled', cancelled_at = now(), updated_at = now()
      WHERE id = $1 AND user_id = $2 AND status = 'pending' RETURNING *`,
     [id, userId],
   );
@@ -35,7 +46,7 @@ async function findPendingForTrainer(client, id, trainerId) {
 
 async function setDecision(client, id, status, rejectReason) {
   const result = await client.query(
-    "UPDATE trainer_connection_requests SET status = $2, reject_reason = $3, responded_at = now() WHERE id = $1 RETURNING *",
+    "UPDATE trainer_connection_requests SET status = $2, reject_reason = $3, responded_at = now(), updated_at = now() WHERE id = $1 AND status = 'pending' RETURNING *",
     [id, status, rejectReason || null],
   );
   return result.rows[0] || null;
@@ -68,4 +79,4 @@ async function listConnections(user) {
   return result.rows;
 }
 
-module.exports = { findPending, findActiveConnection, createRequest, cancel, findPendingForTrainer, setDecision, createConnection, listRequests, listConnections };
+module.exports = { findPending, findActiveConnection, findTrainerProfile, createRequest, cancel, findPendingForTrainer, setDecision, createConnection, listRequests, listConnections };

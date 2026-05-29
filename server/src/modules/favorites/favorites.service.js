@@ -9,7 +9,6 @@ async function addFavorite(userId, exerciseId) {
   const favorite = await withTransaction(async (client) => {
     if (!await exerciseRepository.ensureActive(client, exerciseId)) throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
     const created = await repository.add(client, userId, exerciseId);
-    if (!created) throw new AppError(codes.CONFLICT, "Exercise is already favorited", 409);
     return created;
   });
   return { favorite };

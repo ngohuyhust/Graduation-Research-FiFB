@@ -21,7 +21,14 @@ async function listCertificates(req, res) {
 }
 
 async function reviewCertificate(req, res) {
-  return sendSuccess(res, await service.reviewCertificate(req.auth, req.params.id, req.body), "Certificate reviewed");
+  return sendSuccess(
+    res,
+    await service.reviewCertificate(req.auth, req.params.id, req.body, {
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    }),
+    "Certificate reviewed",
+  );
 }
 
 async function listExercises(req, res) {
@@ -29,7 +36,14 @@ async function listExercises(req, res) {
 }
 
 async function reviewExercise(req, res) {
-  return sendSuccess(res, await service.reviewExercise(req.auth, req.params.id, req.body), "Exercise reviewed");
+  return sendSuccess(
+    res,
+    await service.reviewExercise(req.auth, req.params.id, req.body, {
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    }),
+    "Exercise reviewed",
+  );
 }
 
 async function deactivateExercise(req, res) {

@@ -12,6 +12,7 @@ module.exports = {
   exerciseReviewDecisionSchema: exercisesValidation.reviewDecisionSchema,
   certificateReviewDecisionSchema: certificatesValidation.reviewDecisionSchema,
   auditQuerySchema: auditValidation.auditQuerySchema,
+  certificateQuerySchema: certificatesValidation.certificateQuerySchema,
   deliveryQuerySchema: emailDeliveriesValidation.deliveryQuerySchema,
   uuidParam: z.object({ id: z.string().uuid() }),
 };

@@ -16,6 +16,6 @@ const usersQuerySchema = z.object({
   keyword: z.string().trim().max(120).optional(),
 });
 
-const statusSchema = z.object({ status: z.enum(["active", "locked", "disabled"]) });
+const statusSchema = z.object({ status: z.enum(["active", "locked", "disabled", "pending_verification"]) });
 
 module.exports = { updateProfileSchema, usersQuerySchema, statusSchema };

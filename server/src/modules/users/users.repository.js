@@ -37,7 +37,8 @@ async function updateProfile(id, payload) {
          phone = COALESCE($3, phone),
          avatar_url = COALESCE($4, avatar_url),
          fitness_goal = COALESCE($5, fitness_goal),
-         experience_level = COALESCE($6, experience_level)
+         experience_level = COALESCE($6, experience_level),
+         updated_at = now()
      WHERE id = $1 AND deleted_at IS NULL
      RETURNING ${selectable}`,
     [id, payload.fullName, payload.phone, payload.avatarUrl, payload.fitnessGoal, payload.experienceLevel],
@@ -47,14 +48,14 @@ async function updateProfile(id, payload) {
 
 async function updatePassword(client, id, passwordHash) {
   await client.query(
-    `UPDATE app_users SET password_hash = $2, password_changed_at = now() WHERE id = $1`,
+    `UPDATE app_users SET password_hash = $2, password_changed_at = now(), updated_at = now() WHERE id = $1`,
     [id, passwordHash],
   );
 }
 
 async function markVerified(client, id) {
   const result = await client.query(
-    `UPDATE app_users SET email_verified_at = now(), status = 'active'
+    `UPDATE app_users SET email_verified_at = now(), status = 'active', updated_at = now()
      WHERE id = $1 AND status = 'pending_verification'
      RETURNING ${selectable}`,
     [id],
@@ -63,7 +64,7 @@ async function markVerified(client, id) {
 }
 
 async function touchLastLogin(id) {
-  await query("UPDATE app_users SET last_login_at = now() WHERE id = $1", [id]);
+  await query("UPDATE app_users SET last_login_at = now(), updated_at = now() WHERE id = $1", [id]);
 }
 
 async function listUsers({ page, limit, role, status, keyword }) {
@@ -94,7 +95,7 @@ async function listUsers({ page, limit, role, status, keyword }) {
 async function setStatus(client, id, status) {
   const oldResult = await client.query(`SELECT ${selectable} FROM app_users WHERE id = $1`, [id]);
   const result = await client.query(
-    `UPDATE app_users SET status = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING ${selectable}`,
+    `UPDATE app_users SET status = $2, updated_at = now() WHERE id = $1 AND deleted_at IS NULL RETURNING ${selectable}`,
     [id, status],
   );
   return { oldUser: oldResult.rows[0] || null, user: result.rows[0] || null };

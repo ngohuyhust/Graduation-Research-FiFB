@@ -10,7 +10,8 @@ async function detail(req, res) {
 }
 
 async function create(req, res) {
-  return sendCreated(res, await service.createExercise(req.auth, req.body, "admin"), "Exercise created");
+  const source = req.auth.role === "trainer" ? "trainer_submission" : "admin";
+  return sendCreated(res, await service.createExercise(req.auth, req.body, source), "Exercise created");
 }
 
 async function update(req, res) {

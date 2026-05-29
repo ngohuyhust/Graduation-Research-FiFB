@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate, requireActiveUser, requireVerifiedEmail, requireRoles("admin"));
 router.get("/users", validate(validation.usersQuerySchema, "query"), asyncHandler(controller.listUsers));
 router.patch("/users/:id/status", validate(validation.uuidParam, "params"), validate(validation.statusSchema), asyncHandler(controller.updateUserStatus));
-router.get("/certificates", validate(validation.deliveryQuerySchema, "query"), asyncHandler(controller.listCertificates));
+router.get("/certificates", validate(validation.certificateQuerySchema, "query"), asyncHandler(controller.listCertificates));
 router.patch("/certificates/:id/review", validate(validation.uuidParam, "params"), validate(validation.certificateReviewDecisionSchema), asyncHandler(controller.reviewCertificate));
 router.get("/exercises", validate(validation.exerciseQuerySchema, "query"), asyncHandler(controller.listExercises));
 router.patch("/exercises/:id/review", validate(validation.uuidParam, "params"), validate(validation.exerciseReviewDecisionSchema), asyncHandler(controller.reviewExercise));

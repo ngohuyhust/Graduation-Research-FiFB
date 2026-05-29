@@ -34,11 +34,16 @@ async function findById(id) {
   return result.rows[0] || null;
 }
 
+async function findProfileForUpdate(client, trainerId) {
+  const result = await client.query("SELECT * FROM trainer_profiles WHERE trainer_id = $1", [trainerId]);
+  return result.rows[0] || null;
+}
+
 async function upsertProfile(userId, payload) {
   const result = await query(
     `INSERT INTO trainer_profiles (trainer_id, bio, specialization, years_of_experience)
      VALUES ($1, $2, $3, COALESCE($4, 0))
-     ON CONFLICT (trainer_id) DO UPDATE SET bio = COALESCE($2, trainer_profiles.bio), specialization = COALESCE($3, trainer_profiles.specialization), years_of_experience = COALESCE($4, trainer_profiles.years_of_experience)
+     ON CONFLICT (trainer_id) DO UPDATE SET bio = COALESCE($2, trainer_profiles.bio), specialization = COALESCE($3, trainer_profiles.specialization), years_of_experience = COALESCE($4, trainer_profiles.years_of_experience), updated_at = now()
      RETURNING *`,
     [userId, payload.bio || null, payload.specialization || null, payload.yearsOfExperience],
   );
@@ -46,7 +51,8 @@ async function upsertProfile(userId, payload) {
 }
 
 async function markVerified(client, trainerId, adminId) {
-  await client.query("UPDATE trainer_profiles SET is_verified = true, verified_at = now(), verified_by = $2 WHERE trainer_id = $1", [trainerId, adminId]);
+  const result = await client.query("UPDATE trainer_profiles SET is_verified = true, verified_at = now(), verified_by = $2, updated_at = now() WHERE trainer_id = $1 RETURNING *", [trainerId, adminId]);
+  return result.rows[0] || null;
 }
 
-module.exports = { list, findById, upsertProfile, markVerified };
+module.exports = { list, findById, findProfileForUpdate, upsertProfile, markVerified };

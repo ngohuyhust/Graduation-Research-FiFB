@@ -14,7 +14,14 @@ async function listAll(req, res) {
 }
 
 async function review(req, res) {
-  return sendSuccess(res, await service.review(req.auth, req.params.id, req.body), "Certificate reviewed");
+  return sendSuccess(
+    res,
+    await service.review(req.auth, req.params.id, req.body, {
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    }),
+    "Certificate reviewed",
+  );
 }
 
 module.exports = { submitMine, listMine, listAll, review };

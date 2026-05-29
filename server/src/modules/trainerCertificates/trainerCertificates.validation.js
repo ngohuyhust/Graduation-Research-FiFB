@@ -19,4 +19,10 @@ const reviewDecisionSchema = z.object({
   }
 });
 
-module.exports = { certificateSchema, reviewDecisionSchema };
+const certificateQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+module.exports = { certificateSchema, reviewDecisionSchema, certificateQuerySchema };

@@ -90,6 +90,7 @@ async function refresh(refreshToken, reqMeta) {
     const session = await authRepository.findSessionByHash(client, currentHash);
     if (!session) throw new AppError(codes.UNAUTHENTICATED, "Invalid refresh token", 401);
     if (session.status !== "active") throw new AppError(codes.FORBIDDEN, "Account is not active", 403);
+    if (!session.email_verified_at) throw new AppError(codes.FORBIDDEN, "Email verification required", 403);
     await authRepository.revokeSessionByHash(client, currentHash);
     return createTokenPair(client, { id: session.user_id, role: session.role, status: session.status }, reqMeta);
   });

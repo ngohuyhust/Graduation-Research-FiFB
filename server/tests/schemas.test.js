@@ -29,4 +29,12 @@ describe("request schemas", () => {
     });
     expect(parsed.success).toBe(false);
   });
+
+  test("admin user status schema accepts every app_users status", () => {
+    for (const status of ["active", "locked", "disabled", "pending_verification"]) {
+      expect(authSchemas.registerSchema.shape.role.safeParse("admin").success).toBe(false);
+      const usersValidation = require("../src/modules/users/users.validation");
+      expect(usersValidation.statusSchema.safeParse({ status }).success).toBe(true);
+    }
+  });
 });

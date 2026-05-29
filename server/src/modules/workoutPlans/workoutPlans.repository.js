@@ -35,7 +35,7 @@ async function list(userId, filters) {
 
 async function updatePlan(client, userId, id, payload) {
   const result = await client.query(
-    "UPDATE workout_plans SET title = COALESCE($3, title), description = COALESCE($4, description), visibility = COALESCE($5, visibility), status = COALESCE($6, status) WHERE id = $1 AND owner_id = $2 RETURNING *",
+    "UPDATE workout_plans SET title = COALESCE($3, title), description = COALESCE($4, description), visibility = COALESCE($5, visibility), status = COALESCE($6, status), updated_at = now() WHERE id = $1 AND owner_id = $2 RETURNING *",
     [id, userId, payload.title, payload.description, payload.visibility, payload.status],
   );
   return result.rows[0] || null;
@@ -46,7 +46,7 @@ async function deleteItems(client, planId) {
 }
 
 async function archive(userId, id) {
-  const result = await query("UPDATE workout_plans SET status = 'archived' WHERE id = $1 AND owner_id = $2 RETURNING *", [id, userId]);
+  const result = await query("UPDATE workout_plans SET status = 'archived', updated_at = now() WHERE id = $1 AND owner_id = $2 RETURNING *", [id, userId]);
   return result.rows[0] || null;
 }
 

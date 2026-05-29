@@ -6,6 +6,7 @@ const exercisePayloadSchema = z.object({
   gifUrl: z.string().url().optional(),
   instructions: z.array(z.string().trim().min(1)).default([]),
   status: z.enum(["pending", "active", "inactive", "rejected"]).optional(),
+  rawData: z.record(z.unknown()).optional(),
   bodyPartIds: z.array(z.string().uuid()).default([]),
   equipmentIds: z.array(z.string().uuid()).default([]),
   targetMuscleIds: z.array(z.string().uuid()).default([]),

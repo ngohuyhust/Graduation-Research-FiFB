@@ -6,7 +6,13 @@ function pageOffset({ page, limit }) {
 }
 
 async function add(client, userId, exerciseId) {
-  const result = await client.query("INSERT INTO favorite_exercises (user_id, exercise_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *", [userId, exerciseId]);
+  const result = await client.query(
+    `INSERT INTO favorite_exercises (user_id, exercise_id)
+     VALUES ($1, $2)
+     ON CONFLICT (user_id, exercise_id) DO UPDATE SET user_id = EXCLUDED.user_id
+     RETURNING *`,
+    [userId, exerciseId],
+  );
   return result.rows[0] || null;
 }
 
@@ -15,7 +21,13 @@ async function remove(userId, exerciseId) {
 }
 
 async function list(userId, filters) {
-  const count = await query("SELECT count(*)::int AS total FROM favorite_exercises WHERE user_id = $1", [userId]);
+  const count = await query(
+    `SELECT count(*)::int AS total
+     FROM favorite_exercises f
+     JOIN exercises e ON e.id = f.exercise_id
+     WHERE f.user_id = $1 AND e.status = 'active'`,
+    [userId],
+  );
   const result = await query(
     `SELECT ${exerciseLibrarySelect("e")}
      FROM favorite_exercises f

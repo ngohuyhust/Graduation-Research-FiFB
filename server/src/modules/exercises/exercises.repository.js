@@ -97,7 +97,16 @@ async function create(client, actor, payload, source) {
     `INSERT INTO exercises (external_id, source, name, gif_url, instructions, status, created_by, raw_data)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
-    [payload.externalId || null, source, payload.name, payload.gifUrl || null, JSON.stringify(payload.instructions || []), status, actor.userId, { submittedVia: "api" }],
+    [
+      payload.externalId || null,
+      source,
+      payload.name,
+      payload.gifUrl || null,
+      JSON.stringify(payload.instructions || []),
+      status,
+      actor.userId,
+      payload.rawData || { submittedVia: "api" },
+    ],
   );
   return result.rows[0];
 }
@@ -106,16 +115,34 @@ async function update(client, id, payload) {
   const result = await client.query(
     `UPDATE exercises
      SET external_id = COALESCE($2, external_id), name = COALESCE($3, name), gif_url = COALESCE($4, gif_url),
-         instructions = COALESCE($5, instructions), status = COALESCE($6, status)
+         instructions = COALESCE($5, instructions),
+         status = COALESCE($6, status),
+         raw_data = COALESCE($7, raw_data),
+         updated_at = now()
      WHERE id = $1 RETURNING *`,
-    [id, payload.externalId, payload.name, payload.gifUrl, payload.instructions ? JSON.stringify(payload.instructions) : null, payload.status],
+    [
+      id,
+      payload.externalId,
+      payload.name,
+      payload.gifUrl,
+      payload.instructions ? JSON.stringify(payload.instructions) : null,
+      payload.status,
+      payload.rawData || null,
+    ],
   );
   return result.rows[0] || null;
 }
 
 async function setReviewStatus(client, id, actor, status, rejectionReason) {
   const result = await client.query(
-    "UPDATE exercises SET status = $2, reviewed_by = $3, reviewed_at = now(), rejection_reason = $4 WHERE id = $1 RETURNING *",
+    `UPDATE exercises
+     SET status = $2,
+         reviewed_by = $3,
+         reviewed_at = now(),
+         rejection_reason = CASE WHEN $2 = 'rejected' THEN $4 ELSE NULL END,
+         updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
     [id, status, actor.userId, rejectionReason || null],
   );
   return result.rows[0] || null;
