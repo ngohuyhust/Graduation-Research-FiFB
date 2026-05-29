@@ -1,4 +1,4 @@
-const authSchemas = require("../src/modules/auth/authSchemas");
+const authSchemas = require("../src/modules/auth/auth.validation");
 const exerciseValidation = require("../src/modules/exercises/exercises.validation");
 const reviewsValidation = require("../src/modules/reviews/reviews.validation");
 const workoutPlansValidation = require("../src/modules/workoutPlans/workoutPlans.validation");

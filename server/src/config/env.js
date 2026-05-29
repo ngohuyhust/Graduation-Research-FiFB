@@ -29,13 +29,10 @@ const env = {
   emailVerificationTtlHours: toInt(process.env.EMAIL_VERIFICATION_TTL_HOURS, 24),
   bcryptRounds: toInt(process.env.BCRYPT_ROUNDS, 12),
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
-  smtp: {
-    host: process.env.SMTP_HOST,
-    port: toInt(process.env.SMTP_PORT, 587),
-    secure: toBool(process.env.SMTP_SECURE, false),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.SMTP_FROM || "FiFB <no-reply@fifb.local>",
+  sendgrid: {
+    apiKey: process.env.SENDGRID_API_KEY,
+    fromEmail: process.env.SENDGRID_FROM_EMAIL,
+    fromName: process.env.SENDGRID_FROM_NAME || "FiFB",
   },
   exercisedb: {
     apiUrl: process.env.EXERCISEDB_API_URL,

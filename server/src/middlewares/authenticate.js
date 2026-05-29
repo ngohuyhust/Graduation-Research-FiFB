@@ -1,5 +1,5 @@
-const { verifyAccessToken } = require("../modules/auth/jwtService");
-const userRepository = require("../modules/users/userRepository");
+const { verifyAccessToken } = require("../modules/auth/jwt.service");
+const userRepository = require("../modules/users/users.repository");
 const { AppError } = require("../utils/errors/AppError");
 const codes = require("../utils/errors/errorCodes");
 

@@ -3,7 +3,7 @@ const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 const repository = require("./users.repository");
-const { publicUser } = require("./userPresenter");
+const { publicUser } = require("./users.presenter");
 const auditRepository = require("../audit/audit.repository");
 const notificationRepository = require("../notifications/notifications.repository");
 
