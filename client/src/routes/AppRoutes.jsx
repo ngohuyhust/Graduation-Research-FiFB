@@ -56,6 +56,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route element={<PublicLayout />}>
+        <Route path="/" element={<HomeRedirect />} />
         <Route path="/exercises" element={<ExerciseLibraryPage />} />
         <Route path="/exercises/:id" element={<ExerciseDetailPage />} />
         <Route path="/trainers" element={<TrainersPage />} />
@@ -63,7 +64,6 @@ export default function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<HomeRedirect />} />
         <Route element={<RoleRoute roles={["user", "trainer"]} />}>
           <Route element={<UserLayout />}>
             <Route path="/profile" element={<ProfilePage />} />

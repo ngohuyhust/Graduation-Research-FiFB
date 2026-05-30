@@ -13,6 +13,12 @@ const publicAuthPaths = [
   "/auth/reset-password",
 ];
 
+const publicGetPathPatterns = [
+  /^\/exercises(?:\/[^/]+)?$/,
+  /^\/exercise-taxonomy\/(?:bodyParts|equipments|muscles)$/,
+  /^\/trainers(?:\/[^/]+)?$/,
+];
+
 export const httpClient = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
@@ -52,9 +58,29 @@ async function refreshTokens() {
   return tokens?.accessToken;
 }
 
+function getRequestPath(url = "") {
+  const [withoutQuery] = url.split("?");
+  if (!withoutQuery) return "";
+  if (!/^https?:\/\//i.test(withoutQuery)) return withoutQuery;
+
+  try {
+    return new URL(withoutQuery).pathname;
+  } catch {
+    return withoutQuery;
+  }
+}
+
+function isPublicGetRequest(config) {
+  const method = (config?.method || "get").toLowerCase();
+  if (method !== "get") return false;
+
+  const path = getRequestPath(config?.url);
+  return publicGetPathPatterns.some((pattern) => pattern.test(path));
+}
+
 httpClient.interceptors.request.use((config) => {
   const token = getAccessToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token && !isPublicGetRequest(config)) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -64,7 +90,7 @@ httpClient.interceptors.response.use(
     const original = error.config;
     const status = error.response?.status;
     const url = original?.url || "";
-    const shouldSkipRefresh = publicAuthPaths.some((path) => url.includes(path)) || url.includes("/auth/refresh");
+    const shouldSkipRefresh = publicAuthPaths.some((path) => url.includes(path)) || url.includes("/auth/refresh") || isPublicGetRequest(original);
     const canRefresh = Boolean(getRefreshToken());
 
     if (status === 401 && original && !original._retry && !shouldSkipRefresh && canRefresh) {
