@@ -17,6 +17,7 @@ export default function LoginPage() {
       const fallback = user.role === "admin" ? "/admin" : user.role === "trainer" ? "/trainer" : "/profile";
       navigate(location.state?.from?.pathname || fallback, { replace: true });
     } catch (error) {
+      console.error("[Login Failed]", error);
       showError(error);
     }
   }

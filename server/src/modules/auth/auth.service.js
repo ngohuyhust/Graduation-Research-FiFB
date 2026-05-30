@@ -14,6 +14,31 @@ function sanitizeEmail(email) {
   return email.trim().toLowerCase();
 }
 
+function maskEmail(email = "") {
+  const [local = "", domain = ""] = email.split("@");
+  const maskedLocal = local.length <= 2 ? `${local.slice(0, 1)}***` : `${local.slice(0, 2)}***${local.slice(-1)}`;
+  const [domainName = "", ...domainRest] = domain.split(".");
+  const maskedDomain = domainName ? `${domainName.slice(0, 1)}***` : "***";
+  return domain ? `${maskedLocal}@${[maskedDomain, ...domainRest].filter(Boolean).join(".")}` : maskedLocal;
+}
+
+function loginDebugContext(email, user, passwordMatches) {
+  return {
+    email: maskEmail(email),
+    userId: user?.id || null,
+    status: user?.status || null,
+    verified: user ? Boolean(user.email_verified_at) : null,
+    passwordHashPrefix: user?.password_hash ? user.password_hash.slice(0, 4) : null,
+    passwordHashLength: user?.password_hash ? user.password_hash.length : null,
+    passwordMatches: typeof passwordMatches === "boolean" ? passwordMatches : null,
+  };
+}
+
+function logLoginDebug(reason, context) {
+  if (!env.authDebugLogin) return;
+  console.warn("[Auth Login Debug]", { reason, ...context });
+}
+
 function createEmailOtp() {
   return crypto.randomInt(0, 1000000).toString().padStart(6, "0");
 }
@@ -83,14 +108,39 @@ async function register(payload, _reqMeta) {
 }
 
 async function login(payload, reqMeta) {
-  const user = await userRepository.findByEmail(sanitizeEmail(payload.email));
-  if (!user) throw new AppError(codes.UNAUTHENTICATED, "Invalid email or password", 401);
-  const ok = await bcrypt.compare(payload.password, user.password_hash);
-  if (!ok) throw new AppError(codes.UNAUTHENTICATED, "Invalid email or password", 401);
-  if (user.status !== "active") throw new AppError(codes.FORBIDDEN, `Account status is ${user.status}`, 403);
-  if (!user.email_verified_at) throw new AppError(codes.FORBIDDEN, "Email verification required", 403);
-  await userRepository.touchLastLogin(user.id);
-  return withTransaction(async (client) => createTokenPair(client, user, reqMeta));
+  const email = sanitizeEmail(payload.email);
+
+  try {
+    const user = await userRepository.findByEmail(email);
+    if (!user) {
+      logLoginDebug("user_not_found", loginDebugContext(email));
+      throw new AppError(codes.UNAUTHENTICATED, "Invalid email or password", 401);
+    }
+
+    const ok = await bcrypt.compare(payload.password, user.password_hash);
+    if (!ok) {
+      logLoginDebug("password_mismatch", loginDebugContext(email, user, ok));
+      throw new AppError(codes.UNAUTHENTICATED, "Invalid email or password", 401);
+    }
+
+    if (user.status !== "active") {
+      logLoginDebug("account_not_active", loginDebugContext(email, user, ok));
+      throw new AppError(codes.FORBIDDEN, `Account status is ${user.status}`, 403);
+    }
+
+    if (!user.email_verified_at) {
+      logLoginDebug("email_not_verified", loginDebugContext(email, user, ok));
+      throw new AppError(codes.FORBIDDEN, "Email verification required", 403);
+    }
+
+    await userRepository.touchLastLogin(user.id);
+    return withTransaction(async (client) => createTokenPair(client, user, reqMeta));
+  } catch (error) {
+    if (!(error instanceof AppError)) {
+      logLoginDebug("unexpected_error", { email: maskEmail(email), message: error.message });
+    }
+    throw error;
+  }
 }
 
 async function refresh(refreshToken, reqMeta) {

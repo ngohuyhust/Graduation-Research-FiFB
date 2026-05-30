@@ -30,12 +30,17 @@ export function setUnauthorizedHandler(handler) {
 
 function normalizeError(error) {
   const payload = error.response?.data;
+  const method = (error.config?.method || "get").toUpperCase();
+  const url = error.config?.url || "";
+
   if (payload?.error) {
     return {
       code: payload.error.code || "API_ERROR",
       message: payload.error.message || "Request failed",
       details: payload.error.details || null,
       status: error.response?.status,
+      method,
+      url,
     };
   }
 
@@ -44,7 +49,20 @@ function normalizeError(error) {
     message: error.message || "Unable to reach server",
     details: null,
     status: error.response?.status,
+    method,
+    url,
   };
+}
+
+function logApiError(error) {
+  console.error("[API Error]", {
+    method: error.method,
+    url: error.url,
+    status: error.status,
+    code: error.code,
+    message: error.message,
+    details: error.details,
+  });
 }
 
 async function refreshTokens() {
@@ -105,10 +123,14 @@ httpClient.interceptors.response.use(
       } catch (refreshError) {
         clearTokens();
         onUnauthorized?.();
-        throw normalizeError(refreshError);
+        const normalizedRefreshError = normalizeError(refreshError);
+        logApiError(normalizedRefreshError);
+        throw normalizedRefreshError;
       }
     }
 
-    throw normalizeError(error);
+    const normalizedError = normalizeError(error);
+    logApiError(normalizedError);
+    throw normalizedError;
   },
 );

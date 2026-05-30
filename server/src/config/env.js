@@ -28,6 +28,7 @@ const env = {
   passwordResetTtlMinutes: toInt(process.env.PASSWORD_RESET_TTL_MINUTES, 30),
   emailVerificationTtlHours: toInt(process.env.EMAIL_VERIFICATION_TTL_HOURS, 24),
   bcryptRounds: toInt(process.env.BCRYPT_ROUNDS, 12),
+  authDebugLogin: toBool(process.env.AUTH_DEBUG_LOGIN, process.env.NODE_ENV !== "production"),
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY,
