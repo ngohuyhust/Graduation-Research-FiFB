@@ -31,7 +31,7 @@ async function me(req, res) {
 }
 
 async function verifyEmail(req, res) {
-  const result = await authService.verifyEmail(req.body.token);
+  const result = await authService.verifyEmail(req.body.email, req.body.otp);
   return sendSuccess(res, { user: publicUser(result.user) }, "Email verified");
 }
 

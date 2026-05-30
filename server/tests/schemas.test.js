@@ -21,6 +21,11 @@ describe("request schemas", () => {
     expect(parsed.success).toBe(false);
   });
 
+  test("email verification requires a 6 digit OTP", () => {
+    expect(authSchemas.verifyEmailSchema.safeParse({ email: "demo@example.com", otp: "123456" }).success).toBe(true);
+    expect(authSchemas.verifyEmailSchema.safeParse({ email: "demo@example.com", otp: "12345" }).success).toBe(false);
+  });
+
   test("certificate rejection requires reason", () => {
     const parsed = exerciseValidation.reviewDecisionSchema.safeParse({ status: "rejected" });
     expect(parsed.success).toBe(false);

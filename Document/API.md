@@ -13,9 +13,9 @@ The API matches the existing Supabase schema from `Document/DatabaseSQL.txt`. It
 Custom backend auth issues JWT access tokens and opaque refresh tokens.
 
 - `app_users.password_hash` stores bcrypt password hashes.
-- Refresh/session/reset/verification token hashes are stored in Redis when enabled.
+- Refresh/session/reset token hashes and email verification OTP hashes are stored in Redis when enabled.
 - If `REDIS_DISABLED=true`, the backend uses an in-memory fallback for local development only.
-- Raw tokens are never stored.
+- Raw tokens and OTPs are never stored.
 - Register creates `status = pending_verification`, sends SMTP verification email, and activates the account after verification.
 
 Use access tokens as:
@@ -67,7 +67,7 @@ Authorization: Bearer <accessToken>
 | Method | URL                            | Role          | Description                                             |
 | ------ | ------------------------------ | ------------- | ------------------------------------------------------- |
 | POST   | `/auth/register`               | Guest         | Register `user` or `trainer`; sends verification email. |
-| POST   | `/auth/verify-email`           | Guest         | Verify email token and activate account.                |
+| POST   | `/auth/verify-email`           | Guest         | Verify 6-digit email OTP and activate account.          |
 | POST   | `/auth/login`                  | Guest         | Login active verified user.                             |
 | POST   | `/auth/refresh`                | Guest         | Rotate refresh token and return new tokens.             |
 | POST   | `/auth/logout`                 | Guest         | Revoke refresh token.                                   |
@@ -83,7 +83,17 @@ Register body:
   "email": "user@example.com",
   "password": "password123",
   "role": "user",
-  "fullName": "Demo User"
+  "fullName": "Demo User",
+  "phone": "0900000000"
+}
+```
+
+Verify email body:
+
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456"
 }
 ```
 

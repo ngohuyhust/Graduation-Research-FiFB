@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { env } = require("../../config/env");
 const { withTransaction } = require("../../db/pool");
 const { AppError } = require("../../utils/errors/AppError");
@@ -11,6 +12,14 @@ const { sendEmail } = require("../emailDeliveries/emailDeliveries.repository");
 
 function sanitizeEmail(email) {
   return email.trim().toLowerCase();
+}
+
+function createEmailOtp() {
+  return crypto.randomInt(0, 1000000).toString().padStart(6, "0");
+}
+
+function hashEmailOtp(email, otp) {
+  return hashToken(`${sanitizeEmail(email)}:${otp}`);
 }
 
 async function hashPassword(password) {
@@ -52,19 +61,19 @@ async function register(payload, _reqMeta) {
       await client.query(`INSERT INTO trainer_profiles (trainer_id) VALUES ($1)`, [user.id]);
     }
 
-    const verificationToken = createOpaqueToken();
+    const verificationOtp = createEmailOtp();
     await authRepository.createVerificationToken(client, {
       userId: user.id,
-      tokenHash: hashToken(verificationToken),
+      tokenHash: hashEmailOtp(user.email, verificationOtp),
       expiresAt: addHours(new Date(), env.emailVerificationTtlHours),
     });
 
-    const verifyUrl = `${env.frontendUrl}/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${env.frontendUrl}/verify-email?email=${encodeURIComponent(user.email)}`;
     await sendEmail(client, {
       to: user.email,
       subject: "Verify your FiFB account",
-      text: `Verify your account: ${verifyUrl}`,
-      html: `<p>Verify your FiFB account:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+      text: `Your FiFB verification code is ${verificationOtp}. Enter it here: ${verifyUrl}`,
+      html: `<p>Your FiFB verification code is:</p><p><strong>${verificationOtp}</strong></p><p>Enter it here: <a href="${verifyUrl}">${verifyUrl}</a></p>`,
       templateKey: "email_verification",
       metadata: { userId: user.id },
     });
@@ -102,10 +111,10 @@ async function logout(refreshToken) {
   });
 }
 
-async function verifyEmail(token) {
+async function verifyEmail(email, otp) {
   return withTransaction(async (client) => {
-    const record = await authRepository.findVerificationToken(client, hashToken(token));
-    if (!record) throw new AppError(codes.BAD_REQUEST, "Invalid or expired verification token", 400);
+    const record = await authRepository.findVerificationToken(client, hashEmailOtp(email, otp));
+    if (!record) throw new AppError(codes.BAD_REQUEST, "Invalid or expired verification code", 400);
     await authRepository.markVerificationUsed(client, record.id);
     const user = await userRepository.markVerified(client, record.user_id);
     return { user };

@@ -1,20 +1,22 @@
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../api/authApi";
 import FormField from "../../components/FormField";
 import { showError, showSuccess } from "../../components/ToastBridge";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const { register, handleSubmit, reset, formState } = useForm({
-    defaultValues: { email: "", password: "", fullName: "", role: "user", fitnessGoal: "", experienceLevel: "" },
+    defaultValues: { email: "", password: "", fullName: "", phone: "", role: "user", fitnessGoal: "", experienceLevel: "" },
   });
 
   async function onSubmit(values) {
     try {
-      const payload = { ...values, experienceLevel: values.experienceLevel || undefined };
+      const payload = { ...values, phone: values.phone.trim(), experienceLevel: values.experienceLevel || undefined };
       await authApi.register(payload);
       reset();
-      showSuccess("Registration created. Check email to verify account.");
+      showSuccess("Registration created. Check email for your verification code.");
+      navigate(`/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`);
     } catch (error) {
       showError(error);
     }
@@ -31,6 +33,9 @@ export default function RegisterPage() {
       </FormField>
       <FormField label="Email" error={formState.errors.email?.message}>
         <input className="input" type="email" {...register("email", { required: "Email is required" })} />
+      </FormField>
+      <FormField label="Phone number" error={formState.errors.phone?.message}>
+        <input className="input" type="tel" {...register("phone", { required: "Phone number is required", maxLength: { value: 40, message: "Phone number must be at most 40 characters" } })} />
       </FormField>
       <FormField label="Password" error={formState.errors.password?.message}>
         <input className="input" type="password" {...register("password", { required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } })} />
