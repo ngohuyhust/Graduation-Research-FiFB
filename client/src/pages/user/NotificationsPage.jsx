@@ -1,5 +1,6 @@
+import { CheckCheck } from "lucide-react";
 import { notificationApi } from "../../api/notificationApi";
-import DataTable from "../../components/DataTable";
+import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import PageHeader from "../../components/PageHeader";
@@ -25,16 +26,25 @@ export default function NotificationsPage() {
 
   return (
     <>
-      <PageHeader title="Notifications" actions={<button className="btn-secondary" type="button" onClick={markAllRead}>Mark all read</button>} />
-      <DataTable
-        columns={[
-          { key: "title", header: "Title" },
-          { key: "content", header: "Content" },
-          { key: "createdAt", header: "Created", render: (row) => formatDate(row.createdAt || row.created_at) },
-          { key: "readAt", header: "Read", render: (row) => row.readAt || row.read_at ? "Read" : "Unread" },
-        ]}
-        rows={asItems(data)}
-      />
+      <PageHeader title="Notifications" actions={<button className="btn-secondary" type="button" onClick={markAllRead}><CheckCheck size={17} /> Mark all read</button>} />
+      {asItems(data).length ? (
+        <div className="space-y-3">
+          {asItems(data).map((row) => {
+            const read = row.readAt || row.read_at;
+            return (
+              <article className={`panel border-l-4 ${read ? "border-l-slate-200 opacity-80" : "border-l-mint"}`} key={row.id || row.title}>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className={`font-semibold ${read ? "text-slate-600" : "text-ink"}`}>{row.title || "-"}</h2>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">{row.content || "-"}</p>
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{formatDate(row.createdAt || row.created_at)}</span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : <EmptyState title="No notifications" />}
     </>
   );
 }

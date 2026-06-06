@@ -1,3 +1,4 @@
+import { ShieldCheck, Star, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";
@@ -48,14 +49,22 @@ export default function TrainerDetailPage() {
       <PageHeader title={data.trainer?.fullName || data.trainer?.full_name || "Trainer"} description={data.trainer?.bio} />
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <section className="panel space-y-3">
+          <div className="flex items-start gap-4 rounded-xl bg-gradient-to-r from-ink to-ink-light p-5 text-white">
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-white/10"><UserRound size={30} /></div>
+            <div>
+              <div className="flex items-center gap-2"><h2 className="text-xl font-bold">{data.trainer?.fullName || data.trainer?.full_name || "Trainer"}</h2>{(data.trainer?.isVerified ?? data.trainer?.is_verified) && <ShieldCheck className="text-mint-light" size={20} />}</div>
+              <p className="mt-1 text-sm text-slate-300">{data.trainer?.specialization || "General fitness"}</p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{data.trainer?.yearsOfExperience ?? data.trainer?.years_of_experience ?? 0} years experience</p>
+            </div>
+          </div>
           <StatusBadge value={data.trainer?.isVerified ?? data.trainer?.is_verified} />
           <p className="text-sm text-slate-600">Specialization: {data.trainer?.specialization || "-"}</p>
           <p className="text-sm text-slate-600">Experience: {data.trainer?.yearsOfExperience ?? data.trainer?.years_of_experience ?? 0} years</p>
           <h2 className="pt-4 font-semibold">Reviews</h2>
           <div className="space-y-3">
             {asItems(data.reviews).map((review) => (
-              <div className="rounded-md border border-slate-200 p-3 text-sm" key={review.id}>
-                <div className="font-semibold">{review.rating}/5</div>
+              <div className="rounded-xl border border-slate-200 p-4 text-sm" key={review.id}>
+                <div className="mb-2 flex text-amber-400">{Array.from({ length: 5 }).map((_, index) => <Star fill={index < Number(review.rating || 0) ? "currentColor" : "none"} key={index} size={16} />)}</div>
                 <p className="text-slate-600">{review.comment || "-"}</p>
               </div>
             ))}

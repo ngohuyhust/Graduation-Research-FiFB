@@ -1,3 +1,4 @@
+import { Plus, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -74,10 +75,11 @@ export default function WorkoutPlanEditorPage() {
         <section className="panel space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Plan items</h2>
-            <button className="btn-secondary" type="button" onClick={() => append({ exerciseId: "", dayNumber: 1, sortOrder: fields.length + 1 })}>Add item</button>
+            <button className="btn-secondary" type="button" onClick={() => append({ exerciseId: "", dayNumber: 1, sortOrder: fields.length + 1 })}><Plus size={16} /> Add item</button>
           </div>
           {fields.map((field, index) => (
-            <div className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-6" key={field.id}>
+            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm md:grid-cols-6" key={field.id}>
+              <div className="md:col-span-6 text-xs font-semibold uppercase tracking-wider text-mint">Day {form.watch(`items.${index}.dayNumber`) || 1} · Item {index + 1}</div>
               <input className="input md:col-span-2" placeholder="Exercise UUID" {...form.register(`items.${index}.exerciseId`, { required: true })} />
               <input className="input" placeholder="Day" type="number" {...form.register(`items.${index}.dayNumber`)} />
               <input className="input" placeholder="Order" type="number" {...form.register(`items.${index}.sortOrder`)} />
@@ -85,7 +87,7 @@ export default function WorkoutPlanEditorPage() {
               <input className="input" placeholder="Reps" type="number" {...form.register(`items.${index}.reps`)} />
               <input className="input" placeholder="Rest seconds" type="number" {...form.register(`items.${index}.restSeconds`)} />
               <input className="input md:col-span-4" placeholder="Note" {...form.register(`items.${index}.note`)} />
-              <button className="btn-secondary" type="button" onClick={() => remove(index)}>Remove</button>
+              <button className="btn-secondary" type="button" onClick={() => remove(index)}><Trash2 size={16} /> Remove</button>
             </div>
           ))}
         </section>

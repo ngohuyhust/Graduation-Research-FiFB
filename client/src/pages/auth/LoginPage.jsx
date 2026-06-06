@@ -1,3 +1,4 @@
+import { LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import FormField from "../../components/FormField";
@@ -23,10 +24,13 @@ export default function LoginPage() {
   }
 
   return (
-    <form className="panel space-y-4" onSubmit={handleSubmit(onSubmit)}>
+    <form className="space-y-5 animate-fade-in" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <h1 className="text-2xl font-bold">Login</h1>
-        <p className="mt-1 text-sm text-slate-500">Use an active, verified FiFB account.</p>
+        <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-mint/10 text-mint">
+          <LogIn size={22} />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">Login</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Use an active, verified FiFB account.</p>
       </div>
       <FormField label="Email" error={formState.errors.email?.message}>
         <input className="input" type="email" {...register("email", { required: "Email is required" })} />
@@ -34,12 +38,14 @@ export default function LoginPage() {
       <FormField label="Password" error={formState.errors.password?.message}>
         <input className="input" type="password" {...register("password", { required: "Password is required" })} />
       </FormField>
-      <button className="btn-primary w-full" disabled={formState.isSubmitting} type="submit">
+      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">
         Login
       </button>
-      <div className="flex justify-between text-sm">
-        <Link className="font-semibold text-steel" to="/register">Create account</Link>
-        <Link className="font-semibold text-steel" to="/forgot-password">Forgot password?</Link>
+      <div className="border-t border-slate-100 pt-4">
+        <div className="flex justify-between text-sm">
+          <Link className="link-accent" to="/register">Create account</Link>
+          <Link className="link-accent" to="/forgot-password">Forgot password?</Link>
+        </div>
       </div>
     </form>
   );

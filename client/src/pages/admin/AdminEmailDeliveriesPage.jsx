@@ -1,3 +1,4 @@
+import { Mail } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import DataTable from "../../components/DataTable";
 import ErrorState from "../../components/ErrorState";
@@ -14,7 +15,7 @@ export default function AdminEmailDeliveriesPage() {
   return (
     <>
       <PageHeader title="Email Delivery Logs" />
-      <DataTable columns={[{ key: "to", header: "To" }, { key: "templateKey", header: "Template", render: (row) => row.templateKey || row.template_key || "-" }, { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> }, { key: "createdAt", header: "Created", render: (row) => formatDate(row.createdAt || row.created_at) }]} rows={asItems(data)} />
+      <DataTable columns={[{ key: "to", header: "To", render: (row) => <span className="flex items-center gap-2 font-medium text-ink"><Mail className="text-steel" size={16} />{row.to || "-"}</span> }, { key: "templateKey", header: "Template", render: (row) => row.templateKey || row.template_key || "-" }, { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> }, { key: "createdAt", header: "Created", render: (row) => formatDate(row.createdAt || row.created_at) }]} rows={asItems(data)} />
     </>
   );
 }

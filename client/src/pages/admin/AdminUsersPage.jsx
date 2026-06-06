@@ -1,3 +1,4 @@
+import { Lock, ShieldCheck, SlidersHorizontal, UserX } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";
 import DataTable from "../../components/DataTable";
@@ -31,13 +32,17 @@ export default function AdminUsersPage() {
   return (
     <>
       <PageHeader title="Manage Users" />
+      <div className="panel mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-600"><SlidersHorizontal size={17} /> User status actions</div>
+        <div className="text-xs uppercase tracking-wider text-slate-400">Showing page {pagination.page}</div>
+      </div>
       <DataTable
         columns={[
           { key: "email", header: "Email" },
           { key: "fullName", header: "Name", render: (row) => row.fullName || row.full_name || "-" },
           { key: "role", header: "Role" },
           { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <div className="flex flex-wrap gap-2"><button className="btn-secondary" onClick={() => setStatus(row.id, "active")} type="button">Active</button><button className="btn-secondary" onClick={() => setStatus(row.id, "locked")} type="button">Lock</button><button className="btn-danger" onClick={() => setStatus(row.id, "disabled")} type="button">Disable</button></div> },
+          { key: "actions", header: "Actions", render: (row) => <div className="flex flex-wrap gap-2"><button className="btn-secondary px-3" title="Activate user" onClick={() => setStatus(row.id, "active")} type="button"><ShieldCheck size={16} /></button><button className="btn-secondary px-3" title="Lock user" onClick={() => setStatus(row.id, "locked")} type="button"><Lock size={16} /></button><button className="btn-danger px-3" title="Disable user" onClick={() => setStatus(row.id, "disabled")} type="button"><UserX size={16} /></button></div> },
         ]}
         rows={asItems(data)}
       />

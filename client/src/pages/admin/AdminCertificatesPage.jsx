@@ -1,3 +1,4 @@
+import { Award, Check, X } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import DataTable from "../../components/DataTable";
 import ErrorState from "../../components/ErrorState";
@@ -29,10 +30,10 @@ export default function AdminCertificatesPage() {
       <PageHeader title="Manage Trainer Certificates" />
       <DataTable
         columns={[
-          { key: "title", header: "Title" },
+          { key: "title", header: "Title", render: (row) => <span className="flex items-center gap-2 font-semibold text-ink"><Award className="text-amber-500" size={17} />{row.title || "-"}</span> },
           { key: "issuer", header: "Issuer" },
           { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <div className="flex gap-2"><button className="btn-primary" type="button" onClick={() => review(row.id, "approved")}>Approve</button><button className="btn-secondary" type="button" onClick={() => review(row.id, "rejected")}>Reject</button></div> },
+          { key: "actions", header: "Actions", render: (row) => <div className="flex gap-2"><button className="btn-primary" type="button" onClick={() => review(row.id, "approved")}><Check size={16} /> Approve</button><button className="btn-secondary" type="button" onClick={() => review(row.id, "rejected")}><X size={16} /> Reject</button></div> },
         ]}
         rows={asItems(data)}
       />

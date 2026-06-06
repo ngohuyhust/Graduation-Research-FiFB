@@ -1,8 +1,8 @@
-import { Plus } from "lucide-react";
+import { Archive, Eye, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { workoutPlanApi } from "../../api/workoutPlanApi";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import DataTable from "../../components/DataTable";
+import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import PageHeader from "../../components/PageHeader";
@@ -33,15 +33,25 @@ export default function WorkoutPlansPage() {
   return (
     <>
       <PageHeader title="Workout Plans" actions={<Link className="btn-primary" to="/workout-plans/new"><Plus size={17} /> New plan</Link>} />
-      <DataTable
-        columns={[
-          { key: "title", header: "Title", render: (row) => <Link className="font-semibold text-steel" to={`/workout-plans/${row.id}`}>{row.title}</Link> },
-          { key: "visibility", header: "Visibility" },
-          { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <button className="btn-secondary" type="button" onClick={() => setArchiveId(row.id)}>Archive</button> },
-        ]}
-        rows={asItems(data)}
-      />
+      {asItems(data).length ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {asItems(data).map((row) => (
+            <article className="panel-hover" key={row.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <Link className="text-lg font-semibold text-ink hover:text-mint" to={`/workout-plans/${row.id}`}>{row.title}</Link>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Eye size={15} /> {row.visibility || "private"}</div>
+                </div>
+                <StatusBadge value={row.status} />
+              </div>
+              <div className="mt-5 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{(row.items || []).length} items</span>
+                <button className="btn-secondary" type="button" onClick={() => setArchiveId(row.id)}><Archive size={16} /> Archive</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : <EmptyState title="No workout plans" />}
       <ConfirmDialog danger open={Boolean(archiveId)} title="Archive workout plan" message="This will archive the plan through the backend API." onCancel={() => setArchiveId(null)} onConfirm={archive} confirmLabel="Archive" />
     </>
   );

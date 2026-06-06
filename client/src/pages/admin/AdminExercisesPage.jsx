@@ -1,3 +1,4 @@
+import { Check, ChevronDown, Dumbbell, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { adminApi } from "../../api/adminApi";
 import { exerciseApi } from "../../api/exerciseApi";
@@ -13,6 +14,7 @@ import { asItems } from "../../utils/format";
 
 export default function AdminExercisesPage() {
   const [form, setForm] = useState({ name: "", gifUrl: "", instructionsText: "" });
+  const [showCreate, setShowCreate] = useState(false);
   const { data, loading, error, reload } = useAsync(() => adminApi.exercises({ page: 1, limit: 50 }), []);
 
   async function create(event) {
@@ -52,19 +54,21 @@ export default function AdminExercisesPage() {
 
   return (
     <>
-      <PageHeader title="Manage Exercises" />
-      <form className="panel mb-6 grid gap-4 md:grid-cols-2" onSubmit={create}>
-        <FormField label="Name"><input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></FormField>
-        <FormField label="GIF URL"><input className="input" value={form.gifUrl} onChange={(event) => setForm({ ...form, gifUrl: event.target.value })} /></FormField>
-        <div className="md:col-span-2"><FormField label="Instructions"><textarea className="input min-h-28" value={form.instructionsText} onChange={(event) => setForm({ ...form, instructionsText: event.target.value })} /></FormField></div>
-        <button className="btn-primary" type="submit">Create exercise</button>
-      </form>
+      <PageHeader title="Manage Exercises" actions={<button className="btn-primary" type="button" onClick={() => setShowCreate(!showCreate)}><Plus size={17} /> Create exercise <ChevronDown className={showCreate ? "rotate-180" : ""} size={16} /></button>} />
+      {showCreate && (
+        <form className="panel mb-6 grid gap-4 md:grid-cols-2" onSubmit={create}>
+          <FormField label="Name"><input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></FormField>
+          <FormField label="GIF URL"><input className="input" value={form.gifUrl} onChange={(event) => setForm({ ...form, gifUrl: event.target.value })} /></FormField>
+          <div className="md:col-span-2"><FormField label="Instructions"><textarea className="input min-h-28" value={form.instructionsText} onChange={(event) => setForm({ ...form, instructionsText: event.target.value })} /></FormField></div>
+          <button className="btn-primary" type="submit"><Dumbbell size={17} /> Create exercise</button>
+        </form>
+      )}
       <DataTable
         columns={[
           { key: "name", header: "Name" },
           { key: "source", header: "Source" },
           { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <div className="flex flex-wrap gap-2"><button className="btn-primary" type="button" onClick={() => review(row.id, "approved")}>Approve</button><button className="btn-secondary" type="button" onClick={() => review(row.id, "rejected")}>Reject</button><button className="btn-danger" type="button" onClick={() => deactivate(row.id)}>Deactivate</button></div> },
+          { key: "actions", header: "Actions", render: (row) => <div className="flex flex-wrap gap-2"><button className="btn-primary px-3" title="Approve" type="button" onClick={() => review(row.id, "approved")}><Check size={16} /></button><button className="btn-secondary px-3" title="Reject" type="button" onClick={() => review(row.id, "rejected")}><X size={16} /></button><button className="btn-danger" type="button" onClick={() => deactivate(row.id)}>Deactivate</button></div> },
         ]}
         rows={asItems(data)}
       />

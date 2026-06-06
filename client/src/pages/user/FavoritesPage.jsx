@@ -1,5 +1,6 @@
+import { Heart } from "lucide-react";
 import { favoriteApi } from "../../api/favoriteApi";
-import DataTable from "../../components/DataTable";
+import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import PageHeader from "../../components/PageHeader";
@@ -26,13 +27,21 @@ export default function FavoritesPage() {
   return (
     <>
       <PageHeader title="Favorite Exercises" />
-      <DataTable
-        columns={[
-          { key: "name", header: "Exercise", render: (row) => row.name || row.exercise?.name || row.exerciseName || "-" },
-          { key: "actions", header: "Actions", render: (row) => <button className="btn-secondary" type="button" onClick={() => remove(row.exerciseId || row.exercise_id || row.id)}>Remove</button> },
-        ]}
-        rows={asItems(data)}
-      />
+      {asItems(data).length ? (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {asItems(data).map((row) => (
+            <article className="panel-hover" key={row.id || row.exerciseId || row.exercise_id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-semibold text-ink">{row.name || row.exercise?.name || row.exerciseName || "-"}</h2>
+                  <p className="mt-1 text-sm text-slate-500">Saved exercise</p>
+                </div>
+                <button className="btn-secondary px-3 text-red-500" title="Remove favorite" type="button" onClick={() => remove(row.exerciseId || row.exercise_id || row.id)}><Heart fill="currentColor" size={17} /></button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : <EmptyState title="No favorite exercises" />}
     </>
   );
 }

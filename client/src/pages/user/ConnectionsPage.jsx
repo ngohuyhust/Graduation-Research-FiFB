@@ -1,5 +1,6 @@
+import { Link2, X } from "lucide-react";
 import { trainerApi } from "../../api/trainerApi";
-import DataTable from "../../components/DataTable";
+import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import PageHeader from "../../components/PageHeader";
@@ -30,20 +31,38 @@ export default function ConnectionsPage() {
   return (
     <>
       <PageHeader title="Trainer Connections" />
-      <section className="mb-8">
-        <h2 className="mb-3 font-semibold">Requests</h2>
-        <DataTable
-          columns={[
-            { key: "trainerId", header: "Trainer", render: (row) => row.trainerName || row.trainer_id || row.trainerId || "-" },
-            { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-            { key: "actions", header: "Actions", render: (row) => row.status === "pending" ? <button className="btn-secondary" type="button" onClick={() => cancel(row.id)}>Cancel</button> : "-" },
-          ]}
-          rows={asItems(data.requests)}
-        />
-      </section>
-      <section>
-        <h2 className="mb-3 font-semibold">Connections</h2>
-        <DataTable columns={[{ key: "trainerId", header: "Trainer", render: (row) => row.trainerName || row.trainer_id || row.trainerId || "-" }, { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> }]} rows={asItems(data.connections)} />
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <h2 className="mb-3 font-semibold text-ink">Requests</h2>
+          <div className="space-y-3">
+            {asItems(data.requests).length ? asItems(data.requests).map((row) => (
+              <article className="panel flex items-center justify-between gap-3" key={row.id}>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-steel/10 text-steel"><Link2 size={18} /></div>
+                  <div>
+                    <div className="font-semibold text-ink">{row.trainerName || row.trainer_id || row.trainerId || "-"}</div>
+                    <StatusBadge value={row.status} />
+                  </div>
+                </div>
+                {row.status === "pending" && <button className="btn-secondary px-3" type="button" onClick={() => cancel(row.id)}><X size={16} /></button>}
+              </article>
+            )) : <EmptyState title="No requests" />}
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-3 font-semibold text-ink">Connections</h2>
+          <div className="space-y-3">
+            {asItems(data.connections).length ? asItems(data.connections).map((row) => (
+              <article className="panel flex items-center justify-between gap-3" key={row.id || row.trainerId || row.trainer_id}>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-mint/10 text-mint"><Link2 size={18} /></div>
+                  <div className="font-semibold text-ink">{row.trainerName || row.trainer_id || row.trainerId || "-"}</div>
+                </div>
+                <StatusBadge value={row.status} />
+              </article>
+            )) : <EmptyState title="No connections" />}
+          </div>
+        </div>
       </section>
     </>
   );
