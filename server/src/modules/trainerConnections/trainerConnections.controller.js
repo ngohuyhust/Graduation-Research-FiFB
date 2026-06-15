@@ -22,7 +22,11 @@ async function approve(req, res) {
 }
 
 async function reject(req, res) {
-  return sendSuccess(res, await service.decide(req.auth, req.params.id, "rejected", req.body.rejectReason), "Request rejected");
+  return sendSuccess(
+    res,
+    await service.decide(req.auth, req.params.id, "rejected", req.body.rejectReason),
+    "Request rejected",
+  );
 }
 
 module.exports = { list, listConnections, create, cancel, approve, reject };

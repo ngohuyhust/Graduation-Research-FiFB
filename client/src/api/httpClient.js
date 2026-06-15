@@ -108,7 +108,10 @@ httpClient.interceptors.response.use(
     const original = error.config;
     const status = error.response?.status;
     const url = original?.url || "";
-    const shouldSkipRefresh = publicAuthPaths.some((path) => url.includes(path)) || url.includes("/auth/refresh") || isPublicGetRequest(original);
+    const shouldSkipRefresh =
+      publicAuthPaths.some((path) => url.includes(path)) ||
+      url.includes("/auth/refresh") ||
+      isPublicGetRequest(original);
     const canRefresh = Boolean(getRefreshToken());
 
     if (status === 401 && original && !original._retry && !shouldSkipRefresh && canRefresh) {

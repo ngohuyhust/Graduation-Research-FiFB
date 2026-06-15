@@ -1,7 +1,12 @@
 const express = require("express");
 const controller = require("./favorites.controller");
 const validation = require("./favorites.validation");
-const { authenticate, requireActiveUser, requireVerifiedEmail, requireRoles } = require("../../middlewares/authenticate");
+const {
+  authenticate,
+  requireActiveUser,
+  requireVerifiedEmail,
+  requireRoles,
+} = require("../../middlewares/authenticate");
 const { asyncHandler } = require("../../middlewares/asyncHandler");
 const { validate } = require("../../utils/validators/validate");
 const { uuidParam, paginationQuery } = require("../../utils/validators/commonSchemas");

@@ -4,7 +4,8 @@ const { paginate } = require("../../utils/responses");
 const repository = require("./reviews.repository");
 
 async function upsertReview(userId, trainerId, payload) {
-  if (!await repository.hasConnection(userId, trainerId)) throw new AppError(codes.FORBIDDEN, "Trainer review requires a valid connection", 403);
+  if (!(await repository.hasConnection(userId, trainerId)))
+    throw new AppError(codes.FORBIDDEN, "Trainer review requires a valid connection", 403);
   const existing = await repository.findMine(userId, trainerId);
   const review = existing
     ? await repository.updateMine(userId, trainerId, payload)

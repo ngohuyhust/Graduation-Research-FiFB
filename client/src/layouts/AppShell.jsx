@@ -2,9 +2,9 @@ import { Bell, Dumbbell, LogOut, Menu, Search, User, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import NotificationBadge from "../components/NotificationBadge";
 
-const linkClass = ({ isActive }) =>
-  isActive ? "sidebar-link-active" : "sidebar-link";
+const linkClass = ({ isActive }) => (isActive ? "sidebar-link-active" : "sidebar-link");
 
 export default function AppShell({ navItems }) {
   const [open, setOpen] = useState(false);
@@ -18,16 +18,29 @@ export default function AppShell({ navItems }) {
 
   return (
     <div className="min-h-screen bg-surface">
-      {open && <button aria-label="Close navigation overlay" className="fixed inset-0 z-30 bg-slate-950/40 backdrop-blur-sm md:hidden" type="button" onClick={() => setOpen(false)} />}
-      <aside className={`sidebar fixed inset-y-0 left-0 z-40 flex w-72 flex-col p-4 shadow-2xl transition-transform duration-300 md:translate-x-0 ${open ? "translate-x-0 animate-slide-in-left" : "-translate-x-full"}`}>
+      {open && (
+        <button
+          aria-label="Close navigation overlay"
+          className="fixed inset-0 z-30 bg-slate-950/40 backdrop-blur-sm md:hidden"
+          type="button"
+          onClick={() => setOpen(false)}
+        />
+      )}
+      <aside
+        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-72 flex-col p-4 shadow-2xl transition-transform duration-300 md:translate-x-0 ${open ? "translate-x-0 animate-slide-in-left" : "-translate-x-full"}`}
+      >
         <div className="mb-6 flex items-center justify-between">
           <Link className="flex items-center gap-3 text-lg font-bold text-white" to="/">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-mint text-white shadow-glow">
-            <Dumbbell size={20} />
-          </span>
-          FiFB
-        </Link>
-          <button className="btn-ghost px-2.5 text-slate-300 hover:bg-white/10 hover:text-white md:hidden" type="button" onClick={() => setOpen(false)}>
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-mint text-white shadow-glow">
+              <Dumbbell size={20} />
+            </span>
+            FiFB
+          </Link>
+          <button
+            className="btn-ghost px-2.5 text-slate-300 hover:bg-white/10 hover:text-white md:hidden"
+            type="button"
+            onClick={() => setOpen(false)}
+          >
             <X size={18} />
           </button>
         </div>
@@ -45,8 +58,12 @@ export default function AppShell({ navItems }) {
               <User size={18} />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-white">{user?.fullName || user?.email || "FiFB user"}</div>
-              <div className="mt-1 inline-flex rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">{user?.role || "member"}</div>
+              <div className="truncate text-sm font-semibold text-white">
+                {user?.fullName || user?.email || "FiFB user"}
+              </div>
+              <div className="mt-1 inline-flex rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+                {user?.role || "member"}
+              </div>
             </div>
           </div>
         </div>
@@ -64,7 +81,7 @@ export default function AppShell({ navItems }) {
           <div className="flex items-center gap-3">
             <Link className="btn-secondary relative px-3" to="/notifications" title="Notifications">
               <Bell size={18} />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+              <NotificationBadge />
             </Link>
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm text-slate-600 shadow-sm sm:flex">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-mint/10 text-mint">

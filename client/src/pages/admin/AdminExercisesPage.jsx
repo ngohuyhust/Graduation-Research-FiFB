@@ -20,7 +20,12 @@ export default function AdminExercisesPage() {
   async function create(event) {
     event.preventDefault();
     try {
-      await exerciseApi.create({ name: form.name, gifUrl: form.gifUrl || undefined, instructions: form.instructionsText.split("\n").filter(Boolean), status: "active" });
+      await exerciseApi.create({
+        name: form.name,
+        gifUrl: form.gifUrl || undefined,
+        instructions: form.instructionsText.split("\n").filter(Boolean),
+        status: "active",
+      });
       setForm({ name: "", gifUrl: "", instructionsText: "" });
       showSuccess("Exercise created");
       reload();
@@ -31,7 +36,10 @@ export default function AdminExercisesPage() {
 
   async function review(id, status) {
     try {
-      await adminApi.reviewExercise(id, status === "approved" ? { status } : { status, rejectionReason: "Rejected by admin" });
+      await adminApi.reviewExercise(
+        id,
+        status === "approved" ? { status } : { status, rejectionReason: "Rejected by admin" },
+      );
       showSuccess("Exercise reviewed");
       reload();
     } catch (err) {
@@ -54,13 +62,43 @@ export default function AdminExercisesPage() {
 
   return (
     <>
-      <PageHeader title="Manage Exercises" actions={<button className="btn-primary" type="button" onClick={() => setShowCreate(!showCreate)}><Plus size={17} /> Create exercise <ChevronDown className={showCreate ? "rotate-180" : ""} size={16} /></button>} />
+      <PageHeader
+        title="Manage Exercises"
+        actions={
+          <button className="btn-primary" type="button" onClick={() => setShowCreate(!showCreate)}>
+            <Plus size={17} /> Create exercise <ChevronDown className={showCreate ? "rotate-180" : ""} size={16} />
+          </button>
+        }
+      />
       {showCreate && (
         <form className="panel mb-6 grid gap-4 md:grid-cols-2" onSubmit={create}>
-          <FormField label="Name"><input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></FormField>
-          <FormField label="GIF URL"><input className="input" value={form.gifUrl} onChange={(event) => setForm({ ...form, gifUrl: event.target.value })} /></FormField>
-          <div className="md:col-span-2"><FormField label="Instructions"><textarea className="input min-h-28" value={form.instructionsText} onChange={(event) => setForm({ ...form, instructionsText: event.target.value })} /></FormField></div>
-          <button className="btn-primary" type="submit"><Dumbbell size={17} /> Create exercise</button>
+          <FormField label="Name">
+            <input
+              className="input"
+              required
+              value={form.name}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+            />
+          </FormField>
+          <FormField label="GIF URL">
+            <input
+              className="input"
+              value={form.gifUrl}
+              onChange={(event) => setForm({ ...form, gifUrl: event.target.value })}
+            />
+          </FormField>
+          <div className="md:col-span-2">
+            <FormField label="Instructions">
+              <textarea
+                className="input min-h-28"
+                value={form.instructionsText}
+                onChange={(event) => setForm({ ...form, instructionsText: event.target.value })}
+              />
+            </FormField>
+          </div>
+          <button className="btn-primary" type="submit">
+            <Dumbbell size={17} /> Create exercise
+          </button>
         </form>
       )}
       <DataTable
@@ -68,7 +106,33 @@ export default function AdminExercisesPage() {
           { key: "name", header: "Name" },
           { key: "source", header: "Source" },
           { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <div className="flex flex-wrap gap-2"><button className="btn-primary px-3" title="Approve" type="button" onClick={() => review(row.id, "approved")}><Check size={16} /></button><button className="btn-secondary px-3" title="Reject" type="button" onClick={() => review(row.id, "rejected")}><X size={16} /></button><button className="btn-danger" type="button" onClick={() => deactivate(row.id)}>Deactivate</button></div> },
+          {
+            key: "actions",
+            header: "Actions",
+            render: (row) => (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="btn-primary px-3"
+                  title="Approve"
+                  type="button"
+                  onClick={() => review(row.id, "approved")}
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  className="btn-secondary px-3"
+                  title="Reject"
+                  type="button"
+                  onClick={() => review(row.id, "rejected")}
+                >
+                  <X size={16} />
+                </button>
+                <button className="btn-danger" type="button" onClick={() => deactivate(row.id)}>
+                  Deactivate
+                </button>
+              </div>
+            ),
+          },
         ]}
         rows={asItems(data)}
       />

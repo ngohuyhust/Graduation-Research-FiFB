@@ -26,13 +26,15 @@ const exerciseQuerySchema = z.object({
   status: z.enum(["pending", "active", "inactive", "rejected"]).optional(),
 });
 
-const reviewDecisionSchema = z.object({
-  status: z.enum(["approved", "rejected"]),
-  rejectionReason: z.string().trim().min(1).max(1000).optional(),
-}).superRefine((value, ctx) => {
-  if (value.status === "rejected" && !value.rejectionReason) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["rejectionReason"], message: "Rejection reason is required" });
-  }
-});
+const reviewDecisionSchema = z
+  .object({
+    status: z.enum(["approved", "rejected"]),
+    rejectionReason: z.string().trim().min(1).max(1000).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status === "rejected" && !value.rejectionReason) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["rejectionReason"], message: "Rejection reason is required" });
+    }
+  });
 
 module.exports = { exercisePayloadSchema, exerciseUpdateSchema, exerciseQuerySchema, reviewDecisionSchema };

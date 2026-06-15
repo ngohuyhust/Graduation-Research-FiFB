@@ -1,15 +1,20 @@
+const http = require("http");
 const { createApp } = require("./app");
 const { env } = require("./config/env");
 const { closePool } = require("./db/pool");
 const { closeRedis } = require("./redis/client");
+const { initializeSocket, closeSocket } = require("./socket");
 
 const app = createApp();
-const server = app.listen(env.port, () => {
+const server = http.createServer(app);
+initializeSocket(server);
+server.listen(env.port, () => {
   console.log(`FiFB backend listening on port ${env.port}`);
 });
 
 async function shutdown() {
   server.close(async () => {
+    await closeSocket();
     await closeRedis();
     await closePool();
     process.exit(0);

@@ -21,7 +21,10 @@ const refreshSchema = z.object({ refreshToken: z.string().min(20) });
 const logoutSchema = refreshSchema;
 const verifyEmailSchema = z.object({
   email: z.string().trim().email().max(320),
-  otp: z.string().trim().regex(/^\d{6}$/, "OTP must be 6 digits"),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "OTP must be 6 digits"),
 });
 const requestPasswordResetSchema = z.object({ email: z.string().email() });
 const resetPasswordSchema = z.object({ token: z.string().min(20), newPassword: password });

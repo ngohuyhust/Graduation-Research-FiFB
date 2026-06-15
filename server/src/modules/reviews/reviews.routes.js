@@ -8,7 +8,20 @@ const { uuidParam, paginationQuery } = require("../../utils/validators/commonSch
 
 const router = express.Router();
 
-router.post("/:id/reviews", authenticate, requireActiveUser, requireVerifiedEmail, validate(uuidParam, "params"), validate(validation.reviewSchema), asyncHandler(controller.create));
-router.get("/:id/reviews", validate(uuidParam, "params"), validate(paginationQuery, "query"), asyncHandler(controller.list));
+router.post(
+  "/:id/reviews",
+  authenticate,
+  requireActiveUser,
+  requireVerifiedEmail,
+  validate(uuidParam, "params"),
+  validate(validation.reviewSchema),
+  asyncHandler(controller.create),
+);
+router.get(
+  "/:id/reviews",
+  validate(uuidParam, "params"),
+  validate(paginationQuery, "query"),
+  asyncHandler(controller.list),
+);
 
 module.exports = router;

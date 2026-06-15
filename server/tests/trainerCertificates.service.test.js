@@ -29,7 +29,9 @@ describe("trainer certificates service", () => {
   test("certificate review is pending-only", async () => {
     repository.findById.mockResolvedValue({ id: "certificate-id", status: "approved" });
 
-    await expect(service.review({ userId: "admin-id" }, "certificate-id", { status: "approved" })).rejects.toMatchObject({
+    await expect(
+      service.review({ userId: "admin-id" }, "certificate-id", { status: "approved" }),
+    ).rejects.toMatchObject({
       statusCode: 409,
     });
   });

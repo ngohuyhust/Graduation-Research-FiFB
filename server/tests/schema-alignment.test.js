@@ -16,7 +16,8 @@ describe("database schema alignment", () => {
       ...listJsFiles(path.join(__dirname, "..", "src")),
       ...listJsFiles(path.join(__dirname, "..", "scripts")),
     ];
-    const forbiddenSqlObject = /\b(?:FROM|JOIN|INTO|UPDATE|DELETE\s+FROM)\s+(?:public\.)?(?:users|profiles|auth\.users|exercise_instructions)\b/i;
+    const forbiddenSqlObject =
+      /\b(?:FROM|JOIN|INTO|UPDATE|DELETE\s+FROM)\s+(?:public\.)?(?:users|profiles|auth\.users|exercise_instructions)\b/i;
     const offenders = files.filter((file) => forbiddenSqlObject.test(fs.readFileSync(file, "utf8")));
     expect(offenders).toEqual([]);
   });

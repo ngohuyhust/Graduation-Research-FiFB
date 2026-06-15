@@ -14,7 +14,10 @@ export default function AdminCertificatesPage() {
 
   async function review(id, status) {
     try {
-      await adminApi.reviewCertificate(id, status === "approved" ? { status } : { status, rejectionReason: "Rejected by admin" });
+      await adminApi.reviewCertificate(
+        id,
+        status === "approved" ? { status } : { status, rejectionReason: "Rejected by admin" },
+      );
       showSuccess("Certificate reviewed");
       reload();
     } catch (err) {
@@ -30,10 +33,32 @@ export default function AdminCertificatesPage() {
       <PageHeader title="Manage Trainer Certificates" />
       <DataTable
         columns={[
-          { key: "title", header: "Title", render: (row) => <span className="flex items-center gap-2 font-semibold text-ink"><Award className="text-amber-500" size={17} />{row.title || "-"}</span> },
+          {
+            key: "title",
+            header: "Title",
+            render: (row) => (
+              <span className="flex items-center gap-2 font-semibold text-ink">
+                <Award className="text-amber-500" size={17} />
+                {row.title || "-"}
+              </span>
+            ),
+          },
           { key: "issuer", header: "Issuer" },
           { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-          { key: "actions", header: "Actions", render: (row) => <div className="flex gap-2"><button className="btn-primary" type="button" onClick={() => review(row.id, "approved")}><Check size={16} /> Approve</button><button className="btn-secondary" type="button" onClick={() => review(row.id, "rejected")}><X size={16} /> Reject</button></div> },
+          {
+            key: "actions",
+            header: "Actions",
+            render: (row) => (
+              <div className="flex gap-2">
+                <button className="btn-primary" type="button" onClick={() => review(row.id, "approved")}>
+                  <Check size={16} /> Approve
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => review(row.id, "rejected")}>
+                  <X size={16} /> Reject
+                </button>
+              </div>
+            ),
+          },
         ]}
         rows={asItems(data)}
       />

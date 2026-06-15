@@ -33,15 +33,26 @@ export default function FavoritesPage() {
             <article className="panel-hover" key={row.id || row.exerciseId || row.exercise_id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-semibold text-ink">{row.name || row.exercise?.name || row.exerciseName || "-"}</h2>
+                  <h2 className="font-semibold text-ink">
+                    {row.name || row.exercise?.name || row.exerciseName || "-"}
+                  </h2>
                   <p className="mt-1 text-sm text-slate-500">Saved exercise</p>
                 </div>
-                <button className="btn-secondary px-3 text-red-500" title="Remove favorite" type="button" onClick={() => remove(row.exerciseId || row.exercise_id || row.id)}><Heart fill="currentColor" size={17} /></button>
+                <button
+                  className="btn-secondary px-3 text-red-500"
+                  title="Remove favorite"
+                  type="button"
+                  onClick={() => remove(row.exerciseId || row.exercise_id || row.id)}
+                >
+                  <Heart fill="currentColor" size={17} />
+                </button>
               </div>
             </article>
           ))}
         </div>
-      ) : <EmptyState title="No favorite exercises" />}
+      ) : (
+        <EmptyState title="No favorite exercises" />
+      )}
     </>
   );
 }

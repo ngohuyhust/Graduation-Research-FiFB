@@ -7,7 +7,8 @@ const exerciseRepository = require("../exercises/exercises.repository");
 
 async function addFavorite(userId, exerciseId) {
   const favorite = await withTransaction(async (client) => {
-    if (!await exerciseRepository.ensureActive(client, exerciseId)) throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
+    if (!(await exerciseRepository.ensureActive(client, exerciseId)))
+      throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
     const created = await repository.add(client, userId, exerciseId);
     return created;
   });

@@ -17,7 +17,9 @@ export default function StatusBadge({ value }) {
   const key = String(label).toLowerCase();
   const dotClass = key.includes("pending") ? "animate-pulse-dot" : "";
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ${styles[key] || "bg-slate-100 text-slate-700 ring-slate-200"}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ${styles[key] || "bg-slate-100 text-slate-700 ring-slate-200"}`}
+    >
       <span className={`h-1.5 w-1.5 rounded-full bg-current ${dotClass}`} />
       {label}
     </span>

@@ -24,13 +24,19 @@ export default function ForgotPasswordPage() {
           <Mail size={24} />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">Forgot password</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500">Enter your account email and FiFB will send the reset flow if the address exists.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          Enter your account email and FiFB will send the reset flow if the address exists.
+        </p>
       </div>
       <FormField label="Email" error={formState.errors.email?.message}>
         <input className="input" type="email" {...register("email", { required: "Email is required" })} />
       </FormField>
-      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">Send reset link</button>
-      <Link className="link-accent block text-center text-sm" to="/login">Back to login</Link>
+      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">
+        Send reset link
+      </button>
+      <Link className="link-accent block text-center text-sm" to="/login">
+        Back to login
+      </Link>
     </form>
   );
 }

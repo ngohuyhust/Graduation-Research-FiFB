@@ -1,12 +1,18 @@
 const { query } = require("../../db/pool");
 
 async function findPending(client, userId, trainerId) {
-  const result = await client.query("SELECT 1 FROM trainer_connection_requests WHERE user_id = $1 AND trainer_id = $2 AND status = 'pending'", [userId, trainerId]);
+  const result = await client.query(
+    "SELECT 1 FROM trainer_connection_requests WHERE user_id = $1 AND trainer_id = $2 AND status = 'pending'",
+    [userId, trainerId],
+  );
   return result.rows[0] || null;
 }
 
 async function findActiveConnection(client, userId, trainerId) {
-  const result = await client.query("SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2 AND status = 'active'", [userId, trainerId]);
+  const result = await client.query(
+    "SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2 AND status = 'active'",
+    [userId, trainerId],
+  );
   return result.rows[0] || null;
 }
 
@@ -40,7 +46,10 @@ async function cancel(userId, id) {
 }
 
 async function findPendingForTrainer(client, id, trainerId) {
-  const result = await client.query("SELECT * FROM trainer_connection_requests WHERE id = $1 AND trainer_id = $2 AND status = 'pending'", [id, trainerId]);
+  const result = await client.query(
+    "SELECT * FROM trainer_connection_requests WHERE id = $1 AND trainer_id = $2 AND status = 'pending'",
+    [id, trainerId],
+  );
   return result.rows[0] || null;
 }
 
@@ -53,10 +62,11 @@ async function setDecision(client, id, status, rejectReason) {
 }
 
 async function createConnection(client, request) {
-  await client.query(
-    "INSERT INTO user_trainer_connections (user_id, trainer_id, request_id) VALUES ($1, $2, $3)",
-    [request.user_id, request.trainer_id, request.id],
-  );
+  await client.query("INSERT INTO user_trainer_connections (user_id, trainer_id, request_id) VALUES ($1, $2, $3)", [
+    request.user_id,
+    request.trainer_id,
+    request.id,
+  ]);
 }
 
 async function listRequests(user) {
@@ -72,11 +82,36 @@ async function listRequests(user) {
 async function listConnections(user) {
   const result = await query(
     user.role === "trainer"
-      ? "SELECT * FROM user_trainer_connections WHERE trainer_id = $1 ORDER BY connected_at DESC"
-      : "SELECT * FROM user_trainer_connections WHERE user_id = $1 ORDER BY connected_at DESC",
+      ? `SELECT utc.*, other.full_name AS user_name,
+           count(cm.id) FILTER (WHERE cm.sender_id <> $1 AND cm.read_at IS NULL)::int AS unread_count
+         FROM user_trainer_connections utc
+         JOIN app_users other ON other.id = utc.user_id
+         LEFT JOIN chat_messages cm ON cm.connection_id = utc.id
+         WHERE utc.trainer_id = $1
+         GROUP BY utc.id, other.full_name
+         ORDER BY utc.connected_at DESC`
+      : `SELECT utc.*, other.full_name AS trainer_name,
+           count(cm.id) FILTER (WHERE cm.sender_id <> $1 AND cm.read_at IS NULL)::int AS unread_count
+         FROM user_trainer_connections utc
+         JOIN app_users other ON other.id = utc.trainer_id
+         LEFT JOIN chat_messages cm ON cm.connection_id = utc.id
+         WHERE utc.user_id = $1
+         GROUP BY utc.id, other.full_name
+         ORDER BY utc.connected_at DESC`,
     [user.id],
   );
   return result.rows;
 }
 
-module.exports = { findPending, findActiveConnection, findTrainerProfile, createRequest, cancel, findPendingForTrainer, setDecision, createConnection, listRequests, listConnections };
+module.exports = {
+  findPending,
+  findActiveConnection,
+  findTrainerProfile,
+  createRequest,
+  cancel,
+  findPendingForTrainer,
+  setDecision,
+  createConnection,
+  listRequests,
+  listConnections,
+};

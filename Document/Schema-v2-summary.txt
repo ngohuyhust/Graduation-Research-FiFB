@@ -1,0 +1,13 @@
+TOM TAT SCHEMA V2 (KHONG BAO GOM AI)
+
+1. workout_sessions
+Luu moi buoi tap cua nguoi dung, thoi gian bat dau/hoan thanh, ghi chu va workout plan lien quan.
+
+2. session_exercise_logs
+Luu ket qua thuc te theo tung set: so rep, muc ta, thoi luong va ghi chu.
+
+3. chat_messages
+Luu tin nhan giua trainer va user trong mot ket noi dang hoat dong, kem trang thai da doc.
+
+Indexes moi toi uu cac truy van exercise, notification chua doc, connection, workout plan,
+workout history, exercise progression va chat history.

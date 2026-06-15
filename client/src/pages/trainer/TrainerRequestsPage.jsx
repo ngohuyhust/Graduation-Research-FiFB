@@ -46,14 +46,20 @@ export default function TrainerRequestsPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-semibold text-ink">{row.userName || row.user_id || row.userId || "-"}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{row.goalSnapshot || row.goal_snapshot || "No goal snapshot provided."}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {row.goalSnapshot || row.goal_snapshot || "No goal snapshot provided."}
+                </p>
               </div>
               <StatusBadge value={row.status} />
             </div>
             {row.status === "pending" && (
               <div className="mt-4 flex gap-2">
-                <button className="btn-primary" type="button" onClick={() => approve(row.id)}><Check size={16} /> Approve</button>
-                <button className="btn-secondary" type="button" onClick={() => rejectForm.setValue("id", row.id)}><X size={16} /> Reject</button>
+                <button className="btn-primary" type="button" onClick={() => approve(row.id)}>
+                  <Check size={16} /> Approve
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => rejectForm.setValue("id", row.id)}>
+                  <X size={16} /> Reject
+                </button>
               </div>
             )}
           </article>
@@ -61,12 +67,23 @@ export default function TrainerRequestsPage() {
       </div>
       {rejectForm.watch("id") && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-          <form className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onSubmit={rejectForm.handleSubmit(reject)}>
+          <form
+            className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl"
+            onSubmit={rejectForm.handleSubmit(reject)}
+          >
             <h2 className="font-semibold text-ink">Reject request</h2>
-            <textarea className="input mt-4 min-h-28" placeholder="Reject reason" {...rejectForm.register("rejectReason", { required: true })} />
+            <textarea
+              className="input mt-4 min-h-28"
+              placeholder="Reject reason"
+              {...rejectForm.register("rejectReason", { required: true })}
+            />
             <div className="mt-4 flex justify-end gap-2">
-              <button className="btn-secondary" type="button" onClick={() => rejectForm.reset()}>Cancel</button>
-              <button className="btn-danger" type="submit">Reject</button>
+              <button className="btn-secondary" type="button" onClick={() => rejectForm.reset()}>
+                Cancel
+              </button>
+              <button className="btn-danger" type="submit">
+                Reject
+              </button>
             </div>
           </form>
         </div>
