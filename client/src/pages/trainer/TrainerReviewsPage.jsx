@@ -23,14 +23,20 @@ export default function TrainerReviewsPage() {
           {asItems(data).map((review) => (
             <article className="panel-hover" key={review.id || review.comment}>
               <div className="flex items-center gap-1 text-amber-400">
-                {Array.from({ length: 5 }).map((_, index) => <Star fill={index < Number(review.rating || 0) ? "currentColor" : "none"} key={index} size={18} />)}
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Star fill={index < Number(review.rating || 0) ? "currentColor" : "none"} key={index} size={18} />
+                ))}
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600">{review.comment || "-"}</p>
-              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{review.status || "review"}</div>
+              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                {review.status || "review"}
+              </div>
             </article>
           ))}
         </div>
-      ) : <EmptyState title="No reviews yet" />}
+      ) : (
+        <EmptyState title="No reviews yet" />
+      )}
     </>
   );
 }

@@ -29,13 +29,31 @@ export default function ResetPasswordPage() {
         <p className="mt-2 text-sm leading-6 text-slate-500">Create a new password with at least 8 characters.</p>
       </div>
       <FormField label="New password" error={formState.errors.newPassword?.message}>
-        <input className="input" type="password" {...register("newPassword", { required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } })} />
+        <input
+          className="input"
+          type="password"
+          {...register("newPassword", {
+            required: "Password is required",
+            minLength: { value: 8, message: "Password must be at least 8 characters" },
+          })}
+        />
       </FormField>
       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-gradient-to-r from-mint to-mint-light transition-all duration-300" style={{ width: `${strength}%` }} />
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-mint to-mint-light transition-all duration-300"
+          style={{ width: `${strength}%` }}
+        />
       </div>
-      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting || !params.get("token")} type="submit">Reset password</button>
-      <Link className="link-accent block text-center text-sm" to="/login">Back to login</Link>
+      <button
+        className="btn-primary w-full py-3"
+        disabled={formState.isSubmitting || !params.get("token")}
+        type="submit"
+      >
+        Reset password
+      </button>
+      <Link className="link-accent block text-center text-sm" to="/login">
+        Back to login
+      </Link>
     </form>
   );
 }

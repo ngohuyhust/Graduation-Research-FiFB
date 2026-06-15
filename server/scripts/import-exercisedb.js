@@ -32,13 +32,7 @@ async function importExercise(client, item) {
        instructions = EXCLUDED.instructions,
        raw_data = EXCLUDED.raw_data
      RETURNING id, xmax = 0 AS created`,
-    [
-      String(externalId),
-      item.name,
-      item.gifUrl || item.gif_url || null,
-      JSON.stringify(item.instructions || []),
-      item,
-    ],
+    [String(externalId), item.name, item.gifUrl || item.gif_url || null, JSON.stringify(item.instructions || []), item],
   );
 
   const exerciseId = result.rows[0].id;
@@ -47,17 +41,33 @@ async function importExercise(client, item) {
   await client.query("DELETE FROM exercise_muscles WHERE exercise_id = $1", [exerciseId]);
 
   const bodyPartId = await upsertTaxonomy(client, "body_parts", item.bodyPart || item.body_part);
-  if (bodyPartId) await client.query("INSERT INTO exercise_body_parts VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, bodyPartId]);
+  if (bodyPartId)
+    await client.query("INSERT INTO exercise_body_parts VALUES ($1, $2) ON CONFLICT DO NOTHING", [
+      exerciseId,
+      bodyPartId,
+    ]);
 
   const equipmentId = await upsertTaxonomy(client, "equipments", item.equipment);
-  if (equipmentId) await client.query("INSERT INTO exercise_equipments VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, equipmentId]);
+  if (equipmentId)
+    await client.query("INSERT INTO exercise_equipments VALUES ($1, $2) ON CONFLICT DO NOTHING", [
+      exerciseId,
+      equipmentId,
+    ]);
 
   const targetId = await upsertTaxonomy(client, "muscles", item.target || item.targetMuscle);
-  if (targetId) await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'target') ON CONFLICT DO NOTHING", [exerciseId, targetId]);
+  if (targetId)
+    await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'target') ON CONFLICT DO NOTHING", [
+      exerciseId,
+      targetId,
+    ]);
 
   for (const muscle of item.secondaryMuscles || item.secondary_muscles || []) {
     const muscleId = await upsertTaxonomy(client, "muscles", muscle);
-    if (muscleId) await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'secondary') ON CONFLICT DO NOTHING", [exerciseId, muscleId]);
+    if (muscleId)
+      await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'secondary') ON CONFLICT DO NOTHING", [
+        exerciseId,
+        muscleId,
+      ]);
   }
 
   return result.rows[0].created ? "created" : "updated";

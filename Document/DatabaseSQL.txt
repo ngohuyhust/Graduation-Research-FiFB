@@ -223,3 +223,40 @@ CREATE TABLE public.workout_plans (
   CONSTRAINT workout_plans_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.app_users(id),
   CONSTRAINT workout_plans_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.app_users(id)
 );
+
+-- V2 NON-AI EXTENSIONS
+CREATE TABLE IF NOT EXISTS public.workout_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES public.app_users(id),
+  workout_plan_id uuid REFERENCES public.workout_plans(id),
+  title text NOT NULL,
+  notes text,
+  started_at timestamp with time zone NOT NULL DEFAULT now(),
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT workout_sessions_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.session_exercise_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES public.workout_sessions(id) ON DELETE CASCADE,
+  exercise_id uuid NOT NULL REFERENCES public.exercises(id),
+  set_number integer NOT NULL DEFAULT 1 CHECK (set_number > 0),
+  actual_reps integer CHECK (actual_reps IS NULL OR actual_reps > 0),
+  actual_weight_kg numeric(8,2) CHECK (actual_weight_kg IS NULL OR actual_weight_kg >= 0),
+  duration_seconds integer CHECK (duration_seconds IS NULL OR duration_seconds > 0),
+  note text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT session_exercise_logs_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  connection_id uuid NOT NULL REFERENCES public.user_trainer_connections(id),
+  sender_id uuid NOT NULL REFERENCES public.app_users(id),
+  content text NOT NULL,
+  message_type text NOT NULL DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'system')),
+  read_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id)
+);

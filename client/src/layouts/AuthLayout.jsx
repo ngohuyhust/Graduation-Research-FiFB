@@ -15,12 +15,17 @@ export default function AuthLayout() {
             FiFB
           </Link>
           <div className="relative z-10 max-w-xl py-12">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-mint-light">Fitness intelligence for better routines</p>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-mint-light">
+              Fitness intelligence for better routines
+            </p>
             <h1 className="text-5xl font-bold leading-tight tracking-tight">
-              Build a sharper <span className="bg-gradient-to-r from-mint to-mint-light bg-clip-text text-transparent">Fitness</span> workflow.
+              Build a sharper{" "}
+              <span className="bg-gradient-to-r from-mint to-mint-light bg-clip-text text-transparent">Fitness</span>{" "}
+              workflow.
             </h1>
             <p className="mt-5 max-w-md text-sm leading-6 text-slate-300">
-              Browse exercises, build workout plans, connect with trainers, and manage quality from one focused dashboard.
+              Browse exercises, build workout plans, connect with trainers, and manage quality from one focused
+              dashboard.
             </p>
           </div>
           <p className="relative z-10 text-xs text-slate-400">FiFB workspace · visual redesign v1</p>

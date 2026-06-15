@@ -11,6 +11,8 @@ const favoriteRoutes = require("../modules/favorites/favorites.routes");
 const workoutPlanRoutes = require("../modules/workoutPlans/workoutPlans.routes");
 const notificationRoutes = require("../modules/notifications/notifications.routes");
 const adminRoutes = require("../modules/admin/admin.routes");
+const workoutSessionRoutes = require("../modules/workoutSessions/workoutSessions.routes");
+const chatRoutes = require("../modules/chat/chat.routes");
 
 const router = express.Router();
 
@@ -28,6 +30,8 @@ router.use("/exercises", exerciseRoutes);
 router.use("/exercise-taxonomy", taxonomyRoutes);
 router.use("/favorites", favoriteRoutes);
 router.use("/workout-plans", workoutPlanRoutes);
+router.use("/workout-sessions", workoutSessionRoutes);
+router.use("/chat", chatRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/admin", adminRoutes);
 

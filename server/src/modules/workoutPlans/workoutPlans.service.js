@@ -9,14 +9,19 @@ function assertUniqueWorkoutOrder(items = []) {
   const seen = new Set();
   for (const item of items) {
     const key = `${item.dayNumber}:${item.sortOrder}`;
-    if (seen.has(key)) throw new AppError(codes.CONFLICT, "Workout plan item order must be unique per day", 409, { dayNumber: item.dayNumber, sortOrder: item.sortOrder });
+    if (seen.has(key))
+      throw new AppError(codes.CONFLICT, "Workout plan item order must be unique per day", 409, {
+        dayNumber: item.dayNumber,
+        sortOrder: item.sortOrder,
+      });
     seen.add(key);
   }
 }
 
 async function insertItems(client, planId, items = []) {
   for (const item of items) {
-    if (!await exerciseRepository.ensureActive(client, item.exerciseId)) throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
+    if (!(await exerciseRepository.ensureActive(client, item.exerciseId)))
+      throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
     await repository.insertItem(client, planId, item);
   }
 }

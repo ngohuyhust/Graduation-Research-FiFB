@@ -34,7 +34,9 @@ describe("exercises service", () => {
   test("review rejects active exercises as invalid state transition", async () => {
     repository.findById.mockResolvedValue({ id: "exercise-id", status: "active" });
 
-    await expect(service.reviewExercise({ userId: "admin-id" }, "exercise-id", { status: "approved" })).rejects.toMatchObject({
+    await expect(
+      service.reviewExercise({ userId: "admin-id" }, "exercise-id", { status: "approved" }),
+    ).rejects.toMatchObject({
       statusCode: 409,
     });
   });

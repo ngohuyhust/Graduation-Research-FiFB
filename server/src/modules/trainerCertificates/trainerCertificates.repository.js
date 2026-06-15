@@ -9,13 +9,24 @@ async function create(client, trainerId, payload) {
   const result = await client.query(
     `INSERT INTO trainer_certificates (trainer_id, title, issuer, certificate_url, certificate_number, verification_url, issued_at, expires_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-    [trainerId, payload.title, payload.issuer || null, payload.certificateUrl || null, payload.certificateNumber || null, payload.verificationUrl || null, payload.issuedAt || null, payload.expiresAt || null],
+    [
+      trainerId,
+      payload.title,
+      payload.issuer || null,
+      payload.certificateUrl || null,
+      payload.certificateNumber || null,
+      payload.verificationUrl || null,
+      payload.issuedAt || null,
+      payload.expiresAt || null,
+    ],
   );
   return result.rows[0];
 }
 
 async function listByTrainer(trainerId) {
-  const result = await query("SELECT * FROM trainer_certificates WHERE trainer_id = $1 ORDER BY created_at DESC", [trainerId]);
+  const result = await query("SELECT * FROM trainer_certificates WHERE trainer_id = $1 ORDER BY created_at DESC", [
+    trainerId,
+  ]);
   return result.rows;
 }
 

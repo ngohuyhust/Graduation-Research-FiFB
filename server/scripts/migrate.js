@@ -22,7 +22,10 @@ async function migrate() {
   try {
     await ensureMigrationsTable(client);
     const dir = path.join(__dirname, "..", "migrations");
-    const files = fs.readdirSync(dir).filter((file) => file.endsWith(".sql")).sort();
+    const files = fs
+      .readdirSync(dir)
+      .filter((file) => file.endsWith(".sql"))
+      .sort();
     for (const file of files) {
       const existing = await client.query("SELECT 1 FROM public.schema_migrations WHERE filename = $1", [file]);
       if (existing.rows[0]) {

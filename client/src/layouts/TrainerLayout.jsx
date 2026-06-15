@@ -1,4 +1,15 @@
-import { Award, Bell, BookOpen, Dumbbell, GraduationCap, Inbox, Layers, LayoutDashboard, Star, User } from "lucide-react";
+import {
+  Award,
+  Bell,
+  BookOpen,
+  Dumbbell,
+  GraduationCap,
+  Inbox,
+  Layers,
+  LayoutDashboard,
+  Star,
+  User,
+} from "lucide-react";
 import AppShell from "./AppShell";
 
 const navItems = [

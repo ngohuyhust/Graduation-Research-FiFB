@@ -1,3 +1,5 @@
+const prettier = require("eslint-config-prettier");
+
 module.exports = [
   {
     ignores: ["node_modules/**", "coverage/**"],
@@ -24,10 +26,11 @@ module.exports = [
       },
     },
     rules: {
-      "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "no-console": "off",
-      "semi": ["error", "always"],
-      "quotes": ["error", "double", { "avoidEscape": true, "allowTemplateLiterals": true }]
+      semi: ["error", "always"],
+      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
+  prettier,
 ];

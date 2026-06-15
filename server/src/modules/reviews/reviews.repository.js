@@ -5,12 +5,18 @@ function pageOffset({ page, limit }) {
 }
 
 async function hasConnection(userId, trainerId) {
-  const result = await query("SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2 AND status = 'active'", [userId, trainerId]);
+  const result = await query(
+    "SELECT 1 FROM user_trainer_connections WHERE user_id = $1 AND trainer_id = $2 AND status = 'active'",
+    [userId, trainerId],
+  );
   return Boolean(result.rows[0]);
 }
 
 async function findMine(userId, trainerId) {
-  const result = await query("SELECT id FROM trainer_reviews WHERE user_id = $1 AND trainer_id = $2", [userId, trainerId]);
+  const result = await query("SELECT id FROM trainer_reviews WHERE user_id = $1 AND trainer_id = $2", [
+    userId,
+    trainerId,
+  ]);
   return result.rows[0] || null;
 }
 
@@ -31,8 +37,14 @@ async function createMine(userId, trainerId, payload) {
 }
 
 async function listTrainerReviews(trainerId, filters) {
-  const count = await query("SELECT count(*)::int AS total FROM trainer_reviews WHERE trainer_id = $1 AND status = 'visible'", [trainerId]);
-  const result = await query("SELECT * FROM trainer_reviews WHERE trainer_id = $1 AND status = 'visible' ORDER BY created_at DESC LIMIT $2 OFFSET $3", [trainerId, filters.limit, pageOffset(filters)]);
+  const count = await query(
+    "SELECT count(*)::int AS total FROM trainer_reviews WHERE trainer_id = $1 AND status = 'visible'",
+    [trainerId],
+  );
+  const result = await query(
+    "SELECT * FROM trainer_reviews WHERE trainer_id = $1 AND status = 'visible' ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+    [trainerId, filters.limit, pageOffset(filters)],
+  );
   return { rows: result.rows, total: count.rows[0].total };
 }
 

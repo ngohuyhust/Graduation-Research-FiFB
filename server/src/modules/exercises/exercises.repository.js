@@ -54,15 +54,51 @@ function addTaxonomyFilter(values, clauses, filters, table, nameColumn, alias, r
 
 async function list(filters, admin = false) {
   const values = [];
-  const clauses = [admin && filters.status ? "e.status = $" + values.push(filters.status) : admin ? "1=1" : "e.status = 'active'"];
+  const clauses = [
+    admin && filters.status ? "e.status = $" + values.push(filters.status) : admin ? "1=1" : "e.status = 'active'",
+  ];
   if (filters.keyword) {
     values.push(`%${filters.keyword}%`);
     clauses.push(`e.name ILIKE $${values.length}`);
   }
-  if (filters.bodyPart) addTaxonomyFilter(values, clauses, filters, "exercise_body_parts", { table: "body_parts", fk: "body_part_id" }, "bodyPart");
-  if (filters.equipment) addTaxonomyFilter(values, clauses, filters, "exercise_equipments", { table: "equipments", fk: "equipment_id" }, "equipment");
-  if (filters.targetMuscle) addTaxonomyFilter(values, clauses, filters, "exercise_muscles", { table: "muscles", fk: "muscle_id" }, "targetMuscle", "target");
-  if (filters.secondaryMuscle) addTaxonomyFilter(values, clauses, filters, "exercise_muscles", { table: "muscles", fk: "muscle_id" }, "secondaryMuscle", "secondary");
+  if (filters.bodyPart)
+    addTaxonomyFilter(
+      values,
+      clauses,
+      filters,
+      "exercise_body_parts",
+      { table: "body_parts", fk: "body_part_id" },
+      "bodyPart",
+    );
+  if (filters.equipment)
+    addTaxonomyFilter(
+      values,
+      clauses,
+      filters,
+      "exercise_equipments",
+      { table: "equipments", fk: "equipment_id" },
+      "equipment",
+    );
+  if (filters.targetMuscle)
+    addTaxonomyFilter(
+      values,
+      clauses,
+      filters,
+      "exercise_muscles",
+      { table: "muscles", fk: "muscle_id" },
+      "targetMuscle",
+      "target",
+    );
+  if (filters.secondaryMuscle)
+    addTaxonomyFilter(
+      values,
+      clauses,
+      filters,
+      "exercise_muscles",
+      { table: "muscles", fk: "muscle_id" },
+      "secondaryMuscle",
+      "secondary",
+    );
 
   const where = clauses.join(" AND ");
   const count = await query(`SELECT count(*)::int AS total FROM exercises e WHERE ${where}`, values);
@@ -77,7 +113,10 @@ async function list(filters, admin = false) {
 }
 
 async function findActiveById(id) {
-  const result = await query(`SELECT ${exerciseLibrarySelect("e")} FROM exercises e WHERE e.id = $1 AND e.status = 'active'`, [id]);
+  const result = await query(
+    `SELECT ${exerciseLibrarySelect("e")} FROM exercises e WHERE e.id = $1 AND e.status = 'active'`,
+    [id],
+  );
   return camelExercise(result.rows[0]);
 }
 
@@ -152,10 +191,31 @@ async function replaceMappings(client, exerciseId, payload) {
   await client.query("DELETE FROM exercise_body_parts WHERE exercise_id = $1", [exerciseId]);
   await client.query("DELETE FROM exercise_equipments WHERE exercise_id = $1", [exerciseId]);
   await client.query("DELETE FROM exercise_muscles WHERE exercise_id = $1", [exerciseId]);
-  for (const id of payload.bodyPartIds || []) await client.query("INSERT INTO exercise_body_parts VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, id]);
-  for (const id of payload.equipmentIds || []) await client.query("INSERT INTO exercise_equipments VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, id]);
-  for (const id of payload.targetMuscleIds || []) await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'target') ON CONFLICT DO NOTHING", [exerciseId, id]);
-  for (const id of payload.secondaryMuscleIds || []) await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'secondary') ON CONFLICT DO NOTHING", [exerciseId, id]);
+  for (const id of payload.bodyPartIds || [])
+    await client.query("INSERT INTO exercise_body_parts VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, id]);
+  for (const id of payload.equipmentIds || [])
+    await client.query("INSERT INTO exercise_equipments VALUES ($1, $2) ON CONFLICT DO NOTHING", [exerciseId, id]);
+  for (const id of payload.targetMuscleIds || [])
+    await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'target') ON CONFLICT DO NOTHING", [
+      exerciseId,
+      id,
+    ]);
+  for (const id of payload.secondaryMuscleIds || [])
+    await client.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'secondary') ON CONFLICT DO NOTHING", [
+      exerciseId,
+      id,
+    ]);
 }
 
-module.exports = { list, findActiveById, findById, ensureActive, create, update, setReviewStatus, replaceMappings, exerciseLibrarySelect, camelExercise };
+module.exports = {
+  list,
+  findActiveById,
+  findById,
+  ensureActive,
+  create,
+  update,
+  setReviewStatus,
+  replaceMappings,
+  exerciseLibrarySelect,
+  camelExercise,
+};

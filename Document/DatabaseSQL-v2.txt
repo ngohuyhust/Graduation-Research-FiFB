@@ -1,0 +1,18 @@
+-- FiFB v2 schema additions (non-AI)
+-- Apply with: cd server && npm run migrate:v2
+
+Tables:
+- workout_sessions: one workout occurrence owned by a user, optionally linked to a plan.
+- session_exercise_logs: actual set, rep, weight, duration and note entries for a session.
+- chat_messages: persistent messages for an active trainer-user connection.
+
+Relationships:
+- workout_sessions.user_id -> app_users.id
+- workout_sessions.workout_plan_id -> workout_plans.id
+- session_exercise_logs.session_id -> workout_sessions.id (ON DELETE CASCADE)
+- session_exercise_logs.exercise_id -> exercises.id
+- chat_messages.connection_id -> user_trainer_connections.id
+- chat_messages.sender_id -> app_users.id
+
+The executable SQL and indexes are maintained in server/scripts/migrate-v2.js and
+server/scripts/migrate-indexes.js.

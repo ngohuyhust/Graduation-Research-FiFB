@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes ping-once {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @layer base {
   * {
     @apply transition-colors duration-150;
@@ -75,5 +87,9 @@
 
   .tag {
     @apply inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600;
+  }
+
+  .animate-ping-once {
+    animation: ping-once 0.7s ease-out;
   }
 }

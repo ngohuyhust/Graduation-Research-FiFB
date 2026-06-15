@@ -25,7 +25,10 @@ async function createUser(client, user) {
 }
 
 async function findByEmail(email, client = { query }) {
-  const result = await client.query(`SELECT *, password_hash FROM app_users WHERE lower(email) = lower($1) AND deleted_at IS NULL`, [email]);
+  const result = await client.query(
+    `SELECT *, password_hash FROM app_users WHERE lower(email) = lower($1) AND deleted_at IS NULL`,
+    [email],
+  );
   return result.rows[0] || null;
 }
 
@@ -35,7 +38,9 @@ async function findById(id, client = { query }) {
 }
 
 async function findAuthById(id, client = { query }) {
-  const result = await client.query(`SELECT *, password_hash FROM app_users WHERE id = $1 AND deleted_at IS NULL`, [id]);
+  const result = await client.query(`SELECT *, password_hash FROM app_users WHERE id = $1 AND deleted_at IS NULL`, [
+    id,
+  ]);
   return result.rows[0] || null;
 }
 

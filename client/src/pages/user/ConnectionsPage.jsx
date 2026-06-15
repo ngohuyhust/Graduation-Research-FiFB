@@ -1,4 +1,5 @@
-import { Link2, X } from "lucide-react";
+import { Link2, MessageCircle, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";
 import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
@@ -35,32 +36,68 @@ export default function ConnectionsPage() {
         <div>
           <h2 className="mb-3 font-semibold text-ink">Requests</h2>
           <div className="space-y-3">
-            {asItems(data.requests).length ? asItems(data.requests).map((row) => (
-              <article className="panel flex items-center justify-between gap-3" key={row.id}>
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-steel/10 text-steel"><Link2 size={18} /></div>
-                  <div>
-                    <div className="font-semibold text-ink">{row.trainerName || row.trainer_id || row.trainerId || "-"}</div>
-                    <StatusBadge value={row.status} />
+            {asItems(data.requests).length ? (
+              asItems(data.requests).map((row) => (
+                <article className="panel flex items-center justify-between gap-3" key={row.id}>
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-steel/10 text-steel">
+                      <Link2 size={18} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-ink">
+                        {row.trainerName || row.trainer_id || row.trainerId || "-"}
+                      </div>
+                      <StatusBadge value={row.status} />
+                    </div>
                   </div>
-                </div>
-                {row.status === "pending" && <button className="btn-secondary px-3" type="button" onClick={() => cancel(row.id)}><X size={16} /></button>}
-              </article>
-            )) : <EmptyState title="No requests" />}
+                  {row.status === "pending" && (
+                    <button className="btn-secondary px-3" type="button" onClick={() => cancel(row.id)}>
+                      <X size={16} />
+                    </button>
+                  )}
+                </article>
+              ))
+            ) : (
+              <EmptyState title="No requests" />
+            )}
           </div>
         </div>
         <div>
           <h2 className="mb-3 font-semibold text-ink">Connections</h2>
           <div className="space-y-3">
-            {asItems(data.connections).length ? asItems(data.connections).map((row) => (
-              <article className="panel flex items-center justify-between gap-3" key={row.id || row.trainerId || row.trainer_id}>
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-mint/10 text-mint"><Link2 size={18} /></div>
-                  <div className="font-semibold text-ink">{row.trainerName || row.trainer_id || row.trainerId || "-"}</div>
-                </div>
-                <StatusBadge value={row.status} />
-              </article>
-            )) : <EmptyState title="No connections" />}
+            {asItems(data.connections).length ? (
+              asItems(data.connections).map((row) => (
+                <article
+                  className="panel flex items-center justify-between gap-3"
+                  key={row.id || row.trainerId || row.trainer_id}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-mint/10 text-mint">
+                      <Link2 size={18} />
+                    </div>
+                    <div className="font-semibold text-ink">
+                      {row.trainerName || row.trainer_id || row.trainerId || "-"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge value={row.status} />
+                    {row.status === "active" && (
+                      <Link className="btn-secondary relative px-3" to={`/chat/${row.id}`}>
+                        <MessageCircle size={16} />
+                        Chat
+                        {Number(row.unreadCount || row.unread_count) > 0 && (
+                          <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white">
+                            {row.unreadCount || row.unread_count}
+                          </span>
+                        )}
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              ))
+            ) : (
+              <EmptyState title="No connections" />
+            )}
           </div>
         </div>
       </section>

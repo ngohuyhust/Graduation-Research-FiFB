@@ -16,7 +16,10 @@ async function list(filters) {
     clauses.push(`tp.is_verified = $${values.length}`);
   }
   const where = clauses.join(" AND ");
-  const count = await query(`SELECT count(*)::int AS total FROM trainer_profiles tp JOIN app_users u ON u.id = tp.trainer_id WHERE ${where}`, values);
+  const count = await query(
+    `SELECT count(*)::int AS total FROM trainer_profiles tp JOIN app_users u ON u.id = tp.trainer_id WHERE ${where}`,
+    values,
+  );
   const result = await query(
     `SELECT tp.*, u.email, u.full_name, u.avatar_url
      FROM trainer_profiles tp JOIN app_users u ON u.id = tp.trainer_id
@@ -51,7 +54,10 @@ async function upsertProfile(userId, payload) {
 }
 
 async function markVerified(client, trainerId, adminId) {
-  const result = await client.query("UPDATE trainer_profiles SET is_verified = true, verified_at = now(), verified_by = $2, updated_at = now() WHERE trainer_id = $1 RETURNING *", [trainerId, adminId]);
+  const result = await client.query(
+    "UPDATE trainer_profiles SET is_verified = true, verified_at = now(), verified_by = $2, updated_at = now() WHERE trainer_id = $1 RETURNING *",
+    [trainerId, adminId],
+  );
   return result.rows[0] || null;
 }
 

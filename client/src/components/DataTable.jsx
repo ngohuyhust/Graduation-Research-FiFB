@@ -18,7 +18,10 @@ export default function DataTable({ columns, rows, emptyTitle }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map((row, index) => (
-              <tr className="align-top transition-colors hover:bg-surface-hover even:bg-slate-50/50" key={row.id || index}>
+              <tr
+                className="align-top transition-colors hover:bg-surface-hover even:bg-slate-50/50"
+                key={row.id || index}
+              >
                 {columns.map((column) => (
                   <td className="px-5 py-4 text-slate-700" key={column.key}>
                     {column.render ? column.render(row) : row[column.key] || "-"}

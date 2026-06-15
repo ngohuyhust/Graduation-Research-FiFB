@@ -31,6 +31,9 @@ import TrainerDetailPage from "../pages/user/TrainerDetailPage";
 import TrainersPage from "../pages/user/TrainersPage";
 import WorkoutPlanEditorPage from "../pages/user/WorkoutPlanEditorPage";
 import WorkoutPlansPage from "../pages/user/WorkoutPlansPage";
+import ChatPage from "../pages/user/ChatPage";
+import WorkoutHistoryPage from "../pages/user/WorkoutHistoryPage";
+import WorkoutSessionPage from "../pages/user/WorkoutSessionPage";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
@@ -73,6 +76,9 @@ export default function AppRoutes() {
             <Route path="/workout-plans/:id" element={<WorkoutPlanEditorPage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/chat/:connectionId" element={<ChatPage />} />
+            <Route path="/workout-sessions" element={<WorkoutHistoryPage />} />
+            <Route path="/workout-sessions/:id" element={<WorkoutSessionPage />} />
           </Route>
         </Route>
 

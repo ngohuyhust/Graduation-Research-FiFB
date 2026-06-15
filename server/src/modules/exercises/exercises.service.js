@@ -5,9 +5,12 @@ const { paginate } = require("../../utils/responses");
 const repository = require("./exercises.repository");
 const auditRepository = require("../audit/audit.repository");
 const notificationRepository = require("../notifications/notifications.repository");
+const { invalidateByPrefix } = require("../../utils/cache");
 
 function hasMappingPayload(payload) {
-  return ["bodyPartIds", "equipmentIds", "targetMuscleIds", "secondaryMuscleIds"].some((key) => Array.isArray(payload[key]));
+  return ["bodyPartIds", "equipmentIds", "targetMuscleIds", "secondaryMuscleIds"].some((key) =>
+    Array.isArray(payload[key]),
+  );
 }
 
 async function listExercises(filters, admin = false) {
@@ -27,6 +30,7 @@ async function createExercise(actor, payload, source) {
     await repository.replaceMappings(client, created.id, payload);
     return created;
   });
+  await invalidateByPrefix("exercises:");
   return { exercise };
 }
 
@@ -36,9 +40,17 @@ async function updateExercise(actor, id, payload) {
     if (!oldExercise) throw new AppError(codes.NOT_FOUND, "Exercise not found", 404);
     const updated = await repository.update(client, id, payload);
     if (hasMappingPayload(payload)) await repository.replaceMappings(client, id, payload);
-    await auditRepository.createAudit(client, { actorId: actor.userId, action: "exercise.update", entityType: "exercise", entityId: id, oldValues: oldExercise, newValues: updated });
+    await auditRepository.createAudit(client, {
+      actorId: actor.userId,
+      action: "exercise.update",
+      entityType: "exercise",
+      entityId: id,
+      oldValues: oldExercise,
+      newValues: updated,
+    });
     return updated;
   });
+  await invalidateByPrefix("exercises:");
   return { exercise };
 }
 
@@ -74,6 +86,7 @@ async function reviewExercise(actor, id, decision, requestMeta = {}) {
     });
     return updated;
   });
+  await invalidateByPrefix("exercises:");
   return { exercise };
 }
 
@@ -81,4 +94,12 @@ async function deactivateExercise(actor, id) {
   return updateExercise(actor, id, { status: "inactive" });
 }
 
-module.exports = { listExercises, getActiveExercise, createExercise, updateExercise, reviewExercise, deactivateExercise, hasMappingPayload };
+module.exports = {
+  listExercises,
+  getActiveExercise,
+  createExercise,
+  updateExercise,
+  reviewExercise,
+  deactivateExercise,
+  hasMappingPayload,
+};

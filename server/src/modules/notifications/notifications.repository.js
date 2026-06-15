@@ -1,4 +1,5 @@
 const { query } = require("../../db/pool");
+const { emitToUser } = require("../../socket/emitters");
 
 async function createNotification(client, payload) {
   const runner = client || { query };
@@ -17,7 +18,14 @@ async function createNotification(client, payload) {
       payload.metadata || {},
     ],
   );
-  return result.rows[0];
+  const notification = result.rows[0];
+  emitToUser(payload.recipientId, "notification:new", notification);
+  const unread = await runner.query(
+    "SELECT count(*)::int AS total FROM notifications WHERE recipient_id = $1 AND read_at IS NULL",
+    [payload.recipientId],
+  );
+  emitToUser(payload.recipientId, "notification:count", unread.rows[0].total);
+  return notification;
 }
 
 async function listMine(userId, { page, limit }) {
@@ -35,11 +43,20 @@ async function markRead(userId, id) {
     `UPDATE notifications SET read_at = COALESCE(read_at, now()) WHERE id = $1 AND recipient_id = $2 RETURNING *`,
     [id, userId],
   );
+  const unread = await query(
+    "SELECT count(*)::int AS total FROM notifications WHERE recipient_id = $1 AND read_at IS NULL",
+    [userId],
+  );
+  emitToUser(userId, "notification:count", unread.rows[0].total);
   return result.rows[0] || null;
 }
 
 async function markAllRead(userId) {
-  await query(`UPDATE notifications SET read_at = COALESCE(read_at, now()) WHERE recipient_id = $1 AND read_at IS NULL`, [userId]);
+  await query(
+    `UPDATE notifications SET read_at = COALESCE(read_at, now()) WHERE recipient_id = $1 AND read_at IS NULL`,
+    [userId],
+  );
+  emitToUser(userId, "notification:count", 0);
 }
 
 module.exports = { createNotification, listMine, markRead, markAllRead };

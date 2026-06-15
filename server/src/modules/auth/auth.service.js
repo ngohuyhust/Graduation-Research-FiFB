@@ -206,7 +206,7 @@ async function resetPassword(token, newPassword) {
 async function changePassword(userId, currentPassword, newPassword) {
   return withTransaction(async (client) => {
     const user = await userRepository.findAuthById(userId, client);
-    const ok = user && await bcrypt.compare(currentPassword, user.password_hash);
+    const ok = user && (await bcrypt.compare(currentPassword, user.password_hash));
     if (!ok) throw new AppError(codes.UNAUTHENTICATED, "Current password is incorrect", 401);
     await userRepository.updatePassword(client, userId, await hashPassword(newPassword));
     await authRepository.revokeUserSessions(client, userId);

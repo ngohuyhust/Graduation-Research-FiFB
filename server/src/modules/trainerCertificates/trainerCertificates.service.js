@@ -9,7 +9,7 @@ const notificationRepository = require("../notifications/notifications.repositor
 
 async function submit(trainerId, payload) {
   const certificate = await withTransaction(async (client) => {
-    if (!await repository.ensureTrainerProfile(client, trainerId)) {
+    if (!(await repository.ensureTrainerProfile(client, trainerId))) {
       throw new AppError(codes.CONFLICT, "Trainer profile is required before submitting certificates", 409);
     }
     return repository.create(client, trainerId, payload);
@@ -30,7 +30,8 @@ async function review(actor, id, decision, requestMeta = {}) {
   const certificate = await withTransaction(async (client) => {
     const oldCertificate = await repository.findById(client, id);
     if (!oldCertificate) throw new AppError(codes.NOT_FOUND, "Certificate not found", 404);
-    if (oldCertificate.status !== "pending") throw new AppError(codes.CONFLICT, "Only pending certificates can be reviewed", 409);
+    if (oldCertificate.status !== "pending")
+      throw new AppError(codes.CONFLICT, "Only pending certificates can be reviewed", 409);
     const updated = await repository.setReviewStatus(client, id, actor, decision);
     if (!updated) throw new AppError(codes.CONFLICT, "Only pending certificates can be reviewed", 409);
     if (decision.status === "approved") {

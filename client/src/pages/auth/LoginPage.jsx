@@ -43,8 +43,12 @@ export default function LoginPage() {
       </button>
       <div className="border-t border-slate-100 pt-4">
         <div className="flex justify-between text-sm">
-          <Link className="link-accent" to="/register">Create account</Link>
-          <Link className="link-accent" to="/forgot-password">Forgot password?</Link>
+          <Link className="link-accent" to="/register">
+            Create account
+          </Link>
+          <Link className="link-accent" to="/forgot-password">
+            Forgot password?
+          </Link>
         </div>
       </div>
     </form>

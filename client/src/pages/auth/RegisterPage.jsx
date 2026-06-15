@@ -8,7 +8,15 @@ import { showError, showSuccess } from "../../components/ToastBridge";
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register, handleSubmit, reset, watch, formState } = useForm({
-    defaultValues: { email: "", password: "", fullName: "", phone: "", role: "user", fitnessGoal: "", experienceLevel: "" },
+    defaultValues: {
+      email: "",
+      password: "",
+      fullName: "",
+      phone: "",
+      role: "user",
+      fitnessGoal: "",
+      experienceLevel: "",
+    },
   });
   const role = watch("role");
   const experienceLevel = watch("experienceLevel");
@@ -42,20 +50,42 @@ export default function RegisterPage() {
           <input className="input" type="email" {...register("email", { required: "Email is required" })} />
         </FormField>
         <FormField label="Phone number" error={formState.errors.phone?.message}>
-          <input className="input" type="tel" {...register("phone", { required: "Phone number is required", maxLength: { value: 40, message: "Phone number must be at most 40 characters" } })} />
+          <input
+            className="input"
+            type="tel"
+            {...register("phone", {
+              required: "Phone number is required",
+              maxLength: { value: 40, message: "Phone number must be at most 40 characters" },
+            })}
+          />
         </FormField>
         <FormField label="Password" error={formState.errors.password?.message}>
-          <input className="input" type="password" {...register("password", { required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } })} />
+          <input
+            className="input"
+            type="password"
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 8, message: "Password must be at least 8 characters" },
+            })}
+          />
         </FormField>
       </div>
       <FormField label="Role">
         <div className="grid gap-3 sm:grid-cols-2">
-          {[{ value: "user", label: "User", icon: UserRound }, { value: "trainer", label: "Trainer", icon: Dumbbell }].map((option) => {
+          {[
+            { value: "user", label: "User", icon: UserRound },
+            { value: "trainer", label: "Trainer", icon: Dumbbell },
+          ].map((option) => {
             const Icon = option.icon;
             return (
-              <label className={`cursor-pointer rounded-xl border p-4 transition-all ${role === option.value ? "border-mint bg-mint/5 shadow-glow" : "border-slate-200 bg-white hover:border-slate-300"}`} key={option.value}>
+              <label
+                className={`cursor-pointer rounded-xl border p-4 transition-all ${role === option.value ? "border-mint bg-mint/5 shadow-glow" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                key={option.value}
+              >
                 <input className="sr-only" type="radio" value={option.value} {...register("role")} />
-                <span className="flex items-center gap-3 text-sm font-semibold text-slate-700"><Icon size={18} /> {option.label}</span>
+                <span className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                  <Icon size={18} /> {option.label}
+                </span>
               </label>
             );
           })}
@@ -67,7 +97,10 @@ export default function RegisterPage() {
       <FormField label="Experience level">
         <div className="grid gap-2 sm:grid-cols-3">
           {["beginner", "intermediate", "advanced"].map((level) => (
-            <label className={`cursor-pointer rounded-xl border px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider transition-all ${experienceLevel === level ? "border-mint bg-mint/5 text-mint shadow-glow" : "border-slate-200 text-slate-500 hover:border-slate-300"}`} key={level}>
+            <label
+              className={`cursor-pointer rounded-xl border px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider transition-all ${experienceLevel === level ? "border-mint bg-mint/5 text-mint shadow-glow" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              key={level}
+            >
               <input className="sr-only" type="radio" value={level} {...register("experienceLevel")} />
               <Activity className="mx-auto mb-1" size={16} />
               {level}
@@ -75,8 +108,12 @@ export default function RegisterPage() {
           ))}
         </div>
       </FormField>
-      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">Register</button>
-      <Link className="link-accent block text-center text-sm" to="/login">Already have an account?</Link>
+      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">
+        Register
+      </button>
+      <Link className="link-accent block text-center text-sm" to="/login">
+        Already have an account?
+      </Link>
     </form>
   );
 }

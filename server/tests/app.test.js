@@ -4,11 +4,19 @@ const { createApp } = require("../src/app");
 describe("app", () => {
   test("GET /api/health returns OK envelope", async () => {
     const response = await request(createApp()).get("/api/health").expect(200);
+    expect(response.headers["x-request-id"]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
     expect(response.body).toEqual({
       success: true,
       data: { status: "ok" },
       message: "OK",
     });
+  });
+
+  test("preserves a caller-provided request ID", async () => {
+    const response = await request(createApp()).get("/api/health").set("X-Request-Id", "trace-123").expect(200);
+    expect(response.headers["x-request-id"]).toBe("trace-123");
   });
 
   test("unknown route uses standard error envelope", async () => {

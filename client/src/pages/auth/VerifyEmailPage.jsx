@@ -68,7 +68,9 @@ export default function VerifyEmailPage() {
         <CheckCircle2 className="mx-auto animate-scale-in text-mint" size={64} />
         <h1 className="text-3xl font-bold tracking-tight">Email verified</h1>
         <p className="text-sm leading-6 text-slate-600">Your account is active. You can login now.</p>
-        <Link className="btn-primary w-full py-3" to="/login">Go to login</Link>
+        <Link className="btn-primary w-full py-3" to="/login">
+          Go to login
+        </Link>
       </div>
     );
   }
@@ -108,8 +110,12 @@ export default function VerifyEmailPage() {
           </div>
         </div>
       </FormField>
-      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">Verify email</button>
-      <Link className="link-accent block text-center text-sm" to="/login">Back to login</Link>
+      <button className="btn-primary w-full py-3" disabled={formState.isSubmitting} type="submit">
+        Verify email
+      </button>
+      <Link className="link-accent block text-center text-sm" to="/login">
+        Back to login
+      </Link>
     </form>
   );
 }

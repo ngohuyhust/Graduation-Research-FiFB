@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  notify:
+    if: always() && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != ''
+    needs: [server, client]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SERVER_RESULT: ${{ needs.server.result }}
+          CLIENT_RESULT: ${{ needs.client.result }}
+        run: |
+          curl --fail --silent --show-error \
+            --data-urlencode "chat_id=${CHAT_ID}" \
+            --data-urlencode "text=FiFB CI: server=${SERVER_RESULT}, client=${CLIENT_RESULT}, commit=${GITHUB_SHA}" \
+            "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"
