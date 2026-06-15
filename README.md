@@ -128,6 +128,6 @@ npm.cmd run build
 npm.cmd run format:check
 ```
 
-GitHub Actions runs server lint/tests and client lint/build. Render deployment requires
-`RENDER_DEPLOY_HOOK_URL`. Telegram notifications optionally use `TELEGRAM_BOT_TOKEN` and
-`TELEGRAM_CHAT_ID`.
+GitHub Actions runs server lint/tests and client lint/build. The Render Blueprint deploys the
+`main` branch automatically after those checks pass. Telegram notifications optionally use
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
