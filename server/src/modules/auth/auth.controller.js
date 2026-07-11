@@ -1,6 +1,9 @@
 const authService = require("./auth.service");
 const { publicUser } = require("../users/users.presenter");
 const { sendSuccess, sendCreated, sendNoContent } = require("../../utils/responses");
+const { AppError } = require("../../utils/errors/AppError");
+const codes = require("../../utils/errors/errorCodes");
+const { getRefreshTokenCookie, setRefreshTokenCookie, clearRefreshTokenCookie } = require("./refreshCookie");
 
 function meta(req) {
   return { ipAddress: req.ip, userAgent: req.get("user-agent") };
@@ -13,16 +16,22 @@ async function register(req, res) {
 
 async function login(req, res) {
   const tokens = await authService.login(req.body, meta(req));
-  return sendSuccess(res, tokens, "Logged in");
+  setRefreshTokenCookie(res, tokens.refreshToken, tokens.expiresAt);
+  return sendSuccess(res, { accessToken: tokens.accessToken, expiresAt: tokens.expiresAt }, "Logged in");
 }
 
 async function refresh(req, res) {
-  const tokens = await authService.refresh(req.body.refreshToken, meta(req));
-  return sendSuccess(res, tokens, "Token refreshed");
+  const refreshToken = getRefreshTokenCookie(req);
+  if (!refreshToken) throw new AppError(codes.UNAUTHENTICATED, "Missing refresh token", 401);
+  const tokens = await authService.refresh(refreshToken, meta(req));
+  setRefreshTokenCookie(res, tokens.refreshToken, tokens.expiresAt);
+  return sendSuccess(res, { accessToken: tokens.accessToken, expiresAt: tokens.expiresAt }, "Token refreshed");
 }
 
 async function logout(req, res) {
-  await authService.logout(req.body.refreshToken);
+  const refreshToken = getRefreshTokenCookie(req);
+  if (refreshToken) await authService.logout(refreshToken);
+  clearRefreshTokenCookie(res);
   return sendNoContent(res);
 }
 

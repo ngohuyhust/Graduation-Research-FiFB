@@ -17,7 +17,7 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-const refreshSchema = z.object({ refreshToken: z.string().min(20) });
+const refreshSchema = z.object({});
 const logoutSchema = refreshSchema;
 const verifyEmailSchema = z.object({
   email: z.string().trim().email().max(320),
