@@ -13,6 +13,8 @@ npm run dev
 
 Vite runs on `http://localhost:5173` by default.
 
+If a Docker Compose frontend service is used in your local setup, expose it at `http://localhost:3000`.
+
 ## API Configuration
 
 Default `.env.example`:
@@ -23,6 +25,7 @@ VITE_PROXY_TARGET=http://localhost:4000
 ```
 
 During development, Vite proxies `/api` to `http://localhost:4000`, matching the backend README health check at `GET http://localhost:4000/api/health`.
+The backend API port follows `server/.env` `PORT`; the default is `4000`.
 
 If you do not want to use the Vite proxy, set:
 
@@ -31,6 +34,8 @@ VITE_API_BASE_URL=http://localhost:4000/api
 ```
 
 and make sure backend CORS allows the Vite origin.
+
+For cookie-based refresh auth, backend CORS must allow credentials and include the frontend origin in `CORS_ORIGIN`.
 
 ## Main Routes
 

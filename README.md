@@ -25,6 +25,13 @@ flowchart LR
   API --> Email[SendGrid]
 ```
 
+The application code lives in:
+
+```text
+server/
+client/
+```
+
 The backend keeps the existing module pattern:
 
 ```text
@@ -47,7 +54,16 @@ npm.cmd install
 Copy-Item .env.example .env
 ```
 
-Configure `server/.env`, especially `DATABASE_URL`, JWT secrets, CORS, and Redis/Upstash values.
+Edit `server/.env`:
+
+- `DATABASE_URL`
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+- `CORS_ORIGIN` (`http://localhost:5173,http://localhost:3000` for local native + Docker Compose frontend)
+- SendGrid values if using email verification/password reset
+- Redis or Upstash values if `REDIS_DISABLED=false`
+
+PowerShell blocks `npm.ps1` on this machine, so use `npm.cmd`.
 The existing base schema is documented in `Document/DatabaseSQL.txt`.
 
 Apply the non-AI v2 additions:
@@ -71,8 +87,9 @@ cd client
 npm.cmd run dev
 ```
 
-- Client: `http://localhost:3000`
-- API: `http://localhost:4000/api`
+- Native frontend: `http://localhost:5173`
+- Docker Compose frontend: `http://localhost:3000`
+- Backend API: `http://localhost:4000/api` by default, or the port configured by `server/.env` `PORT`
 - Health: `http://localhost:4000/api/health`
 
 ## New API Endpoints
