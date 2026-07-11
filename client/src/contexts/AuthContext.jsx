@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { authApi } from "../api/authApi";
 import { setUnauthorizedHandler } from "../api/httpClient";
-import { clearTokens, getRefreshToken, setAccessToken, setRefreshToken } from "../api/tokenStore";
+import { clearTokens, setAccessToken } from "../api/tokenStore";
 
 const AuthContext = createContext(null);
 
@@ -15,9 +15,8 @@ export function AuthProvider({ children }) {
   const [bootstrapping, setBootstrapping] = useState(true);
 
   const logout = useCallback(async () => {
-    const refreshToken = getRefreshToken();
     try {
-      if (refreshToken) await authApi.logout(refreshToken);
+      await authApi.logout();
     } catch {
       // Local cleanup is still required when server revoke fails.
     } finally {
@@ -29,15 +28,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     setUnauthorizedHandler(() => setUser(null));
     async function bootstrap() {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        setBootstrapping(false);
-        return;
-      }
       try {
-        const tokens = await authApi.refresh(refreshToken);
+        const tokens = await authApi.refresh();
         setAccessToken(tokens?.accessToken);
-        setRefreshToken(tokens?.refreshToken);
         const profile = await authApi.me();
         setUser(getUserFromPayload(profile));
       } catch {
@@ -53,7 +46,6 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (payload) => {
     const tokens = await authApi.login(payload);
     setAccessToken(tokens?.accessToken);
-    setRefreshToken(tokens?.refreshToken);
     const profile = await authApi.me();
     const nextUser = getUserFromPayload(profile);
     setUser(nextUser);

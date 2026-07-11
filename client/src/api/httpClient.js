@@ -1,14 +1,17 @@
 import axios from "axios";
-import { clearTokens, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from "./tokenStore";
+import { clearTokens, getAccessToken, getTokenVersion, setAccessToken } from "./tokenStore";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 let onUnauthorized = null;
 let refreshPromise = null;
+let unauthorizedNotified = false;
 
-const publicAuthPaths = [
+const skipRefreshPaths = [
   "/auth/register",
   "/auth/verify-email",
   "/auth/login",
+  "/auth/refresh",
+  "/auth/logout",
   "/auth/request-password-reset",
   "/auth/reset-password",
 ];
@@ -22,6 +25,7 @@ const publicGetPathPatterns = [
 export const httpClient = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 export function setUnauthorizedHandler(handler) {
@@ -66,14 +70,14 @@ function logApiError(error) {
 }
 
 async function refreshTokens() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error("Missing refresh token");
-
-  const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+  const startedAtVersion = getTokenVersion();
+  const response = await axios.post(`${baseURL}/auth/refresh`, null, { withCredentials: true });
   const tokens = response.data?.data;
-  setAccessToken(tokens?.accessToken);
-  setRefreshToken(tokens?.refreshToken);
-  return tokens?.accessToken;
+  const nextAccessToken = tokens?.accessToken;
+  if (!nextAccessToken) throw new Error("Refresh did not return an access token");
+  if (getTokenVersion() === startedAtVersion) setAccessToken(nextAccessToken);
+  unauthorizedNotified = false;
+  return getAccessToken() || nextAccessToken;
 }
 
 function getRequestPath(url = "") {
@@ -98,6 +102,7 @@ function isPublicGetRequest(config) {
 
 httpClient.interceptors.request.use((config) => {
   const token = getAccessToken();
+  if (token) unauthorizedNotified = false;
   if (token && !isPublicGetRequest(config)) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -107,25 +112,25 @@ httpClient.interceptors.response.use(
   async (error) => {
     const original = error.config;
     const status = error.response?.status;
-    const url = original?.url || "";
-    const shouldSkipRefresh =
-      publicAuthPaths.some((path) => url.includes(path)) ||
-      url.includes("/auth/refresh") ||
-      isPublicGetRequest(original);
-    const canRefresh = Boolean(getRefreshToken());
+    const path = getRequestPath(original?.url || "");
+    const shouldSkipRefresh = skipRefreshPaths.some((skipPath) => path === skipPath) || isPublicGetRequest(original);
 
-    if (status === 401 && original && !original._retry && !shouldSkipRefresh && canRefresh) {
+    if (status === 401 && original && !original._retry && !shouldSkipRefresh) {
       original._retry = true;
       try {
         refreshPromise ||= refreshTokens().finally(() => {
           refreshPromise = null;
         });
         const token = await refreshPromise;
+        original.headers ||= {};
         original.headers.Authorization = `Bearer ${token}`;
         return httpClient(original);
       } catch (refreshError) {
         clearTokens();
-        onUnauthorized?.();
+        if (!unauthorizedNotified) {
+          unauthorizedNotified = true;
+          onUnauthorized?.();
+        }
         const normalizedRefreshError = normalizeError(refreshError);
         logApiError(normalizedRefreshError);
         throw normalizedRefreshError;
