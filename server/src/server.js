@@ -4,12 +4,13 @@ const { env } = require("./config/env");
 const { closePool } = require("./db/pool");
 const { closeRedis } = require("./redis/client");
 const { initializeSocket, closeSocket } = require("./socket");
+const { logger } = require("./utils/logger");
 
 const app = createApp();
 const server = http.createServer(app);
 initializeSocket(server);
 server.listen(env.port, () => {
-  console.log(`FiFB backend listening on port ${env.port}`);
+  logger.info("FiFB backend listening", { port: env.port });
 });
 
 async function shutdown() {

@@ -4,6 +4,7 @@ const { env } = require("../../config/env");
 const { withTransaction } = require("../../db/pool");
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
+const { logger } = require("../../utils/logger");
 const { createOpaqueToken, hashToken, addDays, addHours, addMinutes } = require("../../utils/tokens");
 const userRepository = require("../users/users.repository");
 const authRepository = require("./auth.repository");
@@ -36,7 +37,7 @@ function loginDebugContext(email, user, passwordMatches) {
 
 function logLoginDebug(reason, context) {
   if (!env.authDebugLogin) return;
-  console.warn("[Auth Login Debug]", { reason, ...context });
+  logger.warn("Auth login debug", { reason, ...context });
 }
 
 function createEmailOtp() {

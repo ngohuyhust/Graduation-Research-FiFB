@@ -5,28 +5,36 @@ const cors = require("cors");
 const morgan = require("morgan");
 const { env } = require("./config/env");
 const routes = require("./routes");
+const { requestId } = require("./middlewares/requestId");
 const { notFound } = require("./middlewares/notFound");
 const { errorHandler } = require("./middlewares/errorHandler");
-const { requestId } = require("./middlewares/requestId");
 const { apiRateLimiter } = require("./middlewares/rateLimiters");
+const { AppError } = require("./utils/errors/AppError");
+const codes = require("./utils/errors/errorCodes");
+const { logger } = require("./utils/logger");
+
+morgan.token("request-id", (req) => req.requestId || "-");
 
 function resolveCorsOrigin(origin, callback) {
   if (!origin || env.corsOrigins.includes(origin)) {
     callback(null, true);
     return;
   }
-  callback(new Error("Not allowed by CORS"));
+  callback(new AppError(codes.FORBIDDEN, "Origin is not allowed by CORS", 403));
 }
 
 function createApp() {
   const app = express();
   app.set("trust proxy", 1);
+  app.use(requestId);
   app.use(helmet());
   app.use(compression());
-  app.use(requestId);
   app.use(cors({ origin: resolveCorsOrigin, credentials: true }));
   app.use(express.json({ limit: "1mb" }));
-  app.use(morgan(env.nodeEnv === "test" ? "tiny" : "dev"));
+  app.use(morgan(":method :url :status :res[content-length] - :response-time ms :request-id", {
+    skip: () => env.nodeEnv === "test",
+    stream: { write: (message) => logger.info(message.trim(), { type: "http" }) },
+  }));
   app.use("/api", apiRateLimiter);
   app.use("/api", routes);
   app.use(notFound);

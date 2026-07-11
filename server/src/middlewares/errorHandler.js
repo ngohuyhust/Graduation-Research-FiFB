@@ -1,41 +1,38 @@
 const { AppError } = require("../utils/errors/AppError");
 const codes = require("../utils/errors/errorCodes");
+const { env } = require("../config/env");
+const { logger } = require("../utils/logger");
 
 function errorHandler(error, req, res, _next) {
-  const statusCode = error instanceof AppError ? error.statusCode : 500;
-  console.error(
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId,
-      method: req.method,
-      url: req.originalUrl,
-      statusCode,
-      code: error.code || codes.SERVER_ERROR,
-      message: error.message,
-      stack: process.env.NODE_ENV !== "production" ? error.stack : undefined,
-    }),
-  );
+  const requestId = req.requestId;
 
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       success: false,
-      requestId: req.requestId,
       error: {
         code: error.code,
         message: error.message,
-        details: error.details || {},
+        details: error.details || null,
       },
+      requestId,
     });
   }
 
+  logger.error("Unhandled request error", {
+    requestId,
+    method: req.method,
+    url: req.originalUrl,
+    error,
+  });
+
   return res.status(500).json({
     success: false,
-    requestId: req.requestId,
     error: {
       code: codes.SERVER_ERROR,
-      message: "Internal server error",
-      details: {},
+      message: env.nodeEnv === "production" ? "Internal server error" : error.message || "Internal server error",
+      details: null,
     },
+    requestId,
   });
 }
 

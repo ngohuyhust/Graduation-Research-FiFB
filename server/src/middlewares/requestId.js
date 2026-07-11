@@ -1,9 +1,9 @@
-const { randomUUID } = require("crypto");
+const crypto = require("crypto");
 
 function requestId(req, res, next) {
-  const id = req.get("X-Request-Id") || randomUUID();
-  req.requestId = id;
-  res.setHeader("X-Request-Id", id);
+  const incomingId = req.get("X-Request-Id");
+  req.requestId = incomingId && incomingId.length <= 128 ? incomingId : crypto.randomUUID();
+  res.setHeader("X-Request-Id", req.requestId);
   next();
 }
 

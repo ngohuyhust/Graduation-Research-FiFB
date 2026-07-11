@@ -42,6 +42,7 @@ function normalizeError(error) {
       code: payload.error.code || "API_ERROR",
       message: payload.error.message || "Request failed",
       details: payload.error.details || null,
+      requestId: payload.requestId || null,
       status: error.response?.status,
       method,
       url,
@@ -52,6 +53,7 @@ function normalizeError(error) {
     code: error.code || "NETWORK_ERROR",
     message: error.message || "Unable to reach server",
     details: null,
+    requestId: null,
     status: error.response?.status,
     method,
     url,
@@ -65,6 +67,7 @@ function logApiError(error) {
     status: error.status,
     code: error.code,
     message: error.message,
+    requestId: error.requestId,
     details: error.details,
   });
 }

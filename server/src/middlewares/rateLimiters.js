@@ -28,13 +28,16 @@ const authRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   store: createRedisStore("rate-limit:auth:"),
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMITED",
-      message: "Too many auth attempts. Try again later.",
-      details: {},
-    },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many auth attempts. Try again later.",
+        details: null,
+      },
+      requestId: req.requestId,
+    });
   },
 });
 
@@ -43,13 +46,16 @@ const apiRateLimiter = createRateLimiter({
   limit: 60,
   store: createRedisStore("rate-limit:api:"),
   skip: () => process.env.NODE_ENV === "test",
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMITED",
-      message: "Too many requests. Try again later.",
-      details: {},
-    },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many requests. Try again later.",
+        details: null,
+      },
+      requestId: req.requestId,
+    });
   },
 });
 

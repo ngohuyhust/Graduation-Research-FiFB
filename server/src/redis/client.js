@@ -1,6 +1,7 @@
 const { Redis } = require("@upstash/redis");
 const { createClient } = require("redis");
 const { env } = require("../config/env");
+const { logger } = require("../utils/logger");
 
 let redisClient;
 let tcpClient;
@@ -68,7 +69,7 @@ async function getRedisClient() {
   if (!env.redisUrl) return null;
   tcpClient = createClient({ url: env.redisUrl });
   tcpClient.on("error", (error) => {
-    console.error("Redis error:", error.message);
+    logger.error("Redis error", { error });
   });
   await tcpClient.connect();
   redisClient = createTcpAdapter(tcpClient);
