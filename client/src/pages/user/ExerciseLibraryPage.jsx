@@ -10,6 +10,7 @@ import PageHeader from "../../components/PageHeader";
 import Pagination from "../../components/Pagination";
 import { showError, showSuccess } from "../../components/ToastBridge";
 import { useAuth } from "../../contexts/AuthContext";
+import { getErrorMessage } from "../../utils/errors";
 import { asItems, asPagination } from "../../utils/format";
 
 export default function ExerciseLibraryPage() {
@@ -42,7 +43,7 @@ export default function ExerciseLibraryPage() {
       try {
         setData(await exerciseApi.list(Object.fromEntries(params)));
       } catch (err) {
-        setError(err.message);
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }

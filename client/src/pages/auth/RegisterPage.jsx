@@ -18,7 +18,7 @@ const genderOptions = [
 
 function optionalNumber(value) {
   if (value === "" || value == null) return undefined;
-  const number = Number(value);
+  const number = Number(String(value).replace(",", "."));
   return Number.isFinite(number) ? number : undefined;
 }
 
@@ -146,7 +146,12 @@ export default function RegisterPage() {
                 className={`cursor-pointer rounded-xl border p-4 transition-all ${gender === option.value ? "border-mint bg-mint/5 shadow-glow" : "border-slate-200 bg-white hover:border-slate-300"}`}
                 key={option.value}
               >
-                <input className="sr-only" type="radio" value={option.value} {...register("gender")} />
+                <input
+                  className="sr-only"
+                  type="radio"
+                  value={option.value}
+                  {...register("gender", { required: "Please choose your gender" })}
+                />
                 <span className="flex items-center gap-3 text-sm font-semibold text-slate-700">
                   <Icon size={18} /> {option.label}
                 </span>
@@ -154,9 +159,12 @@ export default function RegisterPage() {
             );
           })}
         </div>
+        {formState.errors.gender?.message && (
+          <span className="mt-1.5 block text-xs font-medium text-red-600">{formState.errors.gender.message}</span>
+        )}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <FormField label="Weight">
+        <FormField label="Weight" error={formState.errors.weight?.message}>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Scale
@@ -179,7 +187,7 @@ export default function RegisterPage() {
             </select>
           </div>
         </FormField>
-        <FormField label="Height">
+        <FormField label="Height" error={formState.errors.height?.message}>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Ruler

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getErrorMessage } from "../utils/errors";
 import { clearTokens, getAccessToken, getTokenVersion, setAccessToken } from "./tokenStore";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -36,9 +37,10 @@ function normalizeError(error) {
   const payload = error.response?.data;
   const method = (error.config?.method || "get").toUpperCase();
   const url = error.config?.url || "";
+  let normalizedError;
 
   if (payload?.error) {
-    return {
+    normalizedError = {
       code: payload.error.code || "API_ERROR",
       message: payload.error.message || "Request failed",
       details: payload.error.details || null,
@@ -47,16 +49,21 @@ function normalizeError(error) {
       method,
       url,
     };
+  } else {
+    normalizedError = {
+      code: error.code || "NETWORK_ERROR",
+      message: error.message || "Unable to reach server",
+      details: null,
+      requestId: null,
+      status: error.response?.status,
+      method,
+      url,
+    };
   }
 
   return {
-    code: error.code || "NETWORK_ERROR",
-    message: error.message || "Unable to reach server",
-    details: null,
-    requestId: null,
-    status: error.response?.status,
-    method,
-    url,
+    ...normalizedError,
+    userMessage: getErrorMessage(normalizedError),
   };
 }
 
@@ -66,7 +73,7 @@ function logApiError(error) {
     url: error.url,
     status: error.status,
     code: error.code,
-    message: error.message,
+    message: error.userMessage || error.message,
     requestId: error.requestId,
     details: error.details,
   });

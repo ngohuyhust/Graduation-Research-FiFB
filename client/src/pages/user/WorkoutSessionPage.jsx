@@ -6,6 +6,7 @@ import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import PageHeader from "../../components/PageHeader";
 import { showError, showSuccess } from "../../components/ToastBridge";
+import { getErrorMessage } from "../../utils/errors";
 
 const emptyLog = { exerciseId: "", setNumber: 1, actualReps: "", actualWeightKg: "", durationSeconds: "" };
 
@@ -22,7 +23,7 @@ export default function WorkoutSessionPage() {
       setSession(result?.session || result);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(getErrorMessage(err));
     }
   }, [id]);
 

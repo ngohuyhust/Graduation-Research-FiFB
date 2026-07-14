@@ -21,7 +21,7 @@ const genderOptions = [
 
 function optionalNumber(value) {
   if (value === "" || value == null) return undefined;
-  const number = Number(value);
+  const number = Number(String(value).replace(",", "."));
   return Number.isFinite(number) ? number : undefined;
 }
 
