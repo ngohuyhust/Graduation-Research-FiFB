@@ -80,6 +80,26 @@ async function listRequests(user) {
 }
 
 async function listConnections(user) {
+  const chatMessagesExists = await query("SELECT to_regclass('public.chat_messages') AS table_name");
+  const hasChatMessages = Boolean(chatMessagesExists.rows[0]?.table_name);
+  if (!hasChatMessages) {
+    const result = await query(
+      user.role === "trainer"
+        ? `SELECT utc.*, other.full_name AS user_name, 0::int AS unread_count
+           FROM user_trainer_connections utc
+           JOIN app_users other ON other.id = utc.user_id
+           WHERE utc.trainer_id = $1
+           ORDER BY utc.connected_at DESC`
+        : `SELECT utc.*, other.full_name AS trainer_name, 0::int AS unread_count
+           FROM user_trainer_connections utc
+           JOIN app_users other ON other.id = utc.trainer_id
+           WHERE utc.user_id = $1
+           ORDER BY utc.connected_at DESC`,
+      [user.id],
+    );
+    return result.rows;
+  }
+
   const result = await query(
     user.role === "trainer"
       ? `SELECT utc.*, other.full_name AS user_name,

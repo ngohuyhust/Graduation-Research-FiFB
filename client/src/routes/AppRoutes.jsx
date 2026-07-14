@@ -89,11 +89,18 @@ export default function AppRoutes() {
           <Route element={<RoleRoute roles={["trainer"]} />}>
             <Route element={<TrainerLayout />}>
               <Route path="/trainer" element={<TrainerDashboardPage />} />
+              <Route path="/trainer/user-profile" element={<ProfilePage />} />
               <Route path="/trainer/profile" element={<TrainerProfilePage />} />
               <Route path="/trainer/requests" element={<TrainerRequestsPage />} />
               <Route path="/trainer/certificates" element={<TrainerCertificatesPage />} />
               <Route path="/trainer/exercises" element={<TrainerExerciseSubmitPage />} />
               <Route path="/trainer/reviews" element={<TrainerReviewsPage />} />
+              <Route path="/trainer/exercise-library" element={<ExerciseLibraryPage />} />
+              <Route path="/trainer/exercise-library/:id" element={<ExerciseDetailPage />} />
+              <Route path="/trainer/workout-plans" element={<WorkoutPlansPage />} />
+              <Route path="/trainer/workout-plans/new" element={<WorkoutPlanEditorPage />} />
+              <Route path="/trainer/workout-plans/:id" element={<WorkoutPlanEditorPage />} />
+              <Route path="/trainer/notifications" element={<NotificationsPage />} />
             </Route>
           </Route>
 

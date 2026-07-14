@@ -43,7 +43,7 @@ const authRateLimiter = createRateLimiter({
 
 const apiRateLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  limit: 60,
+  limit: 200,
   store: createRedisStore("rate-limit:api:"),
   skip: () => process.env.NODE_ENV === "test",
   handler: (req, res) => {

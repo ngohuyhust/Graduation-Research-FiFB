@@ -65,7 +65,7 @@ export default function AppShell({ navItems }) {
         </div>
         <nav className="flex-1 space-y-1 border-t border-white/10 pt-4">
           {navItems.map((item) => (
-            <NavLink className={linkClass} key={item.to} to={item.to} onClick={() => setOpen(false)}>
+            <NavLink className={linkClass} end={item.end} key={item.to} to={item.to} onClick={() => setOpen(false)}>
               {item.icon ? <item.icon size={18} /> : null}
               {item.label}
             </NavLink>

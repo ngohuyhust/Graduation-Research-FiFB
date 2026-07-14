@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { workoutPlanApi } from "../../api/workoutPlanApi";
 import FormField from "../../components/FormField";
 import LoadingState from "../../components/LoadingState";
@@ -12,10 +12,14 @@ const defaults = { title: "", description: "", visibility: "private", items: [] 
 
 export default function WorkoutPlanEditorPage() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const form = useForm({ defaultValues: defaults });
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
   const isNew = !id || id === "new";
+  const planBasePath = location.pathname.startsWith("/trainer/workout-plans")
+    ? "/trainer/workout-plans"
+    : "/workout-plans";
 
   useEffect(() => {
     if (isNew) return;
@@ -49,8 +53,9 @@ export default function WorkoutPlanEditorPage() {
         })),
       };
       const saved = isNew ? await workoutPlanApi.create(payload) : await workoutPlanApi.update(id, payload);
+      const savedPlan = saved?.plan || saved;
       showSuccess(isNew ? "Workout plan created" : "Workout plan updated");
-      navigate(`/workout-plans/${saved?.id || id}`);
+      navigate(`${planBasePath}/${savedPlan?.id || id}`);
     } catch (error) {
       showError(error);
     }

@@ -1,5 +1,5 @@
 import { Archive, Eye, Play, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { workoutPlanApi } from "../../api/workoutPlanApi";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import EmptyState from "../../components/EmptyState";
@@ -13,8 +13,12 @@ import { asItems } from "../../utils/format";
 import { useState } from "react";
 
 export default function WorkoutPlansPage() {
+  const location = useLocation();
   const [archiveId, setArchiveId] = useState(null);
   const { data, loading, error, reload } = useAsync(workoutPlanApi.list, []);
+  const planBasePath = location.pathname.startsWith("/trainer/workout-plans")
+    ? "/trainer/workout-plans"
+    : "/workout-plans";
 
   async function archive() {
     try {
@@ -35,7 +39,7 @@ export default function WorkoutPlansPage() {
       <PageHeader
         title="Workout Plans"
         actions={
-          <Link className="btn-primary" to="/workout-plans/new">
+          <Link className="btn-primary" to={`${planBasePath}/new`}>
             <Plus size={17} /> New plan
           </Link>
         }
@@ -46,7 +50,7 @@ export default function WorkoutPlansPage() {
             <article className="panel-hover" key={row.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <Link className="text-lg font-semibold text-ink hover:text-mint" to={`/workout-plans/${row.id}`}>
+                  <Link className="text-lg font-semibold text-ink hover:text-mint" to={`${planBasePath}/${row.id}`}>
                     {row.title}
                   </Link>
                   <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">

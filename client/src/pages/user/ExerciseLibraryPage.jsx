@@ -1,6 +1,6 @@
 import { Heart, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { exerciseApi } from "../../api/exerciseApi";
 import { favoriteApi } from "../../api/favoriteApi";
 import EmptyState from "../../components/EmptyState";
@@ -15,6 +15,7 @@ import { asItems, asPagination } from "../../utils/format";
 
 export default function ExerciseLibraryPage() {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
   const [params, setParams] = useSearchParams({ page: "1", limit: "20" });
   const [filters, setFilters] = useState({
     keyword: "",
@@ -71,6 +72,9 @@ export default function ExerciseLibraryPage() {
 
   const rows = asItems(data);
   const pagination = asPagination(data);
+  const detailBasePath = location.pathname.startsWith("/trainer/exercise-library")
+    ? "/trainer/exercise-library"
+    : "/exercises";
 
   return (
     <>
@@ -139,7 +143,7 @@ export default function ExerciseLibraryPage() {
                   className="group overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-card"
                   key={row.id}
                 >
-                  <Link className="relative block bg-slate-100" to={`/exercises/${row.id}`}>
+                  <Link className="relative block bg-slate-100" to={`${detailBasePath}/${row.id}`}>
                     {row.gifUrl || row.gif_url ? (
                       <img
                         className="aspect-square w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
@@ -155,7 +159,7 @@ export default function ExerciseLibraryPage() {
                   </Link>
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <Link className="font-semibold text-ink hover:text-mint" to={`/exercises/${row.id}`}>
+                      <Link className="font-semibold text-ink hover:text-mint" to={`${detailBasePath}/${row.id}`}>
                         {row.name}
                       </Link>
                       {isAuthenticated && (
