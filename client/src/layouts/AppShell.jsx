@@ -1,5 +1,5 @@
 import { Bell, Dumbbell, LogOut, Menu, Search, User, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import NotificationBadge from "../components/NotificationBadge";
@@ -8,12 +8,31 @@ const linkClass = ({ isActive }) => (isActive ? "sidebar-link-active" : "sidebar
 
 export default function AppShell({ navItems }) {
   const [open, setOpen] = useState(false);
+  const [workspaceQuery, setWorkspaceQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const searchMatches = useMemo(() => {
+    const query = workspaceQuery.trim().toLowerCase();
+    if (!query) return navItems.slice(0, 5);
+    return navItems.filter((item) => item.label.toLowerCase().includes(query)).slice(0, 5);
+  }, [navItems, workspaceQuery]);
 
   async function handleLogout() {
     await logout();
     navigate("/login", { replace: true });
+  }
+
+  function goToWorkspaceItem(item) {
+    if (!item) return;
+    navigate(item.to);
+    setWorkspaceQuery("");
+    setSearchOpen(false);
+  }
+
+  function handleWorkspaceSearch(event) {
+    event.preventDefault();
+    goToWorkspaceItem(searchMatches[0]);
   }
 
   return (
@@ -74,10 +93,36 @@ export default function AppShell({ navItems }) {
           <button className="btn-secondary px-3 md:hidden" type="button" onClick={() => setOpen(true)}>
             <Menu size={18} />
           </button>
-          <div className="hidden w-full max-w-md items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-400 md:flex">
-            <Search size={16} />
-            Search workspace
-          </div>
+          <form className="relative hidden w-full max-w-md md:block" onSubmit={handleWorkspaceSearch}>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              className="input rounded-full bg-slate-50 pl-10"
+              placeholder="Search workspace"
+              value={workspaceQuery}
+              onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
+              onChange={(event) => {
+                setWorkspaceQuery(event.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
+            />
+            {searchOpen && searchMatches.length > 0 && (
+              <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card">
+                {searchMatches.map((item) => (
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-surface-hover"
+                    key={item.to}
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => goToWorkspaceItem(item)}
+                  >
+                    {item.icon ? <item.icon className="text-slate-400" size={17} /> : null}
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
           <div className="flex items-center gap-3">
             <Link className="btn-secondary relative px-3" to="/notifications" title="Notifications">
               <Bell size={18} />
