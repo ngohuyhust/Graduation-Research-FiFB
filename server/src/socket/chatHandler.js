@@ -16,9 +16,36 @@ function reply(ack, error, data) {
   }
 }
 
+function createSocketRateLimiter(limits) {
+  const buckets = new Map();
+
+  return function check(eventName) {
+    const limit = limits[eventName];
+    if (!limit) return;
+
+    const now = Date.now();
+    const bucket = buckets.get(eventName);
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(eventName, { count: 1, resetAt: now + limit.windowMs });
+      return;
+    }
+
+    bucket.count += 1;
+    if (bucket.count > limit.max) throw new Error("Too many chat events. Try again later.");
+  };
+}
+
 function registerChatHandlers(socket) {
+  const checkRate = createSocketRateLimiter({
+    "chat:join": { max: 20, windowMs: 60_000 },
+    "chat:send": { max: 30, windowMs: 60_000 },
+    "chat:typing": { max: 60, windowMs: 60_000 },
+    "chat:read": { max: 60, windowMs: 60_000 },
+  });
+
   socket.on("chat:join", async ({ connectionId } = {}, ack) => {
     try {
+      checkRate("chat:join");
       ({ connectionId } = parse(validation.connectionParam, { connectionId }));
       await chatService.membership(connectionId, socket.user.id);
       await socket.join(`chat:${connectionId}`);
@@ -30,6 +57,7 @@ function registerChatHandlers(socket) {
 
   socket.on("chat:send", async ({ connectionId, content, messageType = "text" } = {}, ack) => {
     try {
+      checkRate("chat:send");
       ({ connectionId } = parse(validation.connectionParam, { connectionId }));
       const payload = parse(validation.messageSchema, { content, messageType });
       const result = await chatService.send(socket.user.id, connectionId, payload);
@@ -41,6 +69,7 @@ function registerChatHandlers(socket) {
 
   socket.on("chat:typing", async ({ connectionId, typing } = {}, ack) => {
     try {
+      checkRate("chat:typing");
       ({ connectionId } = parse(validation.connectionParam, { connectionId }));
       if (typeof typing !== "boolean") throw new Error("Invalid chat event payload");
       await chatService.membership(connectionId, socket.user.id);
@@ -53,6 +82,7 @@ function registerChatHandlers(socket) {
 
   socket.on("chat:read", async ({ connectionId } = {}, ack) => {
     try {
+      checkRate("chat:read");
       ({ connectionId } = parse(validation.connectionParam, { connectionId }));
       const result = await chatService.markRead(socket.user.id, connectionId);
       reply(ack, null, result);

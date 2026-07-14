@@ -1,4 +1,5 @@
 const { query } = require("../../db/pool");
+const { env } = require("../../config/env");
 const { getRedisClient } = require("../../redis/client");
 
 const memory = {
@@ -14,6 +15,12 @@ function secondsUntil(date) {
 
 function isExpired(record) {
   return !record || new Date(record.expires_at).getTime() <= Date.now();
+}
+
+function assertMemoryAuthStoreAllowed() {
+  if (env.nodeEnv === "production") {
+    throw new Error("Persistent Redis auth store is required in production");
+  }
 }
 
 async function redisSetJson(key, value, ttlSeconds) {
@@ -52,6 +59,7 @@ async function createSession(_client, { userId, refreshTokenHash, expiresAt, ipA
     await redis.sAdd(`user_sessions:${userId}`, refreshTokenHash);
     return record;
   }
+  assertMemoryAuthStoreAllowed();
   memory.sessions.set(refreshTokenHash, record);
   const hashes = memory.userSessions.get(userId) || new Set();
   hashes.add(refreshTokenHash);
@@ -96,6 +104,7 @@ async function revokeUserSessions(_client, userId) {
 async function createVerificationToken(_client, { userId, tokenHash, expiresAt }) {
   const record = { id: tokenHash, user_id: userId, token_hash: tokenHash, expires_at: expiresAt.toISOString() };
   if (await redisSetJson(`email_verification:${tokenHash}`, record, secondsUntil(expiresAt))) return;
+  assertMemoryAuthStoreAllowed();
   memory.emailVerificationTokens.set(tokenHash, record);
 }
 
@@ -113,6 +122,7 @@ async function markVerificationUsed(_client, id) {
 async function createPasswordResetToken(_client, { userId, tokenHash, expiresAt }) {
   const record = { id: tokenHash, user_id: userId, token_hash: tokenHash, expires_at: expiresAt.toISOString() };
   if (await redisSetJson(`password_reset:${tokenHash}`, record, secondsUntil(expiresAt))) return;
+  assertMemoryAuthStoreAllowed();
   memory.passwordResetTokens.set(tokenHash, record);
 }
 

@@ -29,9 +29,7 @@ function loginDebugContext(email, user, passwordMatches) {
     userId: user?.id || null,
     status: user?.status || null,
     verified: user ? Boolean(user.email_verified_at) : null,
-    passwordHashPrefix: user?.password_hash ? user.password_hash.slice(0, 4) : null,
-    passwordHashLength: user?.password_hash ? user.password_hash.length : null,
-    passwordMatches: typeof passwordMatches === "boolean" ? passwordMatches : null,
+    passwordChecked: typeof passwordMatches === "boolean",
   };
 }
 
@@ -71,7 +69,8 @@ async function createTokenPair(client, user, reqMeta) {
 }
 
 async function register(payload, _reqMeta) {
-  return withTransaction(async (client) => {
+  let verificationEmail;
+  const result = await withTransaction(async (client) => {
     const email = sanitizeEmail(payload.email);
     const existing = await userRepository.findByEmail(email, client);
     if (existing) throw new AppError(codes.CONFLICT, "Email is already registered", 409);
@@ -95,17 +94,19 @@ async function register(payload, _reqMeta) {
     });
 
     const verifyUrl = `${env.frontendUrl}/verify-email?email=${encodeURIComponent(user.email)}`;
-    await sendEmail(client, {
+    verificationEmail = {
       to: user.email,
       subject: "Verify your FiFB account",
       text: `Your FiFB verification code is ${verificationOtp}. Enter it here: ${verifyUrl}`,
       html: `<p>Your FiFB verification code is:</p><p><strong>${verificationOtp}</strong></p><p>Enter it here: <a href="${verifyUrl}">${verifyUrl}</a></p>`,
       templateKey: "email_verification",
       metadata: { userId: user.id },
-    });
+    };
 
     return { user };
   });
+  await sendEmail(null, verificationEmail);
+  return result;
 }
 
 async function login(payload, reqMeta) {
@@ -175,6 +176,7 @@ async function verifyEmail(email, otp) {
 async function requestPasswordReset(email) {
   const user = await userRepository.findByEmail(sanitizeEmail(email));
   if (!user) return;
+  let resetEmail;
   await withTransaction(async (client) => {
     const token = createOpaqueToken();
     await authRepository.createPasswordResetToken(client, {
@@ -183,15 +185,16 @@ async function requestPasswordReset(email) {
       expiresAt: addMinutes(new Date(), env.passwordResetTtlMinutes),
     });
     const resetUrl = `${env.frontendUrl}/reset-password?token=${token}`;
-    await sendEmail(client, {
+    resetEmail = {
       to: user.email,
       subject: "Reset your FiFB password",
       text: `Reset your password: ${resetUrl}`,
       html: `<p>Reset your FiFB password:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
       templateKey: "password_reset",
       metadata: { userId: user.id },
-    });
+    };
   });
+  await sendEmail(null, resetEmail);
 }
 
 async function resetPassword(token, newPassword) {

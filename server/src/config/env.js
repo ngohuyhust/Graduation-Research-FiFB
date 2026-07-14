@@ -78,7 +78,13 @@ function validateEnv() {
     for (const key of ["DATABASE_URL", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "JWT_ACCESS_EXPIRES_IN", "CORS_ORIGIN"]) {
       if (!data[key]) issues.push(`- ${key} is required in production`);
     }
-    if (!data.REDIS_DISABLED && !data.REDIS_URL) issues.push("- REDIS_URL is required in production unless REDIS_DISABLED=true");
+    if (data.REDIS_DISABLED) issues.push("- REDIS_DISABLED cannot be true in production");
+    if (!data.REDIS_URL && !(data.UPSTASH_REDIS_REST_URL && data.UPSTASH_REDIS_REST_TOKEN)) {
+      issues.push("- REDIS_URL or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN is required in production");
+    }
+    if (data.REFRESH_COOKIE_SAME_SITE === "none") {
+      issues.push("- REFRESH_COOKIE_SAME_SITE=none requires CSRF protection and is not allowed by this build");
+    }
   }
 
   if (accessSecret && accessSecret.length < 32) issues.push("- JWT_ACCESS_SECRET must be at least 32 characters");
