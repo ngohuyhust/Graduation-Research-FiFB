@@ -12,6 +12,9 @@ function publicUser(user) {
     lastLoginAt: user.last_login_at,
     fitnessGoal: user.fitness_goal,
     experienceLevel: user.experience_level,
+    gender: user.gender,
+    weight: user.weight ? Number(user.weight) : null,
+    height: user.height ? Number(user.height) : null,
     createdAt: user.created_at,
     updatedAt: user.updated_at,
   };

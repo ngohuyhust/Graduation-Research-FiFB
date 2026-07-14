@@ -2,13 +2,17 @@ const { query } = require("../../db/pool");
 
 const selectable = `
   id, email, full_name, phone, avatar_url, role, status, email_verified_at,
-  last_login_at, password_changed_at, fitness_goal, experience_level, created_at, updated_at
+  last_login_at, password_changed_at, fitness_goal, experience_level,
+  gender, weight, height, created_at, updated_at
 `;
 
 async function createUser(client, user) {
   const result = await client.query(
-    `INSERT INTO app_users (email, password_hash, full_name, phone, role, status, fitness_goal, experience_level)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO app_users (
+       email, password_hash, full_name, phone, role, status,
+       fitness_goal, experience_level, gender, weight, height
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING ${selectable}`,
     [
       user.email,
@@ -19,6 +23,9 @@ async function createUser(client, user) {
       user.status,
       user.fitnessGoal || null,
       user.experienceLevel || null,
+      user.gender || null,
+      user.weight || null,
+      user.height || null,
     ],
   );
   return result.rows[0];
@@ -52,10 +59,23 @@ async function updateProfile(id, payload) {
          avatar_url = COALESCE($4, avatar_url),
          fitness_goal = COALESCE($5, fitness_goal),
          experience_level = COALESCE($6, experience_level),
+         gender = COALESCE($7, gender),
+         weight = COALESCE($8, weight),
+         height = COALESCE($9, height),
          updated_at = now()
      WHERE id = $1 AND deleted_at IS NULL
      RETURNING ${selectable}`,
-    [id, payload.fullName, payload.phone, payload.avatarUrl, payload.fitnessGoal, payload.experienceLevel],
+    [
+      id,
+      payload.fullName,
+      payload.phone,
+      payload.avatarUrl,
+      payload.fitnessGoal,
+      payload.experienceLevel,
+      payload.gender,
+      payload.weight,
+      payload.height,
+    ],
   );
   return result.rows[0] || null;
 }

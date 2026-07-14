@@ -1,6 +1,8 @@
 const { z } = require("zod");
 
 const password = z.string().min(8).max(128);
+const fitnessGoal = z.enum(["lose_weight", "gain_muscle", "increase_strength"]);
+const gender = z.enum(["male", "female"]);
 
 const registerSchema = z.object({
   email: z.string().email().max(320),
@@ -8,7 +10,10 @@ const registerSchema = z.object({
   fullName: z.string().min(1).max(120).optional(),
   phone: z.string().trim().min(1).max(40),
   role: z.enum(["user", "trainer"]).default("user"),
-  fitnessGoal: z.string().max(500).optional(),
+  fitnessGoal: fitnessGoal.optional(),
+  gender: gender.optional(),
+  weight: z.number().positive().max(500).optional(),
+  height: z.number().positive().max(300).optional(),
   experienceLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),
 });
 

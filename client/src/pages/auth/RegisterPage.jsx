@@ -1,9 +1,26 @@
-import { Activity, Dumbbell, UserRound, Users } from "lucide-react";
+import { Activity, Dumbbell, Ruler, Scale, TrendingDown, UserRound, Users, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../api/authApi";
 import FormField from "../../components/FormField";
 import { showError, showSuccess } from "../../components/ToastBridge";
+
+const fitnessGoalOptions = [
+  { value: "lose_weight", label: "Lose Weight", icon: TrendingDown },
+  { value: "gain_muscle", label: "Gain Muscle", icon: Dumbbell },
+  { value: "increase_strength", label: "Increase Strength", icon: Zap },
+];
+
+const genderOptions = [
+  { value: "male", label: "Male", icon: UserRound },
+  { value: "female", label: "Female", icon: Users },
+];
+
+function optionalNumber(value) {
+  if (value === "" || value == null) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -16,14 +33,42 @@ export default function RegisterPage() {
       role: "user",
       fitnessGoal: "",
       experienceLevel: "",
+      gender: "",
+      weight: "",
+      weightUnit: "kg",
+      height: "",
+      heightUnit: "cm",
     },
   });
   const role = watch("role");
+  const gender = watch("gender");
+  const fitnessGoal = watch("fitnessGoal");
   const experienceLevel = watch("experienceLevel");
 
   async function onSubmit(values) {
     try {
-      const payload = { ...values, phone: values.phone.trim(), experienceLevel: values.experienceLevel || undefined };
+      let weight = optionalNumber(values.weight);
+      if (weight && values.weightUnit === "lb") {
+        weight = Number((weight * 0.453592).toFixed(2));
+      }
+
+      let height = optionalNumber(values.height);
+      if (height && values.heightUnit === "in") {
+        height = Number((height * 2.54).toFixed(1));
+      }
+
+      const payload = {
+        email: values.email.trim(),
+        password: values.password,
+        fullName: values.fullName.trim(),
+        phone: values.phone.trim(),
+        role: values.role,
+        fitnessGoal: values.fitnessGoal || undefined,
+        gender: values.gender || undefined,
+        weight,
+        height,
+        experienceLevel: values.experienceLevel || undefined,
+      };
       await authApi.register(payload);
       reset();
       showSuccess("Registration created. Check email for your verification code.");
@@ -91,9 +136,91 @@ export default function RegisterPage() {
           })}
         </div>
       </FormField>
-      <FormField label="Fitness goal">
-        <textarea className="input min-h-24" {...register("fitnessGoal")} />
-      </FormField>
+      <div>
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Gender</span>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {genderOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <label
+                className={`cursor-pointer rounded-xl border p-4 transition-all ${gender === option.value ? "border-mint bg-mint/5 shadow-glow" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                key={option.value}
+              >
+                <input className="sr-only" type="radio" value={option.value} {...register("gender")} />
+                <span className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                  <Icon size={18} /> {option.label}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormField label="Weight">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Scale
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={17}
+              />
+              <input
+                className="input pl-10"
+                min="1"
+                step="0.1"
+                type="number"
+                {...register("weight", {
+                  min: { value: 1, message: "Weight must be positive" },
+                })}
+              />
+            </div>
+            <select className="input w-24" {...register("weightUnit")}>
+              <option value="kg">kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </FormField>
+        <FormField label="Height">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Ruler
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={17}
+              />
+              <input
+                className="input pl-10"
+                min="1"
+                step="0.1"
+                type="number"
+                {...register("height", {
+                  min: { value: 1, message: "Height must be positive" },
+                })}
+              />
+            </div>
+            <select className="input w-24" {...register("heightUnit")}>
+              <option value="cm">cm</option>
+              <option value="in">in</option>
+            </select>
+          </div>
+        </FormField>
+      </div>
+      <div>
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Fitness goal</span>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {fitnessGoalOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <label
+                className={`cursor-pointer rounded-xl border px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider transition-all ${fitnessGoal === option.value ? "border-mint bg-mint/5 text-mint shadow-glow" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                key={option.value}
+              >
+                <input className="sr-only" type="radio" value={option.value} {...register("fitnessGoal")} />
+                <Icon className="mx-auto mb-1" size={16} />
+                {option.label}
+              </label>
+            );
+          })}
+        </div>
+      </div>
       <FormField label="Experience level">
         <div className="grid gap-2 sm:grid-cols-3">
           {["beginner", "intermediate", "advanced"].map((level) => (
