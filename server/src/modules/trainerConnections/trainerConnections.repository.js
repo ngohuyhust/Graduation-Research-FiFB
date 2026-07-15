@@ -72,8 +72,28 @@ async function createConnection(client, request) {
 async function listRequests(user) {
   const result = await query(
     user.role === "trainer"
-      ? "SELECT * FROM trainer_connection_requests WHERE trainer_id = $1 ORDER BY created_at DESC"
-      : "SELECT * FROM trainer_connection_requests WHERE user_id = $1 ORDER BY created_at DESC",
+      ? `SELECT tcr.*,
+           requester.full_name AS user_name,
+           requester.email AS user_email,
+           requester.avatar_url AS user_avatar_url,
+           utc.id AS connection_id,
+           utc.status AS connection_status
+         FROM trainer_connection_requests tcr
+         JOIN app_users requester ON requester.id = tcr.user_id
+         LEFT JOIN user_trainer_connections utc ON utc.request_id = tcr.id
+         WHERE tcr.trainer_id = $1
+         ORDER BY tcr.created_at DESC`
+      : `SELECT tcr.*,
+           trainer.full_name AS trainer_name,
+           trainer.email AS trainer_email,
+           trainer.avatar_url AS trainer_avatar_url,
+           utc.id AS connection_id,
+           utc.status AS connection_status
+         FROM trainer_connection_requests tcr
+         JOIN app_users trainer ON trainer.id = tcr.trainer_id
+         LEFT JOIN user_trainer_connections utc ON utc.request_id = tcr.id
+         WHERE tcr.user_id = $1
+         ORDER BY tcr.created_at DESC`,
     [user.id],
   );
   return result.rows;

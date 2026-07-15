@@ -16,8 +16,9 @@ export const trainerApi = {
   myConnections: () =>
     httpClient.get("/trainer-connection-requests/connections").then((payload) => unwrapList(payload, "connections")),
   sendRequest: (payload) => httpClient.post("/trainer-connection-requests", payload),
-  requests: () => httpClient.get("/trainer-connection-requests"),
-  connections: () => httpClient.get("/trainer-connection-requests/connections"),
+  requests: () => httpClient.get("/trainer-connection-requests").then((payload) => unwrapList(payload, "requests")),
+  connections: () =>
+    httpClient.get("/trainer-connection-requests/connections").then((payload) => unwrapList(payload, "connections")),
   cancelRequest: (id) => httpClient.patch(`/trainer-connection-requests/${id}/cancel`),
   approveRequest: (id) => httpClient.patch(`/trainer-connection-requests/${id}/approve`),
   rejectRequest: (id, rejectReason) => httpClient.patch(`/trainer-connection-requests/${id}/reject`, { rejectReason }),

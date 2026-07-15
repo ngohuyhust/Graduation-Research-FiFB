@@ -101,6 +101,7 @@ export default function AppRoutes() {
               <Route path="/trainer/workout-plans/new" element={<WorkoutPlanEditorPage />} />
               <Route path="/trainer/workout-plans/:id" element={<WorkoutPlanEditorPage />} />
               <Route path="/trainer/notifications" element={<NotificationsPage />} />
+              <Route path="/trainer/chat/:connectionId" element={<ChatPage />} />
             </Route>
           </Route>
 

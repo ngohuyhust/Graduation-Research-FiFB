@@ -1,5 +1,5 @@
 import { Link2, MessageCircle, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";
 import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";
@@ -11,6 +11,8 @@ import { useAsync } from "../../hooks/useAsync";
 import { asItems } from "../../utils/format";
 
 export default function ConnectionsPage() {
+  const location = useLocation();
+  const chatBasePath = location.pathname.startsWith("/trainer") ? "/trainer/chat" : "/chat";
   const { data, loading, error, reload } = useAsync(async () => {
     const [requests, connections] = await Promise.all([trainerApi.requests(), trainerApi.connections()]);
     return { requests, connections };
@@ -82,7 +84,7 @@ export default function ConnectionsPage() {
                   <div className="flex items-center gap-2">
                     <StatusBadge value={row.status} />
                     {row.status === "active" && (
-                      <Link className="btn-secondary relative px-3" to={`/chat/${row.id}`}>
+                      <Link className="btn-secondary relative px-3" to={`${chatBasePath}/${row.id}`}>
                         <MessageCircle size={16} />
                         Chat
                         {Number(row.unreadCount || row.unread_count) > 0 && (
