@@ -1,3 +1,4 @@
+// Gioi han tan suat request cho API va auth endpoints.
 const rateLimit = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const { getRedisClient } = require("../redis/client");

@@ -1,3 +1,4 @@
+// Component error boundary dung chung trong giao dien.
 import { Component } from "react";
 
 export default class ErrorBoundary extends Component {

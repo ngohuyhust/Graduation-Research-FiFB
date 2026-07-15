@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho workout sessions service.
 jest.mock("../src/modules/workoutSessions/workoutSessions.repository", () => ({
   findOwnedPlan: jest.fn(),
   create: jest.fn(),

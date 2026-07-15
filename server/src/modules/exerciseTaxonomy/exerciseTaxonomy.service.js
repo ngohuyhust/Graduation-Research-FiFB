@@ -1,3 +1,4 @@
+// Service chua nghiep vu chinh cua module exerciseTaxonomy.
 const repository = require("./exerciseTaxonomy.repository");
 const { invalidateByPrefix } = require("../../utils/cache");
 

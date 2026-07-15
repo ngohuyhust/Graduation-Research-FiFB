@@ -1,3 +1,4 @@
+// Cung cap helper cache dung chung cho server.
 const { getRedisClient } = require("../redis/client");
 
 async function invalidateByPrefix(prefix) {

@@ -1,3 +1,4 @@
+// Component notification badge dung chung trong giao dien.
 import { useNotifications } from "../hooks/useNotifications";
 
 export default function NotificationBadge() {

@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module emailDeliveries.
 const { z } = require("zod");
 
 const deliveryQuerySchema = z.object({

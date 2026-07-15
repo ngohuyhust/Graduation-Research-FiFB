@@ -1,3 +1,4 @@
+// Layout trainer layout tao khung giao dien cho cac trang.
 import {
   Award,
   Bell,

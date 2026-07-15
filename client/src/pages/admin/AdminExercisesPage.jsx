@@ -1,3 +1,4 @@
+// Trang admin exercises hien thi va xu ly luong nguoi dung.
 import { Check, ChevronDown, Dumbbell, Plus, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";

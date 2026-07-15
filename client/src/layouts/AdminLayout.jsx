@@ -1,3 +1,4 @@
+// Layout admin layout tao khung giao dien cho cac trang.
 import { Award, BarChart3, Dumbbell, Mail, ScrollText, Users } from "lucide-react";
 import AppShell from "./AppShell";
 

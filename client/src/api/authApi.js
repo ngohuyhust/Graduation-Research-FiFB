@@ -1,3 +1,4 @@
+// Goi API auth tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const authApi = {

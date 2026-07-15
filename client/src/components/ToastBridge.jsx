@@ -1,3 +1,4 @@
+// Component toast bridge dung chung trong giao dien.
 import { toast } from "sonner";
 import { getErrorMessage } from "../utils/errors";
 

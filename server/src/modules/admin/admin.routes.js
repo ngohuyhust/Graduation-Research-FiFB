@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module admin.
 const express = require("express");
 const controller = require("./admin.controller");
 const validation = require("./admin.validation");

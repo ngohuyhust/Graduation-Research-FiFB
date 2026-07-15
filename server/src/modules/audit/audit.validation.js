@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module audit.
 const { z } = require("zod");
 
 const auditQuerySchema = z.object({

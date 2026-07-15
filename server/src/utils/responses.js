@@ -1,3 +1,4 @@
+// Chuan hoa response thanh cong tra ve client.
 function sendSuccess(res, data = null, message = "OK", statusCode = 200) {
   return res.status(statusCode).json({ success: true, data, message });
 }

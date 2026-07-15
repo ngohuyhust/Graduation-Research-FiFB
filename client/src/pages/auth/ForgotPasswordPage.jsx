@@ -1,3 +1,4 @@
+// Trang forgot password hien thi va xu ly luong nguoi dung.
 import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";

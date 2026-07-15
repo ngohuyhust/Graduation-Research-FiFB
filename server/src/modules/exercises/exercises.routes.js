@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module exercises.
 const express = require("express");
 const controller = require("./exercises.controller");
 const validation = require("./exercises.validation");

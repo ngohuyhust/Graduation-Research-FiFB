@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module notifications.
 const express = require("express");
 const controller = require("./notifications.controller");
 const validation = require("./notifications.validation");

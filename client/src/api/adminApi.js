@@ -1,3 +1,4 @@
+// Goi API admin tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const adminApi = {

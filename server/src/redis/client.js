@@ -1,3 +1,4 @@
+// Tao va tai su dung Redis client cho cache, rate limit.
 const { Redis } = require("@upstash/redis");
 const { createClient } = require("redis");
 const { env } = require("../config/env");

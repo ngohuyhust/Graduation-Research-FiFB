@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+// Context quan ly trang thai socket context cho ung dung.
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { toast } from "sonner";

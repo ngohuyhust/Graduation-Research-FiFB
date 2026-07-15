@@ -1,3 +1,4 @@
+// Xu ly su kien chat realtime qua Socket.IO.
 const chatService = require("../modules/chat/chat.service");
 const validation = require("../modules/chat/chat.validation");
 

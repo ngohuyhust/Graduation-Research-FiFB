@@ -1,3 +1,4 @@
+// Cau hinh HTTP client va interceptor cho API.
 import axios from "axios";
 import { getErrorMessage } from "../utils/errors";
 import { clearTokens, getAccessToken, getTokenVersion, setAccessToken } from "./tokenStore";

@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho tokens.
 const { createOpaqueToken, hashToken } = require("../src/utils/tokens");
 const { signAccessToken, verifyAccessToken } = require("../src/modules/auth/jwt.service");
 

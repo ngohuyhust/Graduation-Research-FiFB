@@ -1,3 +1,4 @@
+// Goi API favorite tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const favoriteApi = {

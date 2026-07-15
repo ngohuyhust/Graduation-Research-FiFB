@@ -1,3 +1,4 @@
+// Layout user layout tao khung giao dien cho cac trang.
 import { Activity, Bell, Dumbbell, Heart, Layers, MessageCircle, User, Users } from "lucide-react";
 import AppShell from "./AppShell";
 

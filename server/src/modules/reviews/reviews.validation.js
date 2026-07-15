@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module reviews.
 const { z } = require("zod");
 
 const reviewSchema = z.object({

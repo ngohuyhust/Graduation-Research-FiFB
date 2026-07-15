@@ -1,3 +1,4 @@
+// Trang admin dashboard hien thi va xu ly luong nguoi dung.
 import { Award, Dumbbell, ScrollText, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";

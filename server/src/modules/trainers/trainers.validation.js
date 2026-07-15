@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module trainers.
 const { z } = require("zod");
 
 const trainerProfileSchema = z.object({

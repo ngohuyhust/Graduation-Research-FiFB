@@ -1,3 +1,4 @@
+// Component confirm dialog dung chung trong giao dien.
 import { AlertTriangle, HelpCircle } from "lucide-react";
 
 export default function ConfirmDialog({ open, title, message, confirmLabel = "Confirm", onCancel, onConfirm, danger }) {

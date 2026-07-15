@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module notifications.
 const { sendSuccess, sendNoContent } = require("../../utils/responses");
 const service = require("./notifications.service");
 

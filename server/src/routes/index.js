@@ -1,3 +1,4 @@
+// Gom tat ca route module vao mot router /api.
 const express = require("express");
 const authRoutes = require("../modules/auth/auth.routes");
 const userRoutes = require("../modules/users/users.routes");

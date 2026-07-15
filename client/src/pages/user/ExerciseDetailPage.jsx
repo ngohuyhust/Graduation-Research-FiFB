@@ -1,3 +1,4 @@
+// Trang exercise detail hien thi va xu ly luong nguoi dung.
 import { Heart } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { exerciseApi } from "../../api/exerciseApi";

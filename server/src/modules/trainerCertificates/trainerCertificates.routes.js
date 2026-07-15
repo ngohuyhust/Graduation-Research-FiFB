@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module trainerCertificates.
 const express = require("express");
 const controller = require("./trainerCertificates.controller");
 const validation = require("./trainerCertificates.validation");

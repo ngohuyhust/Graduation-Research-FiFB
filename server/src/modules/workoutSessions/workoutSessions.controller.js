@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module workoutSessions.
 const { sendCreated, sendSuccess } = require("../../utils/responses");
 const service = require("./workoutSessions.service");
 

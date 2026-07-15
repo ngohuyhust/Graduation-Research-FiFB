@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module chat.
 const { sendCreated, sendSuccess } = require("../../utils/responses");
 const service = require("./chat.service");
 

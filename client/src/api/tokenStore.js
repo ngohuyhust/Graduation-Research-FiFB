@@ -1,3 +1,4 @@
+// Luu va doc access token o phia client.
 let accessToken = null;
 const refreshKey = "fifb_refresh_token";
 let tokenVersion = 0;

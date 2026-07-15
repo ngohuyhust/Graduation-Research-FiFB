@@ -1,3 +1,4 @@
+// Trang admin users hien thi va xu ly luong nguoi dung.
 import { Lock, ShieldCheck, SlidersHorizontal, UserX } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";

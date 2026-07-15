@@ -1,3 +1,4 @@
+// Diem vao React, render ung dung vao DOM.
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

@@ -1,3 +1,4 @@
+// Dinh nghia lop loi co code va HTTP status.
 class AppError extends Error {
   constructor(code, message, statusCode = 500, details = undefined) {
     super(message);

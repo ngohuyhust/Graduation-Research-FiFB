@@ -1,3 +1,4 @@
+// Component empty state dung chung trong giao dien.
 import { Inbox } from "lucide-react";
 
 export default function EmptyState({ title = "No data", description = "There is nothing to show yet." }) {

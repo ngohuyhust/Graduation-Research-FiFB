@@ -1,3 +1,4 @@
+// Component loading state dung chung trong giao dien.
 import { Loader2 } from "lucide-react";
 
 export default function LoadingState({ label = "Loading..." }) {

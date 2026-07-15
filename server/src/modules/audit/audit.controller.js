@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module audit.
 const { sendSuccess } = require("../../utils/responses");
 const service = require("./audit.service");
 

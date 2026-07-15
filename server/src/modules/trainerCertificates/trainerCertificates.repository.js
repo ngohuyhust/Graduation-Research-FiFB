@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module trainerCertificates.
 const { query } = require("../../db/pool");
 
 async function ensureTrainerProfile(client, trainerId) {

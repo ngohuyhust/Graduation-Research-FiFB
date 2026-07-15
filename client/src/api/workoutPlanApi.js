@@ -1,3 +1,4 @@
+// Goi API workout plan tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const workoutPlanApi = {

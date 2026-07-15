@@ -1,3 +1,4 @@
+// Tao, hash va tinh han token noi bo.
 const crypto = require("crypto");
 
 function createOpaqueToken(bytes = 48) {

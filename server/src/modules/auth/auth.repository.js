@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module auth.
 const { query } = require("../../db/pool");
 const { env } = require("../../config/env");
 const { getRedisClient } = require("../../redis/client");

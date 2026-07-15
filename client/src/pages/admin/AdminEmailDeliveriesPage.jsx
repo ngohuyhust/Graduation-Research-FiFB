@@ -1,3 +1,4 @@
+// Trang admin email deliveries hien thi va xu ly luong nguoi dung.
 import { Mail } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import DataTable from "../../components/DataTable";

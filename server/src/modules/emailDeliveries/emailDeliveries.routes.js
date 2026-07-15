@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module emailDeliveries.
 const express = require("express");
 const controller = require("./emailDeliveries.controller");
 const validation = require("./emailDeliveries.validation");

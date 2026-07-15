@@ -1,3 +1,4 @@
+// Phat su kien realtime tu server den client.
 const { getIO } = require("./index");
 
 function emitToUser(userId, event, data) {

@@ -1,3 +1,4 @@
+// Tao va kiem tra access token JWT cho nguoi dung.
 const jwt = require("jsonwebtoken");
 const { env } = require("../../config/env");
 

@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module chat.
 const { query } = require("../../db/pool");
 
 async function findMembership(connectionId, userId) {

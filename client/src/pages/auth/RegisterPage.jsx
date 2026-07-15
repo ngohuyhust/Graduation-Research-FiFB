@@ -1,3 +1,4 @@
+// Trang register hien thi va xu ly luong nguoi dung.
 import { Activity, Dumbbell, Ruler, Scale, TrendingDown, UserRound, Users, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";

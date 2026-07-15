@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho reviews repository.
 jest.mock("../src/db/pool", () => ({
   query: jest.fn(),
 }));

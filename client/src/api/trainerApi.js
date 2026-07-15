@@ -1,3 +1,4 @@
+// Goi API trainer tu giao dien client.
 import { httpClient } from "./httpClient";
 
 function unwrapList(payload, key) {

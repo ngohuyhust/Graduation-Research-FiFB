@@ -1,3 +1,4 @@
+// Helper errors dung chung trong client.
 export function getErrorMessage(error) {
   if (typeof error === "string") return sanitizeMessage(error);
   if (error?.userMessage) return error.userMessage;

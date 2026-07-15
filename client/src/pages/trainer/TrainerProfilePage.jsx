@@ -1,3 +1,4 @@
+// Trang trainer profile hien thi va xu ly luong nguoi dung.
 import { UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { trainerApi } from "../../api/trainerApi";

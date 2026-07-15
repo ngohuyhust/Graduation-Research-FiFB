@@ -1,3 +1,4 @@
+// Trang reset password hien thi va xu ly luong nguoi dung.
 import { KeyRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";

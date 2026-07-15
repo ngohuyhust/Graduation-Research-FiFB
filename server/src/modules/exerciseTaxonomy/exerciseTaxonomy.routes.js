@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module exerciseTaxonomy.
 const express = require("express");
 const controller = require("./exerciseTaxonomy.controller");
 const validation = require("./exerciseTaxonomy.validation");

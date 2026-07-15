@@ -1,3 +1,4 @@
+// Gan requestId de trace log va response.
 const crypto = require("crypto");
 
 function requestId(req, res, next) {

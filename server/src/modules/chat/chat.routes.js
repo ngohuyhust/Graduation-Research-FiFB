@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module chat.
 const express = require("express");
 const controller = require("./chat.controller");
 const validation = require("./chat.validation");

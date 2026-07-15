@@ -1,3 +1,4 @@
+// Khoi tao Express app va gan middleware, routes, error handler.
 const express = require("express");
 const helmet = require("helmet");
 const compression = require("compression");

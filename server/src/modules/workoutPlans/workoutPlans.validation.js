@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module workoutPlans.
 const { z } = require("zod");
 
 const workoutItemSchema = z.object({

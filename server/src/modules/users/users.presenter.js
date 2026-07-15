@@ -1,3 +1,4 @@
+// Dinh dang du lieu users truoc khi tra ve client.
 function publicUser(user) {
   if (!user) return null;
   return {

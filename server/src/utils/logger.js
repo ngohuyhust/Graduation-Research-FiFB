@@ -1,3 +1,4 @@
+// Cau hinh logger dung chung cho server.
 const { env } = require("../config/env");
 
 const SENSITIVE_KEYS = new Set([

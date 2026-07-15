@@ -1,3 +1,4 @@
+// Goi API exercise tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const exerciseApi = {

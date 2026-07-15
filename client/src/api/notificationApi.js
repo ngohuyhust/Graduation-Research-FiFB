@@ -1,3 +1,4 @@
+// Goi API notification tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const notificationApi = {

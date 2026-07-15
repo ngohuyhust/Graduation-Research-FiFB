@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module emailDeliveries.
 const sgMail = require("@sendgrid/mail");
 const { env } = require("../../config/env");
 

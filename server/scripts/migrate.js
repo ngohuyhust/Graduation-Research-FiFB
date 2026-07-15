@@ -1,3 +1,4 @@
+// Script ho tro migrate cho server.
 const fs = require("fs");
 const path = require("path");
 const { pool } = require("../src/db/pool");

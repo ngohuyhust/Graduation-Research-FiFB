@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module notifications.
 const { query } = require("../../db/pool");
 const { emitToUser } = require("../../socket/emitters");
 

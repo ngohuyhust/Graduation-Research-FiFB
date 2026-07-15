@@ -1,3 +1,4 @@
+// Khoi tao Socket.IO va gan cac handler realtime.
 const { Server } = require("socket.io");
 const { env } = require("../config/env");
 const { verifyAccessToken } = require("../modules/auth/jwt.service");

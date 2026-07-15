@@ -1,3 +1,4 @@
+// Trang admin audit logs hien thi va xu ly luong nguoi dung.
 import { adminApi } from "../../api/adminApi";
 import EmptyState from "../../components/EmptyState";
 import ErrorState from "../../components/ErrorState";

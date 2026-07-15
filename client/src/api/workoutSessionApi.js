@@ -1,3 +1,4 @@
+// Goi API workout session tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const workoutSessionApi = {

@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho app.
 const request = require("supertest");
 const { createApp } = require("../src/app");
 

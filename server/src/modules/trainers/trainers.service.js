@@ -1,3 +1,4 @@
+// Service chua nghiep vu chinh cua module trainers.
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");

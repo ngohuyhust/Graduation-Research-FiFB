@@ -1,3 +1,4 @@
+// Gan va xoa refresh token trong cookie HTTP-only.
 const { env } = require("../../config/env");
 
 const REFRESH_COOKIE_NAME = "fifb_refresh_token";

@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module users.
 const express = require("express");
 const controller = require("./users.controller");
 const validation = require("./users.validation");

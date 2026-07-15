@@ -1,3 +1,4 @@
+// Boc controller async de loi tu dong di vao errorHandler.
 function asyncHandler(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }

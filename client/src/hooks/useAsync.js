@@ -1,3 +1,4 @@
+// Hook use async dung lai logic trong component.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getErrorMessage } from "../utils/errors";
 

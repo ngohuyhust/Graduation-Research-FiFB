@@ -1,3 +1,4 @@
+// Trang trainer certificates hien thi va xu ly luong nguoi dung.
 import { Award, ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

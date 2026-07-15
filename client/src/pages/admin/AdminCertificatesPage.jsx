@@ -1,3 +1,4 @@
+// Trang admin certificates hien thi va xu ly luong nguoi dung.
 import { Award, Check, X } from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import DataTable from "../../components/DataTable";

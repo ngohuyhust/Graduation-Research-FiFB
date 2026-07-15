@@ -1,3 +1,4 @@
+// Component goc lap rap provider va route cua client.
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 

@@ -1,3 +1,4 @@
+// Trang trainer detail hien thi va xu ly luong nguoi dung.
 import { ShieldCheck, Star, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";

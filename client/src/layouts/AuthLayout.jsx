@@ -1,3 +1,4 @@
+// Layout auth layout tao khung giao dien cho cac trang.
 import { Dumbbell } from "lucide-react";
 import { Link, Outlet } from "react-router-dom";
 

@@ -1,3 +1,4 @@
+// Dinh nghia dieu huong va bao ve route protected route.
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import LoadingState from "../components/LoadingState";
 import { useAuth } from "../contexts/AuthContext";

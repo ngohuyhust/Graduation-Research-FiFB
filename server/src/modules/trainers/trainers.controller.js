@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module trainers.
 const { sendSuccess } = require("../../utils/responses");
 const service = require("./trainers.service");
 

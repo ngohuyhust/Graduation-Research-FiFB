@@ -1,3 +1,4 @@
+// Component error state dung chung trong giao dien.
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { getErrorMessage } from "../utils/errors";
 

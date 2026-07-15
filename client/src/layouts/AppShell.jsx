@@ -1,3 +1,4 @@
+// Layout app shell tao khung giao dien cho cac trang.
 import { Bell, Dumbbell, LogOut, Menu, Search, User, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";

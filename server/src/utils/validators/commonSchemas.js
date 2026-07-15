@@ -1,3 +1,4 @@
+// Chua cac schema validate dung lai nhieu noi.
 const { z } = require("zod");
 
 const uuidParam = z.object({ id: z.string().uuid() });

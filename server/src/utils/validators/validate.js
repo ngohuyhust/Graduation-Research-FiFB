@@ -1,3 +1,4 @@
+// Middleware validate request bang schema.
 const { ZodError } = require("zod");
 const { AppError } = require("../errors/AppError");
 const codes = require("../errors/errorCodes");

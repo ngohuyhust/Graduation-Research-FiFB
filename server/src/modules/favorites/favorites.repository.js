@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module favorites.
 const { query } = require("../../db/pool");
 const { exerciseLibrarySelect, camelExercise } = require("../exercises/exercises.repository");
 

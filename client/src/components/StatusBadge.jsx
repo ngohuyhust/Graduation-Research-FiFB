@@ -1,3 +1,4 @@
+// Component status badge dung chung trong giao dien.
 const styles = {
   active: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",

@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module audit.
 const { query } = require("../../db/pool");
 
 async function createAudit(client, payload) {

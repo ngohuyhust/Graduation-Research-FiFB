@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+// Context quan ly trang thai auth context cho ung dung.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { authApi } from "../api/authApi";
 import { setUnauthorizedHandler } from "../api/httpClient";

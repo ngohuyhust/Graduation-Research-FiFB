@@ -1,3 +1,4 @@
+// Xac thuc JWT va kiem tra quyen/trang thai nguoi dung.
 const { verifyAccessToken } = require("../modules/auth/jwt.service");
 const userRepository = require("../modules/users/users.repository");
 const { AppError } = require("../utils/errors/AppError");

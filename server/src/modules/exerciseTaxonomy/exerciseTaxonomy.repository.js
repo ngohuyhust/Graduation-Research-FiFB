@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module exerciseTaxonomy.
 const { query } = require("../../db/pool");
 
 const tables = {

@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module favorites.
 const express = require("express");
 const controller = require("./favorites.controller");
 const validation = require("./favorites.validation");

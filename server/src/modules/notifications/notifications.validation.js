@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module notifications.
 const { z } = require("zod");
 
 const notificationQuerySchema = z.object({

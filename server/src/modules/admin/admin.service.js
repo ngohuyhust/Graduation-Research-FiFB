@@ -1,3 +1,4 @@
+// Service chua nghiep vu chinh cua module admin.
 const usersService = require("../users/users.service");
 const certificateService = require("../trainerCertificates/trainerCertificates.service");
 const exercisesService = require("../exercises/exercises.service");

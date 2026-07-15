@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module users.
 const { z } = require("zod");
 
 const fitnessGoal = z.enum(["lose_weight", "gain_muscle", "increase_strength"]);

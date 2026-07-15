@@ -1,3 +1,4 @@
+// Trang workout session hien thi va xu ly luong nguoi dung.
 import { CheckCircle2, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";

@@ -1,3 +1,4 @@
+// Component form field dung chung trong giao dien.
 import { AlertCircle } from "lucide-react";
 
 export default function FormField({ label, error, children }) {

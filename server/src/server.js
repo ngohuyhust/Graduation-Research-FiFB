@@ -1,3 +1,4 @@
+// Chay HTTP server va khoi dong ket noi thoi gian thuc.
 const http = require("http");
 const { createApp } = require("./app");
 const { env } = require("./config/env");

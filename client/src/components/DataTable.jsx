@@ -1,3 +1,4 @@
+// Component data table dung chung trong giao dien.
 import EmptyState from "./EmptyState";
 
 export default function DataTable({ columns, rows, emptyTitle }) {

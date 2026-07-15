@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module admin.
 const { sendSuccess } = require("../../utils/responses");
 const service = require("./admin.service");
 

@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho favorites service.
 jest.mock("../src/db/pool", () => ({
   withTransaction: (callback) => callback({ query: jest.fn() }),
 }));

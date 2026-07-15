@@ -1,3 +1,4 @@
+// Cache response JSON vao Redis de tang toc cac API doc.
 const { getRedisClient } = require("../redis/client");
 
 function cacheResponse(ttlSeconds = 300, keyPrefix = "cache") {

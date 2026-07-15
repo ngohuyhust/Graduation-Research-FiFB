@@ -1,3 +1,4 @@
+// Component page header dung chung trong giao dien.
 export default function PageHeader({ title, description, actions }) {
   return (
     <div className="mb-8 flex animate-fade-in flex-col gap-4 md:flex-row md:items-end md:justify-between">

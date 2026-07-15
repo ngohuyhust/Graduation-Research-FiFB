@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module auth.
 const { z } = require("zod");
 
 const password = z.string().min(8).max(128);

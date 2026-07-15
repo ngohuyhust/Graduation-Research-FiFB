@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module workoutSessions.
 const { query } = require("../../db/pool");
 
 function offset({ page, limit }) {

@@ -1,3 +1,4 @@
+// Dinh nghia dieu huong va bao ve route app.
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoadingState from "../components/LoadingState";

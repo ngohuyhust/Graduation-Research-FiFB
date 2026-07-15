@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module reviews.
 const { query } = require("../../db/pool");
 
 function pageOffset({ page, limit }) {

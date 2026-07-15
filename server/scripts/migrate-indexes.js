@@ -1,3 +1,4 @@
+// Script ho tro migrate indexes cho server.
 const { pool } = require("../src/db/pool");
 
 const sql = `

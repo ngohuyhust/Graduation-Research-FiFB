@@ -1,3 +1,4 @@
+// Trang verify email hien thi va xu ly luong nguoi dung.
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";

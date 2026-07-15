@@ -1,3 +1,4 @@
+// Trang workout history hien thi va xu ly luong nguoi dung.
 import { Activity, CalendarDays, Flame, Plus, Weight } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";

@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module favorites.
 const { sendSuccess, sendCreated, sendNoContent } = require("../../utils/responses");
 const service = require("./favorites.service");
 

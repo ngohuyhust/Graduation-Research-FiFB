@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module admin.
 const { z } = require("zod");
 const usersValidation = require("../users/users.validation");
 const exercisesValidation = require("../exercises/exercises.validation");

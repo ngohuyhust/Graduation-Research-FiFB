@@ -1,3 +1,4 @@
+// Xu ly nghiep vu xac thuc: dang ky, dang nhap, token, email va mat khau.
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { env } = require("../../config/env");

@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module reviews.
 const express = require("express");
 const controller = require("./reviews.controller");
 const validation = require("./reviews.validation");

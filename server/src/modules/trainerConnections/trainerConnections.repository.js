@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module trainerConnections.
 const { query } = require("../../db/pool");
 
 async function findPending(client, userId, trainerId) {

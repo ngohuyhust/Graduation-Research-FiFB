@@ -1,3 +1,4 @@
+// Trang connections hien thi va xu ly luong nguoi dung.
 import { Link2, MessageCircle, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";

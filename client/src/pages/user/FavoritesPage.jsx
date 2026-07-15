@@ -1,3 +1,4 @@
+// Trang favorites hien thi va xu ly luong nguoi dung.
 import { Heart } from "lucide-react";
 import { favoriteApi } from "../../api/favoriteApi";
 import EmptyState from "../../components/EmptyState";

@@ -1,3 +1,4 @@
+// Chuan hoa response loi va log loi ngoai du kien.
 const { AppError } = require("../utils/errors/AppError");
 const codes = require("../utils/errors/errorCodes");
 const { env } = require("../config/env");

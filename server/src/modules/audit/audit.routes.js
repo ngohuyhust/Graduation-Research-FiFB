@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module audit.
 const express = require("express");
 const controller = require("./audit.controller");
 const validation = require("./audit.validation");

@@ -1,3 +1,4 @@
+// Quan ly pool ket noi PostgreSQL va transaction helper.
 const { Pool } = require("pg");
 const { env } = require("../config/env");
 

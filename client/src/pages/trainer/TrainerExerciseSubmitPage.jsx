@@ -1,3 +1,4 @@
+// Trang trainer exercise submit hien thi va xu ly luong nguoi dung.
 import { Dumbbell } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { exerciseApi } from "../../api/exerciseApi";

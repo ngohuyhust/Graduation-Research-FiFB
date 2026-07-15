@@ -1,3 +1,4 @@
+// Trang trainer dashboard hien thi va xu ly luong nguoi dung.
 import { Award, Inbox, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";

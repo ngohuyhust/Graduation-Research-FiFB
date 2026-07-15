@@ -1,3 +1,4 @@
+// Trang workout plans hien thi va xu ly luong nguoi dung.
 import { Archive, Eye, Play, Plus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { workoutPlanApi } from "../../api/workoutPlanApi";

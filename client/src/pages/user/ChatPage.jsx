@@ -1,3 +1,4 @@
+// Trang chat hien thi va xu ly luong nguoi dung.
 import { useParams } from "react-router-dom";
 import ChatWindow from "../../components/ChatWindow";
 import PageHeader from "../../components/PageHeader";

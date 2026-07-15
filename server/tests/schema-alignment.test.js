@@ -1,3 +1,4 @@
+// Kiem thu tu dong cho schema alignment.
 const fs = require("fs");
 const path = require("path");
 

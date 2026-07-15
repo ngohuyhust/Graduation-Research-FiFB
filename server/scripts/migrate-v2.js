@@ -1,3 +1,4 @@
+// Script ho tro migrate v2 cho server.
 const { pool } = require("../src/db/pool");
 
 const sql = `

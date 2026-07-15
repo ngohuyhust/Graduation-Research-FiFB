@@ -1,3 +1,4 @@
+// Trang trainer reviews hien thi va xu ly luong nguoi dung.
 import { Star } from "lucide-react";
 import { trainerApi } from "../../api/trainerApi";
 import EmptyState from "../../components/EmptyState";

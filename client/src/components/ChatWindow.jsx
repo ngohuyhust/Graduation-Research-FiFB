@@ -1,3 +1,4 @@
+// Component chat window dung chung trong giao dien.
 import { Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { chatApi } from "../api/chatApi";

@@ -1,3 +1,4 @@
+// Script ho tro import exercisedb cho server.
 const { env } = require("../src/config/env");
 const { withTransaction, closePool } = require("../src/db/pool");
 

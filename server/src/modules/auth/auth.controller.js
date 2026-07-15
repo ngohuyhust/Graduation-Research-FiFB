@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module auth.
 const authService = require("./auth.service");
 const { publicUser } = require("../users/users.presenter");
 const { sendSuccess, sendCreated, sendNoContent } = require("../../utils/responses");

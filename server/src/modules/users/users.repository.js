@@ -1,3 +1,4 @@
+// Repository truy van du lieu cho module users.
 const { query } = require("../../db/pool");
 
 const selectable = `

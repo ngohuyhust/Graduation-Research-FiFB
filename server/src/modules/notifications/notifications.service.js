@@ -1,3 +1,4 @@
+// Service chua nghiep vu chinh cua module notifications.
 const { paginate } = require("../../utils/responses");
 const repository = require("./notifications.repository");
 

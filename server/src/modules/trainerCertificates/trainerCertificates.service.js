@@ -1,3 +1,4 @@
+// Service chua nghiep vu chinh cua module trainerCertificates.
 const { withTransaction } = require("../../db/pool");
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");

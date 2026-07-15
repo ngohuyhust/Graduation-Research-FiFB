@@ -1,3 +1,4 @@
+// Goi API chat tu giao dien client.
 import { httpClient } from "./httpClient";
 
 export const chatApi = {

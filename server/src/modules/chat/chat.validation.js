@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module chat.
 const { z } = require("zod");
 
 const connectionParam = z.object({ connectionId: z.string().uuid() });

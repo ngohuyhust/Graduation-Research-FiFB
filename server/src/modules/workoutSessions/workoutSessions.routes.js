@@ -1,3 +1,4 @@
+// Khai bao endpoint va middleware cho module workoutSessions.
 const express = require("express");
 const controller = require("./workoutSessions.controller");
 const validation = require("./workoutSessions.validation");

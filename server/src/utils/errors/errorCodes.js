@@ -1,3 +1,4 @@
+// Tap trung cac ma loi dung chung trong API.
 module.exports = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   UNAUTHENTICATED: "UNAUTHENTICATED",

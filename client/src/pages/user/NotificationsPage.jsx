@@ -1,3 +1,4 @@
+// Trang notifications hien thi va xu ly luong nguoi dung.
 import { CheckCheck } from "lucide-react";
 import { notificationApi } from "../../api/notificationApi";
 import EmptyState from "../../components/EmptyState";

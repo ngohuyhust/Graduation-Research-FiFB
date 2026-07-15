@@ -1,3 +1,4 @@
+// Controller xu ly request/response cho module emailDeliveries.
 const { sendSuccess } = require("../../utils/responses");
 const service = require("./emailDeliveries.service");
 

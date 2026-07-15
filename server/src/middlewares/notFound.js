@@ -1,3 +1,4 @@
+// Tao loi 404 khi request khong khop route nao.
 const { AppError } = require("../utils/errors/AppError");
 const codes = require("../utils/errors/errorCodes");
 

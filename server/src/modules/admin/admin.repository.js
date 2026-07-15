@@ -1,2 +1,2 @@
-// Admin uses module repositories through services; this file exists to keep module shape consistent.
+// Giu cau truc repository cho module admin khi chua co truy van rieng.
 module.exports = {};

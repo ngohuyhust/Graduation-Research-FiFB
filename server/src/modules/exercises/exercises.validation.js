@@ -1,3 +1,4 @@
+// Khai bao schema validate input cho module exercises.
 const { z } = require("zod");
 
 const exercisePayloadSchema = z.object({

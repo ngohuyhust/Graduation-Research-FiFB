@@ -1,3 +1,4 @@
+// Trang trainers hien thi va xu ly luong nguoi dung.
 import { ShieldCheck, UserRound } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { trainerApi } from "../../api/trainerApi";

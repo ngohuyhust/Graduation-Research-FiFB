@@ -1,3 +1,4 @@
+// Trang workout plan editor hien thi va xu ly luong nguoi dung.
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";

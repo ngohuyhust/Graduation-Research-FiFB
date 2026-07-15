@@ -1,3 +1,4 @@
+// Component pagination dung chung trong giao dien.
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Pagination({ page = 1, totalPages = 1, onChange }) {
