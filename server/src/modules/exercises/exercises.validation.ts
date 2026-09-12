@@ -1,7 +1,7 @@
 // Khai bao schema validate input cho module exercises.
-const { z } = require("zod");
+import { z } from "zod";
 
-const exercisePayloadSchema = z.object({
+export const exercisePayloadSchema = z.object({
   externalId: z.string().trim().max(120).optional(),
   name: z.string().trim().min(1).max(200),
   gifUrl: z.string().url().optional(),
@@ -14,9 +14,9 @@ const exercisePayloadSchema = z.object({
   secondaryMuscleIds: z.array(z.string().uuid()).default([]),
 });
 
-const exerciseUpdateSchema = exercisePayloadSchema.partial();
+export const exerciseUpdateSchema = exercisePayloadSchema.partial();
 
-const exerciseQuerySchema = z.object({
+export const exerciseQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
   keyword: z.string().trim().max(120).optional(),
@@ -27,7 +27,7 @@ const exerciseQuerySchema = z.object({
   status: z.enum(["pending", "active", "inactive", "rejected"]).optional(),
 });
 
-const reviewDecisionSchema = z
+export const reviewDecisionSchema = z
   .object({
     status: z.enum(["approved", "rejected"]),
     rejectionReason: z.string().trim().min(1).max(1000).optional(),
@@ -38,4 +38,7 @@ const reviewDecisionSchema = z
     }
   });
 
-module.exports = { exercisePayloadSchema, exerciseUpdateSchema, exerciseQuerySchema, reviewDecisionSchema };
+export type ExercisePayload = z.infer<typeof exercisePayloadSchema>;
+export type ExerciseUpdate = z.infer<typeof exerciseUpdateSchema>;
+export type ExerciseQuery = z.infer<typeof exerciseQuerySchema>;
+export type ReviewDecision = z.infer<typeof reviewDecisionSchema>;

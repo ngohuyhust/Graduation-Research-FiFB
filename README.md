@@ -1,6 +1,6 @@
 # FiFB
 
-FiFB is a fitness platform built with Express, PostgreSQL, Redis, Socket.IO, React, Vite, and Tailwind CSS.
+FiFB is a fitness platform built with NestJS (incrementally migrating from Express), PostgreSQL, Redis, Socket.IO, React, Vite, and Tailwind CSS.
 This upgrade intentionally excludes chatbot and AI features.
 
 ## Features
@@ -17,7 +17,7 @@ This upgrade intentionally excludes chatbot and AI features.
 
 ```mermaid
 flowchart LR
-  Client[React + Vite] -->|REST / JWT| API[Express API]
+  Client[React + Vite] -->|REST / JWT| API[NestJS + Express API]
   Client <-->|Socket.IO| Socket[Realtime layer]
   API --> DB[(PostgreSQL)]
   API --> Redis[(Redis / Upstash)]
@@ -31,6 +31,12 @@ The application code lives in:
 server/
 client/
 ```
+
+The backend is migrating module by module to NestJS 11 with TypeScript. `ExercisesModule` owns
+`/api/exercises` and `/api/admin/exercises`; other modules still use Express. Nest uses the existing
+Express 4 application through `ExpressAdapter`, preserving legacy middleware and request validation.
+Controllers and services use Nest dependency injection; the existing PostgreSQL repository is registered
+as a provider. Shared guards, Zod pipes, exception handling and cache interceptors preserve the API contract.
 
 The backend keeps the existing module pattern:
 
@@ -136,6 +142,7 @@ docker run --env-file .\server\.env -p 4000:4000 fifb-api
 ```powershell
 cd server
 npm.cmd run lint
+npm.cmd run build
 npm.cmd test
 npm.cmd run format:check
 
@@ -145,6 +152,10 @@ npm.cmd run build
 npm.cmd run format:check
 ```
 
-GitHub Actions runs server lint/tests and client lint/build. The Render Blueprint deploys the
+For production, run `npm run build` then `npm start` in `server/`. `npm run dev` runs TypeScript
+with automatic restarts. Docker builds the compiled backend; rebuild with `docker compose up --build`
+after source changes. Existing database/import scripts continue to run directly with Node.
+
+GitHub Actions runs server lint/build/tests and client lint/build. The Render Blueprint deploys the
 `main` branch automatically after those checks pass. Telegram notifications optionally use
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.

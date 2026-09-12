@@ -32,18 +32,6 @@ router.patch(
   validate(validation.certificateReviewDecisionSchema),
   asyncHandler(controller.reviewCertificate),
 );
-router.get("/exercises", validate(validation.exerciseQuerySchema, "query"), asyncHandler(controller.listExercises));
-router.patch(
-  "/exercises/:id/review",
-  validate(validation.uuidParam, "params"),
-  validate(validation.exerciseReviewDecisionSchema),
-  asyncHandler(controller.reviewExercise),
-);
-router.patch(
-  "/exercises/:id/deactivate",
-  validate(validation.uuidParam, "params"),
-  asyncHandler(controller.deactivateExercise),
-);
 router.get("/audit-logs", validate(validation.auditQuerySchema, "query"), asyncHandler(controller.listAuditLogs));
 router.get(
   "/email-deliveries",

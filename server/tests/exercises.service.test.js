@@ -20,7 +20,8 @@ jest.mock("../src/modules/notifications/notifications.repository", () => ({
 }));
 
 const repository = require("../src/modules/exercises/exercises.repository");
-const service = require("../src/modules/exercises/exercises.service");
+const { ExercisesService } = require("../src/modules/exercises/exercises.service");
+const service = new ExercisesService(repository);
 
 describe("exercises service", () => {
   test("trainer submissions are created through the trainer_submission source", async () => {

@@ -1,8 +1,9 @@
+const tseslint = require("typescript-eslint");
 const prettier = require("eslint-config-prettier");
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "coverage/**"],
+    ignores: ["node_modules/**", "coverage/**", "dist/**"],
   },
   {
     files: ["**/*.js"],
@@ -22,6 +23,8 @@ module.exports = [
         expect: "readonly",
         beforeEach: "readonly",
         afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
         jest: "readonly",
       },
     },
@@ -32,5 +35,7 @@ module.exports = [
       quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
+  ...tseslint.configs.recommended.map((config) => ({ ...config, files: ["**/*.ts"] })),
+  { files: ["**/*.ts"], rules: { "@typescript-eslint/no-require-imports": "off" } },
   prettier,
 ];

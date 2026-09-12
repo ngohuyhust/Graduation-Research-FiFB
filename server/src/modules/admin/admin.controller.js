@@ -32,25 +32,6 @@ async function reviewCertificate(req, res) {
   );
 }
 
-async function listExercises(req, res) {
-  return sendSuccess(res, await service.listExercises(req.query));
-}
-
-async function reviewExercise(req, res) {
-  return sendSuccess(
-    res,
-    await service.reviewExercise(req.auth, req.params.id, req.body, {
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    }),
-    "Exercise reviewed",
-  );
-}
-
-async function deactivateExercise(req, res) {
-  return sendSuccess(res, await service.deactivateExercise(req.auth, req.params.id), "Exercise deactivated");
-}
-
 async function listAuditLogs(req, res) {
   return sendSuccess(res, await service.listAuditLogs(req.query));
 }
@@ -64,9 +45,6 @@ module.exports = {
   updateUserStatus,
   listCertificates,
   reviewCertificate,
-  listExercises,
-  reviewExercise,
-  deactivateExercise,
   listAuditLogs,
   listEmailDeliveries,
 };
