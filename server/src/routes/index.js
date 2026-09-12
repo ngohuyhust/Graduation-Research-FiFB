@@ -1,6 +1,5 @@
 // Gom tat ca route module vao mot router /api.
 const express = require("express");
-const authRoutes = require("../modules/auth/auth.routes");
 const userRoutes = require("../modules/users/users.routes");
 const trainerRoutes = require("../modules/trainers/trainers.routes");
 const trainerCertificateRoutes = require("../modules/trainerCertificates/trainerCertificates.routes");
@@ -19,7 +18,6 @@ router.get("/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" }, message: "OK" });
 });
 
-router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/trainers", trainerRoutes);
 router.use("/trainers", trainerCertificateRoutes);

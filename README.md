@@ -34,6 +34,7 @@ client/
 
 The backend is migrating module by module to NestJS 11 with TypeScript. `ExercisesModule` owns
 `/api/exercises` and `/api/admin/exercises`; `ExerciseTaxonomyModule` owns `/api/exercise-taxonomy`.
+`AuthModule` owns `/api/auth`, including the existing auth rate limit and refresh-token cookies.
 Other modules still use Express. Nest uses the existing
 Express 4 application through `ExpressAdapter`, preserving legacy middleware and request validation.
 Controllers and services use Nest dependency injection; the existing PostgreSQL repository is registered
