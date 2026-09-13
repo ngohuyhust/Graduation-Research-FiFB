@@ -1,22 +1,12 @@
 // Kiem thu tu dong cho workout sessions service.
-jest.mock("../src/modules/workoutSessions/workoutSessions.repository", () => ({
-  findOwnedPlan: jest.fn(),
-  create: jest.fn(),
-  list: jest.fn(),
-  detail: jest.fn(),
-  update: jest.fn(),
-  ensureActiveExercise: jest.fn(),
-  addLog: jest.fn(),
-  stats: jest.fn(),
-  progression: jest.fn(),
-}));
 
 jest.mock("../src/redis/client", () => ({
   getRedisClient: jest.fn().mockResolvedValue(null),
 }));
 
-const repository = require("../src/modules/workoutSessions/workoutSessions.repository");
-const service = require("../src/modules/workoutSessions/workoutSessions.service");
+const repository = Object.fromEntries(["findOwnedPlan", "create", "list", "detail", "update", "ensureActiveExercise", "addLog", "stats", "progression"].map((name) => [name, jest.fn()]));
+const { WorkoutSessionsService, streaks } = require("../src/modules/workoutSessions/workoutSessions.service");
+const service = new WorkoutSessionsService(repository);
 
 describe("workout sessions service", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -34,7 +24,7 @@ describe("workout sessions service", () => {
     const yesterday = new Date(today.getTime() - 86400000);
     const twoDaysAgo = new Date(today.getTime() - 2 * 86400000);
     expect(
-      service.streaks([{ workout_date: today }, { workout_date: yesterday }, { workout_date: twoDaysAgo }]),
+      streaks([{ workout_date: today }, { workout_date: yesterday }, { workout_date: twoDaysAgo }]),
     ).toEqual({ currentStreak: 3, longestStreak: 3 });
   });
 });

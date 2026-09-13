@@ -1,13 +1,13 @@
 // Khai bao schema validate input cho module workoutSessions.
-const { z } = require("zod");
+import { z } from "zod";
 
-const createSessionSchema = z.object({
+export const createSessionSchema = z.object({
   workoutPlanId: z.string().uuid().optional(),
   title: z.string().trim().min(1).max(200),
   notes: z.string().trim().max(2000).optional(),
 });
 
-const updateSessionSchema = z
+export const updateSessionSchema = z
   .object({
     title: z.string().trim().min(1).max(200).optional(),
     notes: z.string().trim().max(2000).nullable().optional(),
@@ -15,7 +15,7 @@ const updateSessionSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
-const exerciseLogSchema = z
+export const exerciseLogSchema = z
   .object({
     exerciseId: z.string().uuid(),
     setNumber: z.number().int().positive().default(1),
@@ -29,4 +29,9 @@ const exerciseLogSchema = z
     "A log must include reps, weight, or duration",
   );
 
-module.exports = { createSessionSchema, updateSessionSchema, exerciseLogSchema };
+export type CreateSession = z.infer<typeof createSessionSchema>;
+export type UpdateSession = z.infer<typeof updateSessionSchema>;
+export type ExerciseLog = z.infer<typeof exerciseLogSchema>;
+
+export const exerciseParam = z.object({ exerciseId: z.string().uuid() });
+export type ExerciseParam = z.infer<typeof exerciseParam>;
