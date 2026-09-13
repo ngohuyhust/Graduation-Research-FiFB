@@ -2,7 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../../db/database.service";
 import type { QueryExecutor } from "../../db/database.service";
 type Pagination = { page: number; limit: number };
-const { exerciseLibrarySelect, camelExercise } = require("../exercises/exercises.repository");
+import { exerciseLibrarySelect, camelExercise } from "../exercises/exercises.repository";
+import type { ExerciseRow } from "../exercises/exercises.types";
 
 
 export function pageOffset({ page, limit }: Pagination) {
@@ -36,7 +37,7 @@ export class FavoritesRepository {
        WHERE f.user_id = $1 AND e.status = 'active'`,
       [userId],
     );
-    const result = await this.db.query<Record<string, unknown>>(
+    const result = await this.db.query<ExerciseRow>(
       `SELECT ${exerciseLibrarySelect("e")}
        FROM favorite_exercises f
        JOIN exercises e ON e.id = f.exercise_id

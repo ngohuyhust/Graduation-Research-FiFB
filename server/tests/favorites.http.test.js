@@ -4,13 +4,13 @@ const { UsersRepository } = require("../src/modules/users/users.repository");
 const { FavoritesRepository } = require("../src/modules/favorites/favorites.repository");
 const { DatabaseService } = require("../src/db/database.service");
 const { signAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
-const exerciseRepository = require("../src/modules/exercises/exercises.repository");
+const { ExercisesRepository } = require("../src/modules/exercises/exercises.repository");
 const userId = "d44b9038-7685-40c5-bb65-c075584c83ac";
 const exerciseId = "b18cfd54-c056-4c53-b5c0-4e7890f7521d";
 
 describe("Nest favorites", () => {
-  let app, repository, actor;
-  beforeAll(async () => { app = await createApp(); repository = app.locals.nest.get(FavoritesRepository); });
+  let app, repository, actor, exerciseRepository;
+  beforeAll(async () => { app = await createApp(); repository = app.locals.nest.get(FavoritesRepository); exerciseRepository = app.locals.nest.get(ExercisesRepository); });
   afterAll(async () => { await app.locals.nest.close(); });
   beforeEach(() => {
     actor = { id: userId, role: "user", status: "active", email_verified_at: "2026-01-01" };

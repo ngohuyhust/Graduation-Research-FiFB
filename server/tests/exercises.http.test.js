@@ -1,15 +1,20 @@
 const request = require("supertest");
 
 jest.mock("../src/db/pool", () => ({ withTransaction: (callback) => callback({ query: jest.fn() }) }));
-jest.mock("../src/modules/exercises/exercises.repository", () => ({
-  list: jest.fn(),
-  findActiveById: jest.fn(),
-  create: jest.fn(),
-  replaceMappings: jest.fn(),
-  findById: jest.fn(),
-  update: jest.fn(),
-  setReviewStatus: jest.fn(),
-}));
+jest.mock("../src/modules/exercises/exercises.repository", () => {
+  const actual = jest.requireActual("../src/modules/exercises/exercises.repository");
+  const list = jest.fn(), findActiveById = jest.fn(), create = jest.fn(), replaceMappings = jest.fn(), findById = jest.fn(), update = jest.fn(), setReviewStatus = jest.fn();
+  class ExercisesRepository extends actual.ExercisesRepository {
+    list(...args) { return list(...args); }
+    findActiveById(...args) { return findActiveById(...args); }
+    create(...args) { return create(...args); }
+    replaceMappings(...args) { return replaceMappings(...args); }
+    findById(...args) { return findById(...args); }
+    update(...args) { return update(...args); }
+    setReviewStatus(...args) { return setReviewStatus(...args); }
+  }
+  return { ...actual, ExercisesRepository, list, findActiveById, create, replaceMappings, findById, update, setReviewStatus };
+});
 jest.mock("../src/modules/auth/jwt.service", () => {
   const actual = jest.requireActual("../src/modules/auth/jwt.service");
   const verifyAccessToken = jest.fn();

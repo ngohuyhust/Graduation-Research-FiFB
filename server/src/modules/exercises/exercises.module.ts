@@ -3,13 +3,14 @@ import { NotificationsModule } from "../notifications/notifications.module";
 import { Module } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
 import { ExercisesController, AdminExercisesController } from "./exercises.controller";
-import { ExercisesService, EXERCISES_REPOSITORY } from "./exercises.service";
-import * as repository from "./exercises.repository";
+import { ExercisesService } from "./exercises.service";
+import { ExercisesRepository } from "./exercises.repository";
+import { DatabaseModule } from "../../db/database.module";
 
 @Module({
-  imports: [AuditModule, NotificationsModule, HttpModule],
+  imports: [DatabaseModule, AuditModule, NotificationsModule, HttpModule],
   controllers: [ExercisesController, AdminExercisesController],
-  providers: [ExercisesService, { provide: EXERCISES_REPOSITORY, useValue: repository }],
-  exports: [ExercisesService],
+  providers: [ExercisesService, ExercisesRepository],
+  exports: [ExercisesService, ExercisesRepository],
 })
 export class ExercisesModule {}

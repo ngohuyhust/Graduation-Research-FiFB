@@ -7,7 +7,7 @@ import { WorkoutPlansRepository } from "./workoutPlans.repository";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
-const exerciseRepository = require("../exercises/exercises.repository");
+import { ExercisesRepository } from "../exercises/exercises.repository";
 
 
 export function assertUniqueWorkoutOrder(items: WorkoutItem[] = []) {
@@ -25,11 +25,11 @@ export function assertUniqueWorkoutOrder(items: WorkoutItem[] = []) {
 
 @Injectable()
 export class WorkoutPlansService {
-  constructor(private readonly repository: WorkoutPlansRepository, private readonly db: DatabaseService) {}
+  constructor(private readonly exerciseRepository: ExercisesRepository, private readonly repository: WorkoutPlansRepository, private readonly db: DatabaseService) {}
 
   async insertItems(client: QueryExecutor, planId: string, items: WorkoutItem[] = []) {
     for (const item of items) {
-      if (!(await exerciseRepository.ensureActive(client, item.exerciseId)))
+      if (!(await this.exerciseRepository.ensureActive(client, item.exerciseId)))
         throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
       await this.repository.insertItem(client, planId, item);
     }
