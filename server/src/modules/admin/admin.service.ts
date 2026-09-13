@@ -4,10 +4,9 @@ import type { UsersQuery, UserStatus } from "../users/users.validation";
 import type { Actor } from "../../common/auth.guard";
 import type { CertificateQuery, CertificateDecision, AuditQuery, DeliveryQuery } from "./admin.validation";
 import { TrainerCertificatesService } from "../trainerCertificates/trainerCertificates.service";
-import type * as AuditService from "../audit/audit.service";
+import { AuditService } from "../audit/audit.service";
 import type * as EmailDeliveriesService from "../emailDeliveries/emailDeliveries.service";
 
-export const ADMIN_AUDIT = Symbol("ADMIN_AUDIT");
 export const ADMIN_EMAIL_DELIVERIES = Symbol("ADMIN_EMAIL_DELIVERIES");
 type RequestMeta = { ipAddress?: string; userAgent?: string };
 
@@ -16,7 +15,7 @@ export class AdminService {
   constructor(
     private readonly users: UsersService,
     private readonly certificates: TrainerCertificatesService,
-    @Inject(ADMIN_AUDIT) private readonly audit: typeof AuditService,
+    private readonly audit: AuditService,
     @Inject(ADMIN_EMAIL_DELIVERIES) private readonly emailDeliveries: typeof EmailDeliveriesService,
   ) {}
 

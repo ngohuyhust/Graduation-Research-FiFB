@@ -3,9 +3,14 @@ jest.mock("../src/db/pool", () => ({
   withTransaction: (callback) => callback({ query: jest.fn() }),
 }));
 
-jest.mock("../src/modules/audit/audit.repository", () => ({
-  createAudit: jest.fn(),
-}));
+jest.mock("../src/modules/audit/audit.repository", () => {
+  const actual = jest.requireActual("../src/modules/audit/audit.repository");
+  const createAudit = jest.fn();
+  class AuditRepository extends actual.AuditRepository {
+    createAudit(...args) { return createAudit(...args); }
+  }
+  return { ...actual, AuditRepository, createAudit };
+});
 
 jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
@@ -19,7 +24,7 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
 const repository = { findById: jest.fn() };
 const { TrainerCertificatesService } = require("../src/modules/trainerCertificates/trainerCertificates.service");
 const { DatabaseService } = require("../src/db/database.service");
-const service = new TrainerCertificatesService(new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}), repository, new DatabaseService(), {});
+const service = new TrainerCertificatesService(new (require("../src/modules/audit/audit.repository").AuditRepository)({}), new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}), repository, new DatabaseService(), {});
 
 describe("trainer certificates service", () => {
   test("certificate review is pending-only", async () => {

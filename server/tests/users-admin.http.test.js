@@ -1,6 +1,13 @@
 const request = require("supertest");
 jest.mock("../src/db/pool", () => ({ withTransaction: (callback) => callback({ query: jest.fn() }) }));
-jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
+jest.mock("../src/modules/audit/audit.repository", () => {
+  const actual = jest.requireActual("../src/modules/audit/audit.repository");
+  const createAudit = jest.fn();
+  class AuditRepository extends actual.AuditRepository {
+    createAudit(...args) { return createAudit(...args); }
+  }
+  return { ...actual, AuditRepository, createAudit };
+});
 jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
@@ -9,7 +16,12 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
   }
   return { ...actual, NotificationsRepository, createNotification };
 });
-jest.mock("../src/modules/audit/audit.service", () => ({ listAuditLogs: jest.fn() }));
+jest.mock("../src/modules/audit/audit.service", () => {
+  const actual = jest.requireActual("../src/modules/audit/audit.service");
+  const listAuditLogs = jest.fn();
+  class AuditService extends actual.AuditService { listAuditLogs(...args) { return listAuditLogs(...args); } }
+  return { ...actual, AuditService, listAuditLogs };
+});
 jest.mock("../src/modules/emailDeliveries/emailDeliveries.service", () => ({ list: jest.fn() }));
 const { createApp } = require("../src/app");
 const { UsersRepository } = require("../src/modules/users/users.repository");

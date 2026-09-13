@@ -9,7 +9,7 @@ const { withTransaction } = require("../../db/pool");
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
-const auditRepository = require("../audit/audit.repository");
+import { AuditRepository } from "../audit/audit.repository";
 import { NotificationsRepository } from "../notifications/notifications.repository";
 const { invalidateByPrefix } = require("../../utils/cache");
 
@@ -21,7 +21,7 @@ export function hasMappingPayload(payload: ExerciseUpdate) {
 
 @Injectable()
 export class ExercisesService {
-  constructor(private readonly notificationRepository: NotificationsRepository, @Inject(EXERCISES_REPOSITORY) private readonly repository: typeof ExercisesRepository) {}
+  constructor(private readonly auditRepository: AuditRepository, private readonly notificationRepository: NotificationsRepository, @Inject(EXERCISES_REPOSITORY) private readonly repository: typeof ExercisesRepository) {}
 
   async listExercises(filters: ExerciseQuery, admin = false) {
     const result = await this.repository.list(filters, admin);
@@ -50,7 +50,7 @@ export class ExercisesService {
       if (!oldExercise) throw new AppError(codes.NOT_FOUND, "Exercise not found", 404);
       const updated = await this.repository.update(client, id, payload);
       if (hasMappingPayload(payload)) await this.repository.replaceMappings(client, id, payload);
-      await auditRepository.createAudit(client, {
+      await this.auditRepository.createAudit(client, {
         actorId: actor.userId,
         action: "exercise.update",
         entityType: "exercise",
@@ -89,7 +89,7 @@ export class ExercisesService {
           metadata: { exerciseId: id },
         });
       }
-      await auditRepository.createAudit(client, {
+      await this.auditRepository.createAudit(client, {
         actorId: actor.userId,
         action: `exercise.${status}`,
         entityType: "exercise",

@@ -1,5 +1,12 @@
 jest.mock("pg", () => ({ Pool: jest.fn().mockImplementation(() => ({ connect: jest.fn() })) }));
-jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
+jest.mock("../src/modules/audit/audit.repository", () => {
+  const actual = jest.requireActual("../src/modules/audit/audit.repository");
+  const createAudit = jest.fn();
+  class AuditRepository extends actual.AuditRepository {
+    createAudit(...args) { return createAudit(...args); }
+  }
+  return { ...actual, AuditRepository, createAudit };
+});
 jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
@@ -22,7 +29,7 @@ describe("trainer transaction boundaries", () => {
     client = { query: jest.fn(), release: jest.fn() };
     pool.connect.mockResolvedValue(client);
     const database = new DatabaseService();
-    certificateService = new TrainerCertificatesService(new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
+    certificateService = new TrainerCertificatesService(new (require("../src/modules/audit/audit.repository").AuditRepository)({}), new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
       {
         findById: jest.fn().mockResolvedValue({ id: "certificate", trainer_id: "trainer", status: "pending" }),
         setReviewStatus: jest.fn().mockResolvedValue({ id: "certificate", status: "approved" }),

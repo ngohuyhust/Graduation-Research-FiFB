@@ -8,12 +8,12 @@ import type { Actor } from "../../common/auth.guard";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
-const auditRepository = require("../audit/audit.repository");
+import { AuditRepository } from "../audit/audit.repository";
 import { NotificationsRepository } from "../notifications/notifications.repository";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly notificationRepository: NotificationsRepository,
+  constructor(private readonly auditRepository: AuditRepository, private readonly notificationRepository: NotificationsRepository,
     private readonly repository: UsersRepository,
     private readonly database: DatabaseService,
   ) {}
@@ -53,7 +53,7 @@ export class UsersService {
     const user = await this.database.withTransaction(async (client) => {
       const updated = await this.repository.setStatus(client, targetUserId, status);
       if (!updated.user) throw new AppError(codes.NOT_FOUND, "User not found", 404);
-      await auditRepository.createAudit(client, {
+      await this.auditRepository.createAudit(client, {
         actorId: actor.userId,
         action: `user.${status}`,
         entityType: "app_user",

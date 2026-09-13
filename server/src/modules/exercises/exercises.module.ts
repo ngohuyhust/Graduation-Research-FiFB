@@ -1,3 +1,4 @@
+import { AuditModule } from "../audit/audit.module";
 import { NotificationsModule } from "../notifications/notifications.module";
 import { Module } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
@@ -6,7 +7,7 @@ import { ExercisesService, EXERCISES_REPOSITORY } from "./exercises.service";
 import * as repository from "./exercises.repository";
 
 @Module({
-  imports: [NotificationsModule, HttpModule],
+  imports: [AuditModule, NotificationsModule, HttpModule],
   controllers: [ExercisesController, AdminExercisesController],
   providers: [ExercisesService, { provide: EXERCISES_REPOSITORY, useValue: repository }],
   exports: [ExercisesService],

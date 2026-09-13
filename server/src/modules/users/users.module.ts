@@ -1,3 +1,4 @@
+import { AuditModule } from "../audit/audit.module";
 import { NotificationsModule } from "../notifications/notifications.module";
 import { Module } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
@@ -7,7 +8,7 @@ import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 
 @Module({
-  imports: [NotificationsModule, HttpModule, DatabaseModule, UsersPersistenceModule],
+  imports: [AuditModule, NotificationsModule, HttpModule, DatabaseModule, UsersPersistenceModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService, UsersPersistenceModule],

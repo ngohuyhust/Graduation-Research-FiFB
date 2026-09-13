@@ -7,12 +7,12 @@ import { TrainersRepository } from "../trainers/trainers.repository";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
-const auditRepository = require("../audit/audit.repository");
+import { AuditRepository } from "../audit/audit.repository";
 import { NotificationsRepository } from "../notifications/notifications.repository";
 
 @Injectable()
 export class TrainerCertificatesService {
-  constructor(private readonly notificationRepository: NotificationsRepository,
+  constructor(private readonly auditRepository: AuditRepository, private readonly notificationRepository: NotificationsRepository,
     private readonly repository: TrainerCertificatesRepository,
     private readonly database: DatabaseService,
     private readonly trainersRepository: TrainersRepository,
@@ -53,7 +53,7 @@ export class TrainerCertificatesService {
       if (decision.status === "approved") {
         const oldProfile = await this.trainersRepository.findProfileForUpdate(client, oldCertificate.trainer_id);
         const newProfile = await this.trainersRepository.markVerified(client, oldCertificate.trainer_id, actor.userId);
-        await auditRepository.createAudit(client, {
+        await this.auditRepository.createAudit(client, {
           actorId: actor.userId,
           action: "trainer.verify",
           entityType: "trainer_profile",
@@ -73,7 +73,7 @@ export class TrainerCertificatesService {
         isImportant: true,
         metadata: { certificateId: id },
       });
-      await auditRepository.createAudit(client, {
+      await this.auditRepository.createAudit(client, {
         actorId: actor.userId,
         action: `certificate.${decision.status}`,
         entityType: "trainer_certificate",
