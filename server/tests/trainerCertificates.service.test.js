@@ -3,18 +3,6 @@ jest.mock("../src/db/pool", () => ({
   withTransaction: (callback) => callback({ query: jest.fn() }),
 }));
 
-jest.mock("../src/modules/trainerCertificates/trainerCertificates.repository", () => ({
-  ensureTrainerProfile: jest.fn(),
-  create: jest.fn(),
-  findById: jest.fn(),
-  setReviewStatus: jest.fn(),
-}));
-
-jest.mock("../src/modules/trainers/trainers.repository", () => ({
-  findProfileForUpdate: jest.fn(),
-  markVerified: jest.fn(),
-}));
-
 jest.mock("../src/modules/audit/audit.repository", () => ({
   createAudit: jest.fn(),
 }));
@@ -23,8 +11,10 @@ jest.mock("../src/modules/notifications/notifications.repository", () => ({
   createNotification: jest.fn(),
 }));
 
-const repository = require("../src/modules/trainerCertificates/trainerCertificates.repository");
-const service = require("../src/modules/trainerCertificates/trainerCertificates.service");
+const repository = { findById: jest.fn() };
+const { TrainerCertificatesService } = require("../src/modules/trainerCertificates/trainerCertificates.service");
+const { DatabaseService } = require("../src/db/database.service");
+const service = new TrainerCertificatesService(repository, new DatabaseService(), {});
 
 describe("trainer certificates service", () => {
   test("certificate review is pending-only", async () => {

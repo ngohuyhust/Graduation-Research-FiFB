@@ -39,6 +39,10 @@ The backend is migrating module by module to NestJS 11 with TypeScript. `Exercis
 and email deliveries under `/api/admin`. All files in these two modules are TypeScript. `UsersRepository`
 is an injectable provider shared by auth, Nest guards, remaining Express routes, and Socket.IO. Admin
 delegates to the owning business services and has no separate repository.
+`TrainersModule`, `TrainerCertificatesModule`, `TrainerConnectionsModule`, and `ReviewsModule`
+own trainer profiles, certificate submission/review, member connections and trainer reviews. These
+modules use TypeScript repositories and services; admin certificate review injects the shared
+`TrainerCertificatesService`. Their existing URLs, permissions and response formats are preserved.
 Other modules still use Express. Nest uses the existing
 Express 4 application through `ExpressAdapter`, preserving legacy middleware and request validation.
 Controllers, services and repositories use Nest dependency injection. The exercise and taxonomy SQL

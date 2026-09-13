@@ -2,10 +2,6 @@ const request = require("supertest");
 jest.mock("../src/db/pool", () => ({ withTransaction: (callback) => callback({ query: jest.fn() }) }));
 jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
 jest.mock("../src/modules/notifications/notifications.repository", () => ({ createNotification: jest.fn() }));
-jest.mock("../src/modules/trainerCertificates/trainerCertificates.service", () => ({
-  listAll: jest.fn(),
-  review: jest.fn(),
-}));
 jest.mock("../src/modules/audit/audit.service", () => ({ listAuditLogs: jest.fn() }));
 jest.mock("../src/modules/emailDeliveries/emailDeliveries.service", () => ({ list: jest.fn() }));
 const { createApp } = require("../src/app");
@@ -17,7 +13,8 @@ const { AdminService } = require("../src/modules/admin/admin.service");
 const { signAccessToken } = require("../src/modules/auth/jwt.service");
 const { createAudit } = require("../src/modules/audit/audit.repository");
 const { createNotification } = require("../src/modules/notifications/notifications.repository");
-const certificates = require("../src/modules/trainerCertificates/trainerCertificates.service");
+const { TrainerCertificatesService } = require("../src/modules/trainerCertificates/trainerCertificates.service");
+const certificates = TrainerCertificatesService.prototype;
 const audit = require("../src/modules/audit/audit.service");
 const email = require("../src/modules/emailDeliveries/emailDeliveries.service");
 const { AppError } = require("../src/utils/errors/AppError");
@@ -48,6 +45,8 @@ describe("Nest users and admin HTTP contracts", () => {
     await app.locals.nest.close();
   });
   beforeEach(() => {
+    jest.spyOn(certificates, "listAll");
+    jest.spyOn(certificates, "review");
     jest.clearAllMocks();
     actor = { ...user, id: actorId, role: "admin" };
     jest

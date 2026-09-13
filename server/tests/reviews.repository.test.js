@@ -4,7 +4,9 @@ jest.mock("../src/db/pool", () => ({
 }));
 
 const { query } = require("../src/db/pool");
-const repository = require("../src/modules/reviews/reviews.repository");
+const { ReviewsRepository } = require("../src/modules/reviews/reviews.repository");
+const { DatabaseService } = require("../src/db/database.service");
+const repository = new ReviewsRepository(new DatabaseService());
 
 describe("reviews repository", () => {
   test("review eligibility requires an active trainer connection", async () => {
