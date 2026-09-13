@@ -1,3 +1,4 @@
+import { WorkoutPlansModule } from "./modules/workoutPlans/workoutPlans.module";
 import { FavoritesModule } from "./modules/favorites/favorites.module";
 import { TrainersModule } from "./modules/trainers/trainers.module";
 import { TrainerCertificatesModule } from "./modules/trainerCertificates/trainerCertificates.module";
@@ -12,6 +13,7 @@ import { AdminModule } from "./modules/admin/admin.module";
 
 @Module({
   imports: [
+    WorkoutPlansModule,
     FavoritesModule,
     ExercisesModule,
     ExerciseTaxonomyModule,

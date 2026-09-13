@@ -1,7 +1,7 @@
 // Khai bao schema validate input cho module workoutPlans.
-const { z } = require("zod");
+import { z } from "zod";
 
-const workoutItemSchema = z.object({
+export const workoutItemSchema = z.object({
   exerciseId: z.string().uuid(),
   dayNumber: z.number().int().positive().default(1),
   sortOrder: z.number().int().positive().default(1),
@@ -12,16 +12,18 @@ const workoutItemSchema = z.object({
   note: z.string().trim().min(1).max(1000).optional(),
 });
 
-const workoutPlanSchema = z.object({
+export const workoutPlanSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(2000).optional(),
   visibility: z.enum(["private", "trainer_visible", "public"]).default("private"),
   items: z.array(workoutItemSchema).default([]),
 });
 
-const workoutPlanUpdateSchema = workoutPlanSchema.partial().extend({
+export const workoutPlanUpdateSchema = workoutPlanSchema.partial().extend({
   status: z.enum(["active", "archived"]).optional(),
   items: z.array(workoutItemSchema).optional(),
 });
 
-module.exports = { workoutPlanSchema, workoutPlanUpdateSchema };
+export type WorkoutItem = z.infer<typeof workoutItemSchema>;
+export type WorkoutPlanPayload = z.infer<typeof workoutPlanSchema>;
+export type WorkoutPlanUpdate = z.infer<typeof workoutPlanUpdateSchema>;
