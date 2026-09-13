@@ -6,7 +6,7 @@ const { registerChatHandlers } = require("./chatHandler");
 
 let io;
 
-function initializeSocket(httpServer, userRepository) {
+function initializeSocket(httpServer, userRepository, chatService) {
   if (!env.socketIoEnabled) return null;
   io = new Server(httpServer, {
     cors: {
@@ -33,7 +33,7 @@ function initializeSocket(httpServer, userRepository) {
 
   io.on("connection", (socket) => {
     socket.join(`user:${socket.user.id}`);
-    registerChatHandlers(socket);
+    registerChatHandlers(socket, chatService);
   });
   return io;
 }

@@ -1,5 +1,4 @@
 // Xu ly su kien chat realtime qua Socket.IO.
-const chatService = require("../modules/chat/chat.service");
 const validation = require("../modules/chat/chat.validation");
 
 function parse(schema, payload) {
@@ -36,7 +35,7 @@ function createSocketRateLimiter(limits) {
   };
 }
 
-function registerChatHandlers(socket) {
+function registerChatHandlers(socket, chatService) {
   const checkRate = createSocketRateLimiter({
     "chat:join": { max: 20, windowMs: 60_000 },
     "chat:send": { max: 30, windowMs: 60_000 },
