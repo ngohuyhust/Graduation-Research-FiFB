@@ -1,13 +1,14 @@
 import { Module } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
 import { ExerciseTaxonomyController } from "./exerciseTaxonomy.controller";
-import { ExerciseTaxonomyService, TAXONOMY_REPOSITORY } from "./exerciseTaxonomy.service";
-import * as repository from "./exerciseTaxonomy.repository";
+import { ExerciseTaxonomyService } from "./exerciseTaxonomy.service";
+import { ExerciseTaxonomyRepository } from "./exerciseTaxonomy.repository";
+import { DatabaseModule } from "../../db/database.module";
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, DatabaseModule],
   controllers: [ExerciseTaxonomyController],
-  providers: [ExerciseTaxonomyService, { provide: TAXONOMY_REPOSITORY, useValue: repository }],
+  providers: [ExerciseTaxonomyService, ExerciseTaxonomyRepository],
   exports: [ExerciseTaxonomyService],
 })
 export class ExerciseTaxonomyModule {}

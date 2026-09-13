@@ -1,9 +1,14 @@
 const request = require("supertest");
 
-jest.mock("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository", () => ({
-  list: jest.fn(),
-  create: jest.fn(),
-}));
+jest.mock("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository", () => {
+  const actual = jest.requireActual("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository");
+  const list = jest.fn(), create = jest.fn();
+  class ExerciseTaxonomyRepository extends actual.ExerciseTaxonomyRepository {
+    list(...args) { return list(...args); }
+    create(...args) { return create(...args); }
+  }
+  return { ...actual, ExerciseTaxonomyRepository, list, create };
+});
 jest.mock("../src/modules/auth/jwt.service", () => {
   const actual = jest.requireActual("../src/modules/auth/jwt.service");
   const verifyAccessToken = jest.fn();

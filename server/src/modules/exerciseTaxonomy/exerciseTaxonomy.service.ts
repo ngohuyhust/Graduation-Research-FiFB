@@ -1,13 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
-import type * as TaxonomyRepository from "./exerciseTaxonomy.repository";
+import { Injectable } from "@nestjs/common";
+import { ExerciseTaxonomyRepository } from "./exerciseTaxonomy.repository";
 import type { TaxonomyKind } from "./exerciseTaxonomy.validation";
 const { invalidateByPrefix } = require("../../utils/cache");
 
-export const TAXONOMY_REPOSITORY = Symbol("TAXONOMY_REPOSITORY");
 
 @Injectable()
 export class ExerciseTaxonomyService {
-  constructor(@Inject(TAXONOMY_REPOSITORY) private readonly repository: typeof TaxonomyRepository) {}
+  constructor(private readonly repository: ExerciseTaxonomyRepository) {}
 
   async list(kind: TaxonomyKind) {
     return { items: await this.repository.list(kind) };
