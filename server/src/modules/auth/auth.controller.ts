@@ -23,7 +23,7 @@ import type {
 import { publicUser } from "../users/users.presenter";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
-const { getRefreshTokenCookie, setRefreshTokenCookie, clearRefreshTokenCookie } = require("./refreshCookie");
+import { getRefreshTokenCookie, setRefreshTokenCookie, clearRefreshTokenCookie } from "./refreshCookie";
 
 function meta(req: Request) {
   return { ipAddress: req.ip, userAgent: req.get("user-agent") };

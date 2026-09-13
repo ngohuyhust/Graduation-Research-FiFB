@@ -1,3 +1,4 @@
+import { JwtService } from "../modules/auth/jwt.service";
 import { CanActivate, ExecutionContext, Injectable, SetMetadata } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request, Response, RequestHandler } from "express";
@@ -26,7 +27,7 @@ export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(
+  constructor(private readonly jwt: JwtService,
     private readonly reflector: Reflector,
     private readonly users: UsersRepository,
   ) {}
@@ -36,7 +37,7 @@ export class AuthGuard implements CanActivate {
     const response = context.switchToHttp().getResponse<Response>();
     const roles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
     const checks: RequestHandler[] = [requireActiveUser, requireVerifiedEmail];
-    checks.unshift(createAuthenticate(this.users));
+    checks.unshift(createAuthenticate(this.users, this.jwt));
     if (roles) checks.push(requireRoles(...roles));
     for (const check of checks) {
       await new Promise<void>((resolve, reject) => {

@@ -3,7 +3,7 @@ const { createApp } = require("../src/app");
 const { UsersRepository } = require("../src/modules/users/users.repository");
 const { DatabaseService } = require("../src/db/database.service");
 const { AuditRepository } = require("../src/modules/audit/audit.repository");
-const { signAccessToken } = require("../src/modules/auth/jwt.service");
+const { signAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
 const id = "d44b9038-7685-40c5-bb65-c075584c83ac";
 describe("Nest audit module behind admin endpoints", () => {
   let app, actor, query;

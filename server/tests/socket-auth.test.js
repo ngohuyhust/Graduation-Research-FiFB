@@ -2,7 +2,7 @@ jest.mock("socket.io", () => ({
   Server: jest.fn().mockImplementation(() => ({ use: jest.fn(), on: jest.fn(), close: jest.fn() })),
 }));
 const { initializeSocket, closeSocket } = require("../src/socket");
-const { signAccessToken } = require("../src/modules/auth/jwt.service");
+const { signAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
 const { env } = require("../src/config/env");
 
 describe("Socket auth uses the injected users repository", () => {
@@ -14,7 +14,7 @@ describe("Socket auth uses the injected users repository", () => {
     previousEnabled = env.socketIoEnabled;
     env.socketIoEnabled = true;
     repository = { findById: jest.fn().mockResolvedValue(user) };
-    const io = initializeSocket({}, repository);
+    const io = initializeSocket({}, repository, {}, new (require("../src/modules/auth/jwt.service").JwtService)());
     authenticate = io.use.mock.calls[0][0];
   });
   afterEach(async () => {

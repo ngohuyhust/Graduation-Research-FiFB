@@ -12,7 +12,7 @@ const { AuthService } = require("../src/modules/auth/auth.service");
 const { withTransaction } = require("../src/db/pool");
 const { sendEmail } = require("../src/modules/emailDeliveries/emailDeliveries.repository");
 const { hashToken } = require("../src/utils/tokens");
-const { verifyAccessToken } = require("../src/modules/auth/jwt.service");
+const { verifyAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
 const bcrypt = require("bcryptjs");
 const user = {
   id: "user-id",
@@ -57,7 +57,7 @@ describe("Nest auth service", () => {
     );
     users.createUser.mockResolvedValue(user);
     users.markVerified.mockResolvedValue(user);
-    service = new AuthService(new (require("../src/modules/emailDeliveries/emailDeliveries.repository").EmailDeliveriesRepository)(), repository, users);
+    service = new AuthService(new (require("../src/db/database.service").DatabaseService)(), new (require("../src/modules/auth/jwt.service").JwtService)(), new (require("../src/modules/emailDeliveries/emailDeliveries.repository").EmailDeliveriesRepository)(), repository, users);
   });
 
   test.each(["user", "trainer"])(

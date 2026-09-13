@@ -1,3 +1,4 @@
+const { JwtService } = require("./modules/auth/jwt.service");
 // Chay HTTP server va khoi dong ket noi thoi gian thuc.
 const { createApp } = require("./app");
 const { ChatService } = require("./modules/chat/chat.service");
@@ -11,7 +12,7 @@ const { logger } = require("./utils/logger");
 async function bootstrap() {
   const app = await createApp();
   const server = app.locals.nest.getHttpServer();
-  initializeSocket(server, app.locals.nest.get(UsersRepository), app.locals.nest.get(ChatService));
+  initializeSocket(server, app.locals.nest.get(UsersRepository), app.locals.nest.get(ChatService), app.locals.nest.get(JwtService));
   server.listen(env.port, () => {
     logger.info("FiFB backend listening", { port: env.port });
   });

@@ -4,7 +4,12 @@ jest.mock("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository", () => (
   list: jest.fn(),
   create: jest.fn(),
 }));
-jest.mock("../src/modules/auth/jwt.service", () => ({ verifyAccessToken: jest.fn() }));
+jest.mock("../src/modules/auth/jwt.service", () => {
+  const actual = jest.requireActual("../src/modules/auth/jwt.service");
+  const verifyAccessToken = jest.fn();
+  class JwtService extends actual.JwtService { verifyAccessToken(...args) { return verifyAccessToken(...args); } }
+  return { ...actual, JwtService, verifyAccessToken };
+});
 jest.mock("../src/redis/client", () => ({ getRedisClient: jest.fn() }));
 jest.mock("../src/utils/cache", () => ({ invalidateByPrefix: jest.fn() }));
 

@@ -8,7 +8,7 @@ jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => {
 });
 const { createApp } = require("../src/app");
 const { AuthService } = require("../src/modules/auth/auth.service");
-const { signAccessToken } = require("../src/modules/auth/jwt.service");
+const { signAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
 const { UsersRepository } = require("../src/modules/users/users.repository");
 const users = UsersRepository.prototype;
 const { authRateLimiter } = require("../src/middlewares/rateLimiters");

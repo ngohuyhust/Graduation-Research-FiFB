@@ -10,7 +10,12 @@ jest.mock("../src/modules/exercises/exercises.repository", () => ({
   update: jest.fn(),
   setReviewStatus: jest.fn(),
 }));
-jest.mock("../src/modules/auth/jwt.service", () => ({ verifyAccessToken: jest.fn() }));
+jest.mock("../src/modules/auth/jwt.service", () => {
+  const actual = jest.requireActual("../src/modules/auth/jwt.service");
+  const verifyAccessToken = jest.fn();
+  class JwtService extends actual.JwtService { verifyAccessToken(...args) { return verifyAccessToken(...args); } }
+  return { ...actual, JwtService, verifyAccessToken };
+});
 jest.mock("../src/modules/audit/audit.repository", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.repository");
   const createAudit = jest.fn();

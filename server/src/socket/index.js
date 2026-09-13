@@ -1,12 +1,11 @@
 // Khoi tao Socket.IO va gan cac handler realtime.
 const { Server } = require("socket.io");
 const { env } = require("../config/env");
-const { verifyAccessToken } = require("../modules/auth/jwt.service");
 const { registerChatHandlers } = require("./chatHandler");
 
 let io;
 
-function initializeSocket(httpServer, userRepository, chatService) {
+function initializeSocket(httpServer, userRepository, chatService, jwtService) {
   if (!env.socketIoEnabled) return null;
   io = new Server(httpServer, {
     cors: {
@@ -19,7 +18,7 @@ function initializeSocket(httpServer, userRepository, chatService) {
     try {
       const token = socket.handshake.auth?.token;
       if (!token) return next(new Error("Authentication required"));
-      const payload = verifyAccessToken(token);
+      const payload = jwtService.verifyAccessToken(token);
       const user = await userRepository.findById(payload.sub);
       if (!user) return next(new Error("Invalid token subject"));
       if (user.status !== "active") return next(new Error("Account is not active"));

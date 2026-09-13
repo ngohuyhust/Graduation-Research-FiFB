@@ -1,21 +1,20 @@
 import { UsersRepository } from "../users/users.repository";
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import type { PoolClient } from "pg";
-import type * as AuthRepository from "./auth.repository";
+import { AuthRepository } from "./auth.repository";
 import type { RegisterPayload, LoginPayload } from "./auth.validation";
 import type { RequestMeta, TokenUser } from "./auth.types";
 
-export const AUTH_REPOSITORY = Symbol("AUTH_REPOSITORY");
 
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { env } = require("../../config/env");
-const { withTransaction } = require("../../db/pool");
+import { DatabaseService } from "../../db/database.service";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { logger } = require("../../utils/logger");
 const { createOpaqueToken, hashToken, addDays, addHours, addMinutes } = require("../../utils/tokens");
-const { signAccessToken } = require("./jwt.service");
+import { JwtService } from "./jwt.service";
 import { EmailDeliveriesRepository } from "../emailDeliveries/emailDeliveries.repository";
 
 function sanitizeEmail(email: string) {
@@ -59,8 +58,8 @@ async function hashPassword(password: string) {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly emailDeliveries: EmailDeliveriesRepository,
-    @Inject(AUTH_REPOSITORY) private readonly authRepository: typeof AuthRepository,
+  constructor(private readonly db: DatabaseService, private readonly jwt: JwtService, private readonly emailDeliveries: EmailDeliveriesRepository,
+    private readonly authRepository: AuthRepository,
     private readonly userRepository: UsersRepository,
   ) {}
 
@@ -76,14 +75,14 @@ export class AuthService {
       userAgent: reqMeta.userAgent,
     });
     return {
-      accessToken: signAccessToken(user),
+      accessToken: this.jwt.signAccessToken(user),
       refreshToken,
       expiresAt,
     };
   }
 
   async register(payload: RegisterPayload) {
-    const result = await withTransaction(async (client: PoolClient) => {
+    const result = await this.db.withTransaction(async (client: PoolClient) => {
       const email = sanitizeEmail(payload.email);
       const existing = await this.userRepository.findByEmail(email, client);
       if (existing) throw new AppError(codes.CONFLICT, "Email is already registered", 409);
@@ -149,7 +148,7 @@ export class AuthService {
       }
 
       await this.userRepository.touchLastLogin(user.id);
-      return withTransaction(async (client: PoolClient) => this.createTokenPair(client, user, reqMeta));
+      return this.db.withTransaction(async (client: PoolClient) => this.createTokenPair(client, user, reqMeta));
     } catch (error) {
       if (!(error instanceof AppError)) {
         logLoginDebug("unexpected_error", {
@@ -162,7 +161,7 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string, reqMeta: RequestMeta) {
-    return withTransaction(async (client: PoolClient) => {
+    return this.db.withTransaction(async (client: PoolClient) => {
       const currentHash = hashToken(refreshToken);
       const session = await this.authRepository.findSessionByHash(client, currentHash);
       if (!session) throw new AppError(codes.UNAUTHENTICATED, "Invalid refresh token", 401);
@@ -174,13 +173,13 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    return withTransaction(async (client: PoolClient) => {
+    return this.db.withTransaction(async (client: PoolClient) => {
       await this.authRepository.revokeSessionByHash(client, hashToken(refreshToken));
     });
   }
 
   async verifyEmail(email: string, otp: string) {
-    return withTransaction(async (client: PoolClient) => {
+    return this.db.withTransaction(async (client: PoolClient) => {
       const record = await this.authRepository.findVerificationToken(client, hashEmailOtp(email, otp));
       if (!record) throw new AppError(codes.BAD_REQUEST, "Invalid or expired verification code", 400);
       await this.authRepository.markVerificationUsed(client, record.id);
@@ -192,7 +191,7 @@ export class AuthService {
   async requestPasswordReset(email: string) {
     const user = await this.userRepository.findByEmail(sanitizeEmail(email));
     if (!user) return;
-    const resetEmail = await withTransaction(async (client: PoolClient) => {
+    const resetEmail = await this.db.withTransaction(async (client: PoolClient) => {
       const token = createOpaqueToken();
       await this.authRepository.createPasswordResetToken(client, {
         userId: user.id,
@@ -213,7 +212,7 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    return withTransaction(async (client: PoolClient) => {
+    return this.db.withTransaction(async (client: PoolClient) => {
       const record = await this.authRepository.findPasswordResetToken(client, hashToken(token));
       if (!record) throw new AppError(codes.BAD_REQUEST, "Invalid or expired reset token", 400);
       await this.userRepository.updatePassword(client, record.user_id, await hashPassword(newPassword));
@@ -223,7 +222,7 @@ export class AuthService {
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
-    return withTransaction(async (client: PoolClient) => {
+    return this.db.withTransaction(async (client: PoolClient) => {
       const user = await this.userRepository.findAuthById(userId, client);
       const ok = user && (await bcrypt.compare(currentPassword, user.password_hash));
       if (!ok) throw new AppError(codes.UNAUTHENTICATED, "Current password is incorrect", 401);

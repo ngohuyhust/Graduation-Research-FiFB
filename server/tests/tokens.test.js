@@ -1,6 +1,6 @@
 // Kiem thu tu dong cho tokens.
 const { createOpaqueToken, hashToken } = require("../src/utils/tokens");
-const { signAccessToken, verifyAccessToken } = require("../src/modules/auth/jwt.service");
+const { signAccessToken, verifyAccessToken } = new (require("../src/modules/auth/jwt.service").JwtService)();
 
 describe("token utilities", () => {
   test("hashToken is deterministic and does not expose the raw token", () => {
