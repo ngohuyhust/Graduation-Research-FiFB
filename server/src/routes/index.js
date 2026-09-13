@@ -1,6 +1,5 @@
 // Gom tat ca route module vao mot router /api.
 const express = require("express");
-const favoriteRoutes = require("../modules/favorites/favorites.routes");
 const workoutPlanRoutes = require("../modules/workoutPlans/workoutPlans.routes");
 const notificationRoutes = require("../modules/notifications/notifications.routes");
 const workoutSessionRoutes = require("../modules/workoutSessions/workoutSessions.routes");
@@ -12,7 +11,6 @@ router.get("/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" }, message: "OK" });
 });
 
-router.use("/favorites", favoriteRoutes);
 router.use("/workout-plans", workoutPlanRoutes);
 router.use("/workout-sessions", workoutSessionRoutes);
 router.use("/chat", chatRoutes);

@@ -3,19 +3,15 @@ jest.mock("../src/db/pool", () => ({
   withTransaction: (callback) => callback({ query: jest.fn() }),
 }));
 
-jest.mock("../src/modules/favorites/favorites.repository", () => ({
-  add: jest.fn(),
-  remove: jest.fn(),
-  list: jest.fn(),
-}));
-
 jest.mock("../src/modules/exercises/exercises.repository", () => ({
   ensureActive: jest.fn(),
 }));
 
-const repository = require("../src/modules/favorites/favorites.repository");
+const repository = { add: jest.fn(), remove: jest.fn(), list: jest.fn() };
 const exerciseRepository = require("../src/modules/exercises/exercises.repository");
-const service = require("../src/modules/favorites/favorites.service");
+const { FavoritesService } = require("../src/modules/favorites/favorites.service");
+const { DatabaseService } = require("../src/db/database.service");
+const service = new FavoritesService(repository, new DatabaseService());
 
 describe("favorites service", () => {
   test("add favorite is idempotent when repository returns existing favorite", async () => {
