@@ -16,7 +16,7 @@ const codes = require("../../utils/errors/errorCodes");
 const { logger } = require("../../utils/logger");
 const { createOpaqueToken, hashToken, addDays, addHours, addMinutes } = require("../../utils/tokens");
 const { signAccessToken } = require("./jwt.service");
-const { sendEmail } = require("../emailDeliveries/emailDeliveries.repository");
+import { EmailDeliveriesRepository } from "../emailDeliveries/emailDeliveries.repository";
 
 function sanitizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -59,7 +59,7 @@ async function hashPassword(password: string) {
 
 @Injectable()
 export class AuthService {
-  constructor(
+  constructor(private readonly emailDeliveries: EmailDeliveriesRepository,
     @Inject(AUTH_REPOSITORY) private readonly authRepository: typeof AuthRepository,
     private readonly userRepository: UsersRepository,
   ) {}
@@ -118,7 +118,7 @@ export class AuthService {
 
       return { user, verificationEmail };
     });
-    await sendEmail(null, result.verificationEmail);
+    await this.emailDeliveries.sendEmail(null, result.verificationEmail);
     return { user: result.user };
   }
 
@@ -209,7 +209,7 @@ export class AuthService {
         metadata: { userId: user.id },
       };
     });
-    await sendEmail(null, resetEmail);
+    await this.emailDeliveries.sendEmail(null, resetEmail);
   }
 
   async resetPassword(token: string, newPassword: string) {

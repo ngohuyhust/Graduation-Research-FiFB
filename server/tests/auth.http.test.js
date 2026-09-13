@@ -1,6 +1,11 @@
 const request = require("supertest");
 
-jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => ({ sendEmail: jest.fn() }));
+jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => {
+  const actual = jest.requireActual("../src/modules/emailDeliveries/emailDeliveries.repository");
+  const sendEmail = jest.fn();
+  class EmailDeliveriesRepository extends actual.EmailDeliveriesRepository { sendEmail(...args) { return sendEmail(...args); } }
+  return { ...actual, EmailDeliveriesRepository, sendEmail };
+});
 const { createApp } = require("../src/app");
 const { AuthService } = require("../src/modules/auth/auth.service");
 const { signAccessToken } = require("../src/modules/auth/jwt.service");

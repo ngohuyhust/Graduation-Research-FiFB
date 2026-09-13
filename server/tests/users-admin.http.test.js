@@ -22,7 +22,12 @@ jest.mock("../src/modules/audit/audit.service", () => {
   class AuditService extends actual.AuditService { listAuditLogs(...args) { return listAuditLogs(...args); } }
   return { ...actual, AuditService, listAuditLogs };
 });
-jest.mock("../src/modules/emailDeliveries/emailDeliveries.service", () => ({ list: jest.fn() }));
+jest.mock("../src/modules/emailDeliveries/emailDeliveries.service", () => {
+  const actual = jest.requireActual("../src/modules/emailDeliveries/emailDeliveries.service");
+  const list = jest.fn();
+  class EmailDeliveriesService extends actual.EmailDeliveriesService { list(...args) { return list(...args); } }
+  return { ...actual, EmailDeliveriesService, list };
+});
 const { createApp } = require("../src/app");
 const { UsersRepository } = require("../src/modules/users/users.repository");
 const { UsersService } = require("../src/modules/users/users.service");

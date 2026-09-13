@@ -1,3 +1,4 @@
+import { EmailDeliveriesModule } from "../emailDeliveries/emailDeliveries.module";
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
 import { AuthController } from "./auth.controller";
@@ -7,7 +8,7 @@ import { UsersPersistenceModule } from "../users/users-persistence.module";
 const { authRateLimiter } = require("../../middlewares/rateLimiters");
 
 @Module({
-  imports: [HttpModule, UsersPersistenceModule],
+  imports: [EmailDeliveriesModule, HttpModule, UsersPersistenceModule],
   controllers: [AuthController],
   providers: [AuthService, { provide: AUTH_REPOSITORY, useValue: authRepository }],
   exports: [AuthService],

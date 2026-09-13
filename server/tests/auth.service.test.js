@@ -1,6 +1,11 @@
 jest.mock("../src/db/pool", () => ({ withTransaction: jest.fn() }));
 jest.mock("bcryptjs", () => ({ hash: jest.fn(), compare: jest.fn() }));
-jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => ({ sendEmail: jest.fn() }));
+jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => {
+  const actual = jest.requireActual("../src/modules/emailDeliveries/emailDeliveries.repository");
+  const sendEmail = jest.fn();
+  class EmailDeliveriesRepository extends actual.EmailDeliveriesRepository { sendEmail(...args) { return sendEmail(...args); } }
+  return { ...actual, EmailDeliveriesRepository, sendEmail };
+});
 jest.mock("../src/utils/logger", () => ({ logger: { warn: jest.fn() } }));
 
 const { AuthService } = require("../src/modules/auth/auth.service");
@@ -52,7 +57,7 @@ describe("Nest auth service", () => {
     );
     users.createUser.mockResolvedValue(user);
     users.markVerified.mockResolvedValue(user);
-    service = new AuthService(repository, users);
+    service = new AuthService(new (require("../src/modules/emailDeliveries/emailDeliveries.repository").EmailDeliveriesRepository)(), repository, users);
   });
 
   test.each(["user", "trainer"])(

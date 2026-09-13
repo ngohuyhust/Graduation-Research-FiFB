@@ -1,13 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { UsersService } from "../users/users.service";
 import type { UsersQuery, UserStatus } from "../users/users.validation";
 import type { Actor } from "../../common/auth.guard";
 import type { CertificateQuery, CertificateDecision, AuditQuery, DeliveryQuery } from "./admin.validation";
 import { TrainerCertificatesService } from "../trainerCertificates/trainerCertificates.service";
 import { AuditService } from "../audit/audit.service";
-import type * as EmailDeliveriesService from "../emailDeliveries/emailDeliveries.service";
+import { EmailDeliveriesService } from "../emailDeliveries/emailDeliveries.service";
 
-export const ADMIN_EMAIL_DELIVERIES = Symbol("ADMIN_EMAIL_DELIVERIES");
 type RequestMeta = { ipAddress?: string; userAgent?: string };
 
 @Injectable()
@@ -16,7 +15,7 @@ export class AdminService {
     private readonly users: UsersService,
     private readonly certificates: TrainerCertificatesService,
     private readonly audit: AuditService,
-    @Inject(ADMIN_EMAIL_DELIVERIES) private readonly emailDeliveries: typeof EmailDeliveriesService,
+    private readonly emailDeliveries: EmailDeliveriesService,
   ) {}
 
   listUsers(query: UsersQuery) {

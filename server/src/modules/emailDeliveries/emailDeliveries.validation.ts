@@ -1,9 +1,9 @@
 // Khai bao schema validate input cho module emailDeliveries.
-const { z } = require("zod");
+import { z } from "zod";
 
-const deliveryQuerySchema = z.object({
+export const deliveryQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
-module.exports = { deliveryQuerySchema };
+export type DeliveryQuery = z.infer<typeof deliveryQuerySchema>;
