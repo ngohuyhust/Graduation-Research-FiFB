@@ -9,11 +9,11 @@ const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 const auditRepository = require("../audit/audit.repository");
-const notificationRepository = require("../notifications/notifications.repository");
+import { NotificationsRepository } from "../notifications/notifications.repository";
 
 @Injectable()
 export class UsersService {
-  constructor(
+  constructor(private readonly notificationRepository: NotificationsRepository,
     private readonly repository: UsersRepository,
     private readonly database: DatabaseService,
   ) {}
@@ -63,7 +63,7 @@ export class UsersService {
         ipAddress: requestMeta.ipAddress,
         userAgent: requestMeta.userAgent,
       });
-      await notificationRepository.createNotification(client, {
+      await this.notificationRepository.createNotification(client, {
         recipientId: targetUserId,
         actorId: actor.userId,
         type: `account_${status}`,

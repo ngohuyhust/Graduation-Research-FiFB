@@ -10,7 +10,7 @@ const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 const auditRepository = require("../audit/audit.repository");
-const notificationRepository = require("../notifications/notifications.repository");
+import { NotificationsRepository } from "../notifications/notifications.repository";
 const { invalidateByPrefix } = require("../../utils/cache");
 
 export function hasMappingPayload(payload: ExerciseUpdate) {
@@ -21,7 +21,7 @@ export function hasMappingPayload(payload: ExerciseUpdate) {
 
 @Injectable()
 export class ExercisesService {
-  constructor(@Inject(EXERCISES_REPOSITORY) private readonly repository: typeof ExercisesRepository) {}
+  constructor(private readonly notificationRepository: NotificationsRepository, @Inject(EXERCISES_REPOSITORY) private readonly repository: typeof ExercisesRepository) {}
 
   async listExercises(filters: ExerciseQuery, admin = false) {
     const result = await this.repository.list(filters, admin);
@@ -79,7 +79,7 @@ export class ExercisesService {
       const status = decision.status === "approved" ? "active" : "rejected";
       const updated = await this.repository.setReviewStatus(client, id, actor, status, decision.rejectionReason);
       if (oldExercise.created_by) {
-        await notificationRepository.createNotification(client, {
+        await this.notificationRepository.createNotification(client, {
           recipientId: oldExercise.created_by,
           actorId: actor.userId,
           type: `exercise_${status}`,

@@ -1,3 +1,4 @@
+import { NotificationsModule } from "../notifications/notifications.module";
 import { Module } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
 import { DatabaseModule } from "../../db/database.module";
@@ -7,7 +8,7 @@ import { TrainerCertificatesService } from "./trainerCertificates.service";
 import { TrainerCertificatesRepository } from "./trainerCertificates.repository";
 
 @Module({
-  imports: [HttpModule, DatabaseModule, TrainersModule],
+  imports: [NotificationsModule, HttpModule, DatabaseModule, TrainersModule],
   controllers: [TrainerCertificatesController],
   providers: [TrainerCertificatesService, TrainerCertificatesRepository],
   exports: [TrainerCertificatesService, TrainerCertificatesRepository],

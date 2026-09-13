@@ -8,11 +8,11 @@ const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 const auditRepository = require("../audit/audit.repository");
-const notificationRepository = require("../notifications/notifications.repository");
+import { NotificationsRepository } from "../notifications/notifications.repository";
 
 @Injectable()
 export class TrainerCertificatesService {
-  constructor(
+  constructor(private readonly notificationRepository: NotificationsRepository,
     private readonly repository: TrainerCertificatesRepository,
     private readonly database: DatabaseService,
     private readonly trainersRepository: TrainersRepository,
@@ -64,7 +64,7 @@ export class TrainerCertificatesService {
           userAgent: requestMeta.userAgent,
         });
       }
-      await notificationRepository.createNotification(client, {
+      await this.notificationRepository.createNotification(client, {
         recipientId: oldCertificate.trainer_id,
         actorId: actor.userId,
         type: `certificate_${decision.status}`,

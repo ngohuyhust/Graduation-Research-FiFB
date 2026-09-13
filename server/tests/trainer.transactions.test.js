@@ -1,6 +1,13 @@
 jest.mock("pg", () => ({ Pool: jest.fn().mockImplementation(() => ({ connect: jest.fn() })) }));
 jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
-jest.mock("../src/modules/notifications/notifications.repository", () => ({ createNotification: jest.fn() }));
+jest.mock("../src/modules/notifications/notifications.repository", () => {
+  const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
+  const createNotification = jest.fn();
+  class NotificationsRepository extends actual.NotificationsRepository {
+    createNotification(...args) { return createNotification(...args); }
+  }
+  return { ...actual, NotificationsRepository, createNotification };
+});
 const { pool } = require("../src/db/pool");
 const { DatabaseService } = require("../src/db/database.service");
 const { TrainerCertificatesService } = require("../src/modules/trainerCertificates/trainerCertificates.service");
@@ -15,7 +22,7 @@ describe("trainer transaction boundaries", () => {
     client = { query: jest.fn(), release: jest.fn() };
     pool.connect.mockResolvedValue(client);
     const database = new DatabaseService();
-    certificateService = new TrainerCertificatesService(
+    certificateService = new TrainerCertificatesService(new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
       {
         findById: jest.fn().mockResolvedValue({ id: "certificate", trainer_id: "trainer", status: "pending" }),
         setReviewStatus: jest.fn().mockResolvedValue({ id: "certificate", status: "approved" }),
@@ -23,7 +30,7 @@ describe("trainer transaction boundaries", () => {
       database,
       { findProfileForUpdate: jest.fn(), markVerified: jest.fn() },
     );
-    connectionService = new TrainerConnectionsService(
+    connectionService = new TrainerConnectionsService(new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
       {
         findPendingForTrainer: jest.fn().mockResolvedValue({ id: "request", trainer_id: "trainer", user_id: "member" }),
         findActiveConnection: jest.fn().mockResolvedValue(null),

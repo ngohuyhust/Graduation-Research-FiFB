@@ -12,7 +12,14 @@ jest.mock("../src/modules/exercises/exercises.repository", () => ({
 }));
 jest.mock("../src/modules/auth/jwt.service", () => ({ verifyAccessToken: jest.fn() }));
 jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
-jest.mock("../src/modules/notifications/notifications.repository", () => ({ createNotification: jest.fn() }));
+jest.mock("../src/modules/notifications/notifications.repository", () => {
+  const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
+  const createNotification = jest.fn();
+  class NotificationsRepository extends actual.NotificationsRepository {
+    createNotification(...args) { return createNotification(...args); }
+  }
+  return { ...actual, NotificationsRepository, createNotification };
+});
 jest.mock("../src/redis/client", () => ({ getRedisClient: jest.fn() }));
 jest.mock("../src/utils/cache", () => ({ invalidateByPrefix: jest.fn() }));
 

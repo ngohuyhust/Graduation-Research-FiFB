@@ -15,13 +15,18 @@ jest.mock("../src/modules/audit/audit.repository", () => ({
   createAudit: jest.fn(),
 }));
 
-jest.mock("../src/modules/notifications/notifications.repository", () => ({
-  createNotification: jest.fn(),
-}));
+jest.mock("../src/modules/notifications/notifications.repository", () => {
+  const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
+  const createNotification = jest.fn();
+  class NotificationsRepository extends actual.NotificationsRepository {
+    createNotification(...args) { return createNotification(...args); }
+  }
+  return { ...actual, NotificationsRepository, createNotification };
+});
 
 const repository = require("../src/modules/exercises/exercises.repository");
 const { ExercisesService } = require("../src/modules/exercises/exercises.service");
-const service = new ExercisesService(repository);
+const service = new ExercisesService(new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}), repository);
 
 describe("exercises service", () => {
   test("trainer submissions are created through the trainer_submission source", async () => {

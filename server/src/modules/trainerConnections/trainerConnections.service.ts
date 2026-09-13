@@ -5,11 +5,11 @@ import { DatabaseService } from "../../db/database.service";
 import type { Actor } from "../../common/auth.guard";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
-const notificationRepository = require("../notifications/notifications.repository");
+import { NotificationsRepository } from "../notifications/notifications.repository";
 
 @Injectable()
 export class TrainerConnectionsService {
-  constructor(
+  constructor(private readonly notificationRepository: NotificationsRepository,
     private readonly repository: TrainerConnectionsRepository,
     private readonly database: DatabaseService,
   ) {}
@@ -24,7 +24,7 @@ export class TrainerConnectionsService {
       if (await this.repository.findActiveConnection(client, userId, payload.trainerId))
         throw new AppError(codes.CONFLICT, "An active trainer connection already exists", 409);
       const created = await this.repository.createRequest(client, userId, payload);
-      await notificationRepository.createNotification(client, {
+      await this.notificationRepository.createNotification(client, {
         recipientId: payload.trainerId,
         actorId: userId,
         type: "trainer_request_pending",
@@ -56,7 +56,7 @@ export class TrainerConnectionsService {
       if (status === "approved") {
         await this.repository.createConnection(client, pending);
       }
-      await notificationRepository.createNotification(client, {
+      await this.notificationRepository.createNotification(client, {
         recipientId: pending.user_id,
         actorId: actor.userId,
         type: `trainer_request_${status}`,

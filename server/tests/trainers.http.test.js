@@ -1,7 +1,14 @@
 const request = require("supertest");
 jest.mock("../src/db/pool", () => ({ withTransaction: (callback) => callback({ query: jest.fn() }) }));
 jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
-jest.mock("../src/modules/notifications/notifications.repository", () => ({ createNotification: jest.fn() }));
+jest.mock("../src/modules/notifications/notifications.repository", () => {
+  const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
+  const createNotification = jest.fn();
+  class NotificationsRepository extends actual.NotificationsRepository {
+    createNotification(...args) { return createNotification(...args); }
+  }
+  return { ...actual, NotificationsRepository, createNotification };
+});
 const { createApp } = require("../src/app");
 const { UsersRepository } = require("../src/modules/users/users.repository");
 const { TrainersRepository } = require("../src/modules/trainers/trainers.repository");

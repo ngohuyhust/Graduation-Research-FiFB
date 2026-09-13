@@ -1,3 +1,4 @@
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ChatModule } from "./modules/chat/chat.module";
 import { WorkoutSessionsModule } from "./modules/workoutSessions/workoutSessions.module";
 import { WorkoutPlansModule } from "./modules/workoutPlans/workoutPlans.module";
@@ -15,6 +16,7 @@ import { AdminModule } from "./modules/admin/admin.module";
 
 @Module({
   imports: [
+    NotificationsModule,
     ChatModule,
     WorkoutSessionsModule,
     WorkoutPlansModule,
