@@ -3,9 +3,6 @@ import { EmailDeliveriesRepository } from "./emailDeliveries.repository";
 import type { DeliveryQuery } from "./emailDeliveries.validation";
 const { paginate } = require("../../utils/responses");
 
-
-
-
 @Injectable()
 export class EmailDeliveriesService {
   constructor(private readonly repository: EmailDeliveriesRepository) {}

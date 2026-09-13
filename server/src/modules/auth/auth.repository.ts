@@ -5,8 +5,6 @@ import type { StoredSession, StoredToken, SessionPayload, TokenPayload } from ".
 const { env } = require("../../config/env");
 const { getRedisClient } = require("../../redis/client");
 
-
-
 export function secondsUntil(date: Date | string) {
   return Math.max(1, Math.floor((new Date(date).getTime() - Date.now()) / 1000));
 }
@@ -52,7 +50,10 @@ export class AuthRepository {
   };
   constructor(private readonly db: DatabaseService) {}
 
-  async createSession(_client: QueryExecutor, { userId, refreshTokenHash, expiresAt, ipAddress, userAgent }: SessionPayload) {
+  async createSession(
+    _client: QueryExecutor,
+    { userId, refreshTokenHash, expiresAt, ipAddress, userAgent }: SessionPayload,
+  ) {
     const record = {
       user_id: userId,
       refresh_token_hash: refreshTokenHash,
@@ -79,10 +80,15 @@ export class AuthRepository {
     let session = await redisGetJson<StoredSession>(`session:${refreshTokenHash}`);
     if (!session) session = this.memory.sessions.get(refreshTokenHash) || null;
     if (!session || isExpired(session) || session.revoked_at) return null;
-    const user = await this.db.query<{ id: string; role: string; status: string; email: string; email_verified_at: Date | null }>(
-      `SELECT id, role, status, email, email_verified_at FROM app_users WHERE id = $1 AND deleted_at IS NULL`,
-      [session.user_id],
-    );
+    const user = await this.db.query<{
+      id: string;
+      role: string;
+      status: string;
+      email: string;
+      email_verified_at: Date | null;
+    }>(`SELECT id, role, status, email, email_verified_at FROM app_users WHERE id = $1 AND deleted_at IS NULL`, [
+      session.user_id,
+    ]);
     if (!user.rows[0]) return null;
     return { ...session, ...user.rows[0], user_id: session.user_id };
   }

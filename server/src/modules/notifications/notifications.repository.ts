@@ -2,11 +2,17 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../../db/database.service";
 import type { QueryExecutor } from "../../db/database.service";
 import type { NotificationQuery } from "./notifications.validation";
-export interface NotificationPayload { recipientId: string; actorId?: string | null; type: string; title: string; content?: string | null; actionUrl?: string; isImportant?: boolean; metadata?: Record<string, unknown> }
+export interface NotificationPayload {
+  recipientId: string;
+  actorId?: string | null;
+  type: string;
+  title: string;
+  content?: string | null;
+  actionUrl?: string;
+  isImportant?: boolean;
+  metadata?: Record<string, unknown>;
+}
 const { emitToUser } = require("../../socket/emitters");
-
-
-
 
 @Injectable()
 export class NotificationsRepository {
@@ -41,7 +47,10 @@ export class NotificationsRepository {
 
   async listMine(userId: string, { page, limit }: NotificationQuery) {
     const offset = (page - 1) * limit;
-    const count = await this.db.query<{ total: number }>(`SELECT count(*)::int AS total FROM notifications WHERE recipient_id = $1`, [userId]);
+    const count = await this.db.query<{ total: number }>(
+      `SELECT count(*)::int AS total FROM notifications WHERE recipient_id = $1`,
+      [userId],
+    );
     const result = await this.db.query<Record<string, unknown>>(
       `SELECT * FROM notifications WHERE recipient_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       [userId, limit, offset],

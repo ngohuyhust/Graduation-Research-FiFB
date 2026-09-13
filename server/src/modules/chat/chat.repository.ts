@@ -2,9 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../../db/database.service";
 import type { MessagePayload, MessageQuery } from "./chat.validation";
 
-
-
-
 @Injectable()
 export class ChatRepository {
   constructor(private readonly db: DatabaseService) {}
@@ -22,9 +19,10 @@ export class ChatRepository {
   }
 
   async listMessages(connectionId: string, { page, limit }: MessageQuery) {
-    const total = await this.db.query<{ total: number }>("SELECT count(*)::int AS total FROM chat_messages WHERE connection_id = $1", [
-      connectionId,
-    ]);
+    const total = await this.db.query<{ total: number }>(
+      "SELECT count(*)::int AS total FROM chat_messages WHERE connection_id = $1",
+      [connectionId],
+    );
     const offset = Math.max(total.rows[0].total - page * limit, 0);
     const result = await this.db.query<Record<string, unknown>>(
       `SELECT cm.*, u.full_name AS sender_name

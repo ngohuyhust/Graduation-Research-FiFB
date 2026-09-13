@@ -4,7 +4,11 @@ jest.mock("../src/redis/client", () => ({
   getRedisClient: jest.fn().mockResolvedValue(null),
 }));
 
-const repository = Object.fromEntries(["findOwnedPlan", "create", "list", "detail", "update", "ensureActiveExercise", "addLog", "stats", "progression"].map((name) => [name, jest.fn()]));
+const repository = Object.fromEntries(
+  ["findOwnedPlan", "create", "list", "detail", "update", "ensureActiveExercise", "addLog", "stats", "progression"].map(
+    (name) => [name, jest.fn()],
+  ),
+);
 const { WorkoutSessionsService, streaks } = require("../src/modules/workoutSessions/workoutSessions.service");
 const service = new WorkoutSessionsService(repository);
 
@@ -23,8 +27,9 @@ describe("workout sessions service", () => {
     const today = new Date();
     const yesterday = new Date(today.getTime() - 86400000);
     const twoDaysAgo = new Date(today.getTime() - 2 * 86400000);
-    expect(
-      streaks([{ workout_date: today }, { workout_date: yesterday }, { workout_date: twoDaysAgo }]),
-    ).toEqual({ currentStreak: 3, longestStreak: 3 });
+    expect(streaks([{ workout_date: today }, { workout_date: yesterday }, { workout_date: twoDaysAgo }])).toEqual({
+      currentStreak: 3,
+      longestStreak: 3,
+    });
   });
 });

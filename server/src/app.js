@@ -1,11 +1,8 @@
-// Nest owns migrated modules; Express routes remain during the incremental migration.
+// Nest owns all API routes; Express supplies the HTTP adapter and shared middleware.
 require("reflect-metadata");
 const { NestFactory } = require("@nestjs/core");
 const { ExpressAdapter } = require("@nestjs/platform-express");
 const { AppModule } = require("./app.module");
-const { JwtService } = require("./modules/auth/jwt.service");
-const { UsersRepository } = require("./modules/users/users.repository");
-const { createAuthenticate } = require("./middlewares/authenticate");
 const { ApiExceptionFilter } = require("./common/api-exception.filter");
 const express = require("express");
 const helmet = require("helmet");
@@ -13,7 +10,6 @@ const compression = require("compression");
 const cors = require("cors");
 const morgan = require("morgan");
 const { env } = require("./config/env");
-const routes = require("./routes");
 const { requestId } = require("./middlewares/requestId");
 const { errorHandler } = require("./middlewares/errorHandler");
 const { apiRateLimiter } = require("./middlewares/rateLimiters");
@@ -46,7 +42,6 @@ async function createApp() {
     }),
   );
   app.use("/api", apiRateLimiter);
-  app.use("/api", routes);
   app.use(errorHandler);
   const nest = await NestFactory.create(AppModule, new ExpressAdapter(app), {
     bodyParser: false,
@@ -57,7 +52,6 @@ async function createApp() {
   nest.useGlobalFilters(new ApiExceptionFilter());
   await nest.init();
   app.locals.nest = nest;
-  app.locals.authenticate = createAuthenticate(nest.get(UsersRepository), nest.get(JwtService));
   return app;
 }
 

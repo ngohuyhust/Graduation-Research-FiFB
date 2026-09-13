@@ -4,7 +4,9 @@ jest.mock("../src/modules/audit/audit.repository", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.repository");
   const createAudit = jest.fn();
   class AuditRepository extends actual.AuditRepository {
-    createAudit(...args) { return createAudit(...args); }
+    createAudit(...args) {
+      return createAudit(...args);
+    }
   }
   return { ...actual, AuditRepository, createAudit };
 });
@@ -12,20 +14,30 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
   class NotificationsRepository extends actual.NotificationsRepository {
-    createNotification(...args) { return createNotification(...args); }
+    createNotification(...args) {
+      return createNotification(...args);
+    }
   }
   return { ...actual, NotificationsRepository, createNotification };
 });
 jest.mock("../src/modules/audit/audit.service", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.service");
   const listAuditLogs = jest.fn();
-  class AuditService extends actual.AuditService { listAuditLogs(...args) { return listAuditLogs(...args); } }
+  class AuditService extends actual.AuditService {
+    listAuditLogs(...args) {
+      return listAuditLogs(...args);
+    }
+  }
   return { ...actual, AuditService, listAuditLogs };
 });
 jest.mock("../src/modules/emailDeliveries/emailDeliveries.service", () => {
   const actual = jest.requireActual("../src/modules/emailDeliveries/emailDeliveries.service");
   const list = jest.fn();
-  class EmailDeliveriesService extends actual.EmailDeliveriesService { list(...args) { return list(...args); } }
+  class EmailDeliveriesService extends actual.EmailDeliveriesService {
+    list(...args) {
+      return list(...args);
+    }
+  }
   return { ...actual, EmailDeliveriesService, list };
 });
 const { createApp } = require("../src/app");

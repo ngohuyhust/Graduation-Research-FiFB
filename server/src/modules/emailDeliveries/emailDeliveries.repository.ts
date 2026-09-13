@@ -4,11 +4,6 @@ import type { EmailPayload, DeliveryPayload, DeliveryRow } from "./emailDeliveri
 import sgMail from "@sendgrid/mail";
 const { env } = require("../../config/env");
 
-
-
-
-
-
 @Injectable()
 export class EmailDeliveriesRepository {
   private readonly memoryDeliveries: DeliveryRow[] = [];
@@ -18,15 +13,16 @@ export class EmailDeliveriesRepository {
   }
 
   createSendGridMessage({ to, subject, html, text }: Pick<EmailPayload, "to" | "subject" | "html" | "text">) {
-    const message: { to: string; from: { email: string; name: string }; subject: string; text: string; html?: string } = {
-      to,
-      from: {
-        email: env.sendgrid.fromEmail,
-        name: env.sendgrid.fromName,
-      },
-      subject,
-      text: text || subject,
-    };
+    const message: { to: string; from: { email: string; name: string }; subject: string; text: string; html?: string } =
+      {
+        to,
+        from: {
+          email: env.sendgrid.fromEmail,
+          name: env.sendgrid.fromName,
+        },
+        subject,
+        text: text || subject,
+      };
     if (html) message.html = html;
     return message;
   }
@@ -54,7 +50,10 @@ export class EmailDeliveriesRepository {
     return row;
   }
 
-  async sendEmail(client: QueryExecutor | null, { to, subject, html, text, templateKey, metadata, notificationId }: EmailPayload) {
+  async sendEmail(
+    client: QueryExecutor | null,
+    { to, subject, html, text, templateKey, metadata, notificationId }: EmailPayload,
+  ) {
     if (!this.hasSendGridConfig()) {
       await this.logDelivery(client, {
         to,
@@ -85,7 +84,9 @@ export class EmailDeliveriesRepository {
     } catch (error) {
       pending.status = "failed";
       const providerError = error as { response?: { body?: unknown }; message?: string };
-      pending.error_message = providerError.response?.body ? JSON.stringify(providerError.response.body) : (providerError.message || String(error));
+      pending.error_message = providerError.response?.body
+        ? JSON.stringify(providerError.response.body)
+        : providerError.message || String(error);
       throw error;
     }
   }

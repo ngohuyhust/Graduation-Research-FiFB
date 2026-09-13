@@ -5,7 +5,6 @@ type Pagination = { page: number; limit: number };
 import { exerciseLibrarySelect, camelExercise } from "../exercises/exercises.repository";
 import type { ExerciseRow } from "../exercises/exercises.types";
 
-
 export function pageOffset({ page, limit }: Pagination) {
   return (page - 1) * limit;
 }

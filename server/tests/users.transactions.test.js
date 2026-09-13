@@ -3,7 +3,9 @@ jest.mock("../src/modules/audit/audit.repository", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.repository");
   const createAudit = jest.fn();
   class AuditRepository extends actual.AuditRepository {
-    createAudit(...args) { return createAudit(...args); }
+    createAudit(...args) {
+      return createAudit(...args);
+    }
   }
   return { ...actual, AuditRepository, createAudit };
 });
@@ -11,7 +13,9 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
   class NotificationsRepository extends actual.NotificationsRepository {
-    createNotification(...args) { return createNotification(...args); }
+    createNotification(...args) {
+      return createNotification(...args);
+    }
   }
   return { ...actual, NotificationsRepository, createNotification };
 });
@@ -33,7 +37,12 @@ describe("user status transaction boundary", () => {
         .fn()
         .mockResolvedValue({ oldUser: { id: "member", status: "active" }, user: { id: "member", status: "locked" } }),
     };
-    service = new UsersService(new (require("../src/modules/audit/audit.repository").AuditRepository)({}), new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}), repository, new DatabaseService());
+    service = new UsersService(
+      new (require("../src/modules/audit/audit.repository").AuditRepository)({}),
+      new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
+      repository,
+      new DatabaseService(),
+    );
   });
 
   test("success commits only after audit and notification complete", async () => {

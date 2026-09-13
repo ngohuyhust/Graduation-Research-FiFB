@@ -1,6 +1,6 @@
 # FiFB
 
-FiFB is a fitness platform built with NestJS (incrementally migrating from Express), PostgreSQL, Redis, Socket.IO, React, Vite, and Tailwind CSS.
+FiFB is a fitness platform built with NestJS, PostgreSQL, Redis, Socket.IO, React, Vite, and Tailwind CSS.
 This upgrade intentionally excludes chatbot and AI features.
 
 ## Features
@@ -32,21 +32,28 @@ server/
 client/
 ```
 
-The backend is migrating module by module to NestJS 11 with TypeScript. `ExercisesModule` owns
-`/api/exercises` and `/api/admin/exercises`; `ExerciseTaxonomyModule` owns `/api/exercise-taxonomy`.
-`AuthModule` owns `/api/auth`, including the existing auth rate limit and refresh-token cookies.
-`UsersModule` owns `/api/users`; `AdminModule` owns user administration, certificates, audit logs,
-and email deliveries under `/api/admin`. All files in these two modules are TypeScript. `UsersRepository`
-is an injectable provider shared by auth, Nest guards, remaining Express routes, and Socket.IO. Admin
-delegates to the owning business services and has no separate repository.
-`TrainersModule`, `TrainerCertificatesModule`, `TrainerConnectionsModule`, and `ReviewsModule`
-own trainer profiles, certificate submission/review, member connections and trainer reviews. These
-modules use TypeScript repositories and services; admin certificate review injects the shared
-`TrainerCertificatesService`. Their existing URLs, permissions and response formats are preserved.
-Other modules still use Express. Nest uses the existing
-Express 4 application through `ExpressAdapter`, preserving legacy middleware and request validation.
-Controllers, services and repositories use Nest dependency injection. The exercise and taxonomy SQL
-repositories remain registered as existing providers during their incremental migration. Shared guards, Zod pipes, exception handling and cache interceptors preserve the API contract.
+All business modules use NestJS 11 and TypeScript, including their repositories, validation schemas,
+auth token provider and refresh-cookie helpers. Controllers, services and repositories use Nest
+dependency injection. Nest owns all `/api` routes, including `/api/health`; Express 4 remains the
+HTTP adapter with shared CORS, security headers, parsing, logging and rate limits.
+
+| Module | Routes / responsibility |
+| --- | --- |
+| `AuthModule` | `/api/auth`, credentials, verification/reset tokens, refresh sessions and cookies |
+| `UsersModule`, `AdminModule` | `/api/users`, `/api/admin`, user administration and delegation to business services |
+| `ExercisesModule`, `ExerciseTaxonomyModule` | `/api/exercises`, `/api/admin/exercises`, `/api/exercise-taxonomy` |
+| `TrainersModule`, `TrainerCertificatesModule`, `TrainerConnectionsModule`, `ReviewsModule` | Trainer profiles, certificates, connection requests and reviews |
+| `FavoritesModule` | `/api/favorites` |
+| `WorkoutPlansModule`, `WorkoutSessionsModule` | `/api/workout-plans`, `/api/workout-sessions`, logs, statistics and progression |
+| `ChatModule` | `/api/chat`; Socket.IO handlers receive the same Nest `ChatService` instance |
+| `NotificationsModule` | `/api/notifications` and shared transactional notification creation |
+| `AuditModule`, `EmailDeliveriesModule` | Shared audit/mail providers; administration routes live in `AdminController` |
+
+`UsersRepository` and `JwtService` are shared by HTTP authentication and Socket.IO. Admin delegates
+to the owning business services and has no separate repository. Guards, Zod pipes, exception handling
+and cache interceptors preserve existing URLs, permissions, status codes and response envelopes.
+Database transactions use the injected `DatabaseService`. Auth storage still uses Redis with the
+existing non-production memory fallback; email-delivery history remains process-local.
 
 The backend keeps the existing module pattern:
 

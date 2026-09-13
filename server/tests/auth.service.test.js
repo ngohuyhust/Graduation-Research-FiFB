@@ -3,7 +3,11 @@ jest.mock("bcryptjs", () => ({ hash: jest.fn(), compare: jest.fn() }));
 jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => {
   const actual = jest.requireActual("../src/modules/emailDeliveries/emailDeliveries.repository");
   const sendEmail = jest.fn();
-  class EmailDeliveriesRepository extends actual.EmailDeliveriesRepository { sendEmail(...args) { return sendEmail(...args); } }
+  class EmailDeliveriesRepository extends actual.EmailDeliveriesRepository {
+    sendEmail(...args) {
+      return sendEmail(...args);
+    }
+  }
   return { ...actual, EmailDeliveriesRepository, sendEmail };
 });
 jest.mock("../src/utils/logger", () => ({ logger: { warn: jest.fn() } }));
@@ -57,7 +61,13 @@ describe("Nest auth service", () => {
     );
     users.createUser.mockResolvedValue(user);
     users.markVerified.mockResolvedValue(user);
-    service = new AuthService(new (require("../src/db/database.service").DatabaseService)(), new (require("../src/modules/auth/jwt.service").JwtService)(), new (require("../src/modules/emailDeliveries/emailDeliveries.repository").EmailDeliveriesRepository)(), repository, users);
+    service = new AuthService(
+      new (require("../src/db/database.service").DatabaseService)(),
+      new (require("../src/modules/auth/jwt.service").JwtService)(),
+      new (require("../src/modules/emailDeliveries/emailDeliveries.repository").EmailDeliveriesRepository)(),
+      repository,
+      users,
+    );
   });
 
   test.each(["user", "trainer"])(

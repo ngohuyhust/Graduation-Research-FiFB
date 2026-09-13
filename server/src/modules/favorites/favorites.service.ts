@@ -6,12 +6,13 @@ const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 import { ExercisesRepository } from "../exercises/exercises.repository";
 
-
-
-
 @Injectable()
 export class FavoritesService {
-  constructor(private readonly exerciseRepository: ExercisesRepository, private readonly repository: FavoritesRepository, private readonly db: DatabaseService) {}
+  constructor(
+    private readonly exerciseRepository: ExercisesRepository,
+    private readonly repository: FavoritesRepository,
+    private readonly db: DatabaseService,
+  ) {}
 
   async addFavorite(userId: string, exerciseId: string) {
     const favorite = await this.db.withTransaction(async (client) => {

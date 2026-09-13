@@ -5,7 +5,6 @@ const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 
-
 export function ioInstance() {
   return require("../../socket").getIO();
 }

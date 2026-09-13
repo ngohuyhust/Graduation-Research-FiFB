@@ -1,15 +1,11 @@
 import { JwtService } from "../modules/auth/jwt.service";
 import { CanActivate, ExecutionContext, Injectable, SetMetadata } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import type { Request, Response, RequestHandler } from "express";
+import type { Request } from "express";
 import { UsersRepository } from "../modules/users/users.repository";
 import type { UserRow } from "../modules/users/users.types";
-const {
-  createAuthenticate,
-  requireActiveUser,
-  requireVerifiedEmail,
-  requireRoles,
-} = require("../middlewares/authenticate");
+const { AppError } = require("../utils/errors/AppError");
+const codes = require("../utils/errors/errorCodes");
 
 export interface Actor {
   userId: string;
@@ -27,22 +23,37 @@ export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly jwt: JwtService,
+  constructor(
+    private readonly jwt: JwtService,
     private readonly reflector: Reflector,
     private readonly users: UsersRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const response = context.switchToHttp().getResponse<Response>();
     const roles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [context.getHandler(), context.getClass()]);
-    const checks: RequestHandler[] = [requireActiveUser, requireVerifiedEmail];
-    checks.unshift(createAuthenticate(this.users, this.jwt));
-    if (roles) checks.push(requireRoles(...roles));
-    for (const check of checks) {
-      await new Promise<void>((resolve, reject) => {
-        check(request, response, (error?: unknown) => (error ? reject(error) : resolve()));
-      });
+    try {
+      const [scheme, token] = (request.headers.authorization || "").split(" ");
+      if (scheme !== "Bearer" || !token) {
+        throw new AppError(codes.UNAUTHENTICATED, "Missing bearer token", 401);
+      }
+      const payload = this.jwt.verifyAccessToken(token);
+      const user = await this.users.findById(payload.sub);
+      if (!user) throw new AppError(codes.UNAUTHENTICATED, "Invalid token subject", 401);
+      request.auth = { userId: user.id, role: user.role, status: user.status };
+      request.user = user;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(codes.UNAUTHENTICATED, "Invalid or expired token", 401);
+    }
+    if (request.auth.status !== "active") {
+      throw new AppError(codes.FORBIDDEN, "Account is not active", 403);
+    }
+    if (!request.user.email_verified_at) {
+      throw new AppError(codes.FORBIDDEN, "Email verification required", 403);
+    }
+    if (roles && !roles.includes(request.auth.role)) {
+      throw new AppError(codes.FORBIDDEN, "Insufficient role", 403);
     }
     return true;
   }

@@ -9,7 +9,8 @@ import { NotificationsRepository } from "../notifications/notifications.reposito
 
 @Injectable()
 export class TrainerConnectionsService {
-  constructor(private readonly notificationRepository: NotificationsRepository,
+  constructor(
+    private readonly notificationRepository: NotificationsRepository,
     private readonly repository: TrainerConnectionsRepository,
     private readonly database: DatabaseService,
   ) {}

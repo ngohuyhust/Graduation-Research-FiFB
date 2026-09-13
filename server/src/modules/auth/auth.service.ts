@@ -5,7 +5,6 @@ import { AuthRepository } from "./auth.repository";
 import type { RegisterPayload, LoginPayload } from "./auth.validation";
 import type { RequestMeta, TokenUser } from "./auth.types";
 
-
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { env } = require("../../config/env");
@@ -58,7 +57,10 @@ async function hashPassword(password: string) {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly db: DatabaseService, private readonly jwt: JwtService, private readonly emailDeliveries: EmailDeliveriesRepository,
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly jwt: JwtService,
+    private readonly emailDeliveries: EmailDeliveriesRepository,
     private readonly authRepository: AuthRepository,
     private readonly userRepository: UsersRepository,
   ) {}

@@ -10,12 +10,20 @@ const exerciseId = "b18cfd54-c056-4c53-b5c0-4e7890f7521d";
 
 describe("Nest favorites", () => {
   let app, repository, actor, exerciseRepository;
-  beforeAll(async () => { app = await createApp(); repository = app.locals.nest.get(FavoritesRepository); exerciseRepository = app.locals.nest.get(ExercisesRepository); });
-  afterAll(async () => { await app.locals.nest.close(); });
+  beforeAll(async () => {
+    app = await createApp();
+    repository = app.locals.nest.get(FavoritesRepository);
+    exerciseRepository = app.locals.nest.get(ExercisesRepository);
+  });
+  afterAll(async () => {
+    await app.locals.nest.close();
+  });
   beforeEach(() => {
     actor = { id: userId, role: "user", status: "active", email_verified_at: "2026-01-01" };
     jest.spyOn(app.locals.nest.get(UsersRepository), "findById").mockImplementation(async () => actor);
-    jest.spyOn(app.locals.nest.get(DatabaseService), "withTransaction").mockImplementation((cb) => cb({ query: jest.fn() }));
+    jest
+      .spyOn(app.locals.nest.get(DatabaseService), "withTransaction")
+      .mockImplementation((cb) => cb({ query: jest.fn() }));
     jest.spyOn(exerciseRepository, "ensureActive").mockResolvedValue(true);
     jest.spyOn(repository, "list").mockResolvedValue({ rows: [{ id: exerciseId }], total: 1 });
     jest.spyOn(repository, "add").mockResolvedValue({ user_id: userId, exercise_id: exerciseId });
@@ -28,16 +36,31 @@ describe("Nest favorites", () => {
     expect(repository.list).toHaveBeenCalledWith(userId, { page: 2, limit: 5 });
     expect(list.body.data).toEqual({ items: [{ id: exerciseId }], page: 2, limit: 5, total: 1, totalPages: 1 });
     for (let i = 0; i < 2; i++) {
-      const added = await request(app).post("/api/favorites").set("Authorization", token(actor)).send({ exerciseId, userId: exerciseId }).expect(201);
-      expect(added.body).toEqual({ success: true, data: { favorite: { user_id: userId, exercise_id: exerciseId } }, message: "Favorite added" });
+      const added = await request(app)
+        .post("/api/favorites")
+        .set("Authorization", token(actor))
+        .send({ exerciseId, userId: exerciseId })
+        .expect(201);
+      expect(added.body).toEqual({
+        success: true,
+        data: { favorite: { user_id: userId, exercise_id: exerciseId } },
+        message: "Favorite added",
+      });
     }
     expect(repository.add).toHaveBeenCalledWith(expect.anything(), userId, exerciseId);
-    const deleted = await request(app).delete(`/api/favorites/${exerciseId}`).set("Authorization", token(actor)).expect(204);
+    const deleted = await request(app)
+      .delete(`/api/favorites/${exerciseId}`)
+      .set("Authorization", token(actor))
+      .expect(204);
     expect(deleted.text).toBe("");
     expect(repository.remove).toHaveBeenCalledWith(userId, exerciseId);
   });
   test("inactive exercise and invalid inputs do not insert", async () => {
-    await request(app).post("/api/favorites").set("Authorization", token(actor)).send({ exerciseId: "bad" }).expect(400);
+    await request(app)
+      .post("/api/favorites")
+      .set("Authorization", token(actor))
+      .send({ exerciseId: "bad" })
+      .expect(400);
     exerciseRepository.ensureActive.mockResolvedValue(false);
     await request(app).post("/api/favorites").set("Authorization", token(actor)).send({ exerciseId }).expect(400);
     await request(app).get("/api/favorites?limit=101").set("Authorization", token(actor)).expect(400);
@@ -49,9 +72,11 @@ describe("Nest favorites", () => {
     await request(app)[method](path).expect(401);
     actor.status = "locked";
     await request(app)[method](path).set("Authorization", token(actor)).expect(403);
-    actor.status = "active"; actor.email_verified_at = null;
+    actor.status = "active";
+    actor.email_verified_at = null;
     await request(app)[method](path).set("Authorization", token(actor)).expect(403);
-    actor.email_verified_at = "2026-01-01"; actor.role = "admin";
+    actor.email_verified_at = "2026-01-01";
+    actor.role = "admin";
     await request(app)[method](path).set("Authorization", token(actor)).expect(403);
   });
 });

@@ -15,26 +15,24 @@ export class FavoritesController {
   constructor(private readonly service: FavoritesService) {}
 
   @Get("")
-  async list(
-    @Req() req: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(paginationQuery)) query: Pagination
-  ) {
+  async list(@Req() req: AuthenticatedRequest, @Query(new ZodValidationPipe(paginationQuery)) query: Pagination) {
     return { success: true, data: await this.service.listFavorites(req.auth.userId, query), message: "OK" };
   }
 
   @Post("")
-  async add(
-    @Req() req: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(favoriteSchema)) body: FavoritePayload
-  ) {
-    return { success: true, data: await this.service.addFavorite(req.auth.userId, body.exerciseId), message: "Favorite added" };
+  async add(@Req() req: AuthenticatedRequest, @Body(new ZodValidationPipe(favoriteSchema)) body: FavoritePayload) {
+    return {
+      success: true,
+      data: await this.service.addFavorite(req.auth.userId, body.exerciseId),
+      message: "Favorite added",
+    };
   }
 
   @Delete(":id")
   @HttpCode(204)
   async remove(
     @Req() req: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string }
+    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
   ) {
     await this.service.removeFavorite(req.auth.userId, id);
   }

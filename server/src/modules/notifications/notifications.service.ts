@@ -3,9 +3,6 @@ import { NotificationsRepository } from "./notifications.repository";
 import type { NotificationQuery } from "./notifications.validation";
 const { paginate } = require("../../utils/responses");
 
-
-
-
 @Injectable()
 export class NotificationsService {
   constructor(private readonly repository: NotificationsRepository) {}

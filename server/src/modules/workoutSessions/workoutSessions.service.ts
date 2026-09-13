@@ -7,11 +7,12 @@ const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 const { getRedisClient } = require("../../redis/client");
 
-
 export function streaks(rows: { workout_date: Date | string }[]) {
   const days = rows.map((row) => new Date(row.workout_date).toISOString().slice(0, 10));
   if (!days.length) return { currentStreak: 0, longestStreak: 0 };
-  const unique = [...new Set(days)].map((day) => new Date(`${day}T00:00:00Z`)).sort((a, b) => b.getTime() - a.getTime());
+  const unique = [...new Set(days)]
+    .map((day) => new Date(`${day}T00:00:00Z`))
+    .sort((a, b) => b.getTime() - a.getTime());
   let longest = 1;
   let run = 1;
   for (let index = 1; index < unique.length; index += 1) {

@@ -20,7 +20,12 @@ export function hasMappingPayload(payload: ExerciseUpdate) {
 
 @Injectable()
 export class ExercisesService {
-  constructor(private readonly db: DatabaseService, private readonly auditRepository: AuditRepository, private readonly notificationRepository: NotificationsRepository, private readonly repository: ExercisesRepository) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly auditRepository: AuditRepository,
+    private readonly notificationRepository: NotificationsRepository,
+    private readonly repository: ExercisesRepository,
+  ) {}
 
   async listExercises(filters: ExerciseQuery, admin = false) {
     const result = await this.repository.list(filters, admin);

@@ -3,7 +3,6 @@ import { DatabaseService } from "../../db/database.service";
 import type { CreateSession, UpdateSession, ExerciseLog } from "./workoutSessions.validation";
 type Pagination = { page: number; limit: number };
 
-
 export function offset({ page, limit }: Pagination) {
   return (page - 1) * limit;
 }
@@ -13,7 +12,10 @@ export class WorkoutSessionsRepository {
   constructor(private readonly db: DatabaseService) {}
 
   async findOwnedPlan(userId: string, planId: string) {
-    const result = await this.db.query<Record<string, unknown>>("SELECT id, title FROM workout_plans WHERE id = $1 AND owner_id = $2", [planId, userId]);
+    const result = await this.db.query<Record<string, unknown>>(
+      "SELECT id, title FROM workout_plans WHERE id = $1 AND owner_id = $2",
+      [planId, userId],
+    );
     return result.rows[0] || null;
   }
 
@@ -27,7 +29,10 @@ export class WorkoutSessionsRepository {
   }
 
   async list(userId: string, filters: Pagination) {
-    const count = await this.db.query<{ total: number }>("SELECT count(*)::int AS total FROM workout_sessions WHERE user_id = $1", [userId]);
+    const count = await this.db.query<{ total: number }>(
+      "SELECT count(*)::int AS total FROM workout_sessions WHERE user_id = $1",
+      [userId],
+    );
     const result = await this.db.query<Record<string, unknown>>(
       `SELECT ws.*, count(sel.id)::int AS logged_sets
        FROM workout_sessions ws
@@ -42,7 +47,10 @@ export class WorkoutSessionsRepository {
   }
 
   async detail(userId: string, id: string) {
-    const session = await this.db.query<Record<string, unknown>>("SELECT * FROM workout_sessions WHERE id = $1 AND user_id = $2", [id, userId]);
+    const session = await this.db.query<Record<string, unknown>>(
+      "SELECT * FROM workout_sessions WHERE id = $1 AND user_id = $2",
+      [id, userId],
+    );
     if (!session.rows[0]) return null;
     const [logs, plannedExercises] = await Promise.all([
       this.db.query<Record<string, unknown>>(
@@ -88,7 +96,10 @@ export class WorkoutSessionsRepository {
   }
 
   async ensureActiveExercise(exerciseId: string) {
-    const result = await this.db.query<Record<string, unknown>>("SELECT 1 FROM exercises WHERE id = $1 AND status = 'active'", [exerciseId]);
+    const result = await this.db.query<Record<string, unknown>>(
+      "SELECT 1 FROM exercises WHERE id = $1 AND status = 'active'",
+      [exerciseId],
+    );
     return Boolean(result.rows[0]);
   }
 
@@ -163,7 +174,9 @@ export class WorkoutSessionsRepository {
   }
 
   async progression(userId: string, exerciseId: string) {
-    const exercise = await this.db.query<{ id: string; name: string }>("SELECT id, name FROM exercises WHERE id = $1", [exerciseId]);
+    const exercise = await this.db.query<{ id: string; name: string }>("SELECT id, name FROM exercises WHERE id = $1", [
+      exerciseId,
+    ]);
     if (!exercise.rows[0]) return null;
     const result = await this.db.query<{ date: string; max_weight: number; total_reps: number; total_sets: number }>(
       `SELECT ws.started_at::date AS date,

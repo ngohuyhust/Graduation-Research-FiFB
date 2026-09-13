@@ -5,13 +5,27 @@ jest.mock("../src/db/pool", () => ({
 
 jest.mock("../src/modules/exercises/exercises.repository", () => {
   const actual = jest.requireActual("../src/modules/exercises/exercises.repository");
-  const create = jest.fn(), replaceMappings = jest.fn(), findById = jest.fn(), update = jest.fn(), setReviewStatus = jest.fn();
+  const create = jest.fn(),
+    replaceMappings = jest.fn(),
+    findById = jest.fn(),
+    update = jest.fn(),
+    setReviewStatus = jest.fn();
   class ExercisesRepository extends actual.ExercisesRepository {
-    create(...args) { return create(...args); }
-    replaceMappings(...args) { return replaceMappings(...args); }
-    findById(...args) { return findById(...args); }
-    update(...args) { return update(...args); }
-    setReviewStatus(...args) { return setReviewStatus(...args); }
+    create(...args) {
+      return create(...args);
+    }
+    replaceMappings(...args) {
+      return replaceMappings(...args);
+    }
+    findById(...args) {
+      return findById(...args);
+    }
+    update(...args) {
+      return update(...args);
+    }
+    setReviewStatus(...args) {
+      return setReviewStatus(...args);
+    }
   }
   return { ...actual, ExercisesRepository, create, replaceMappings, findById, update, setReviewStatus };
 });
@@ -20,7 +34,9 @@ jest.mock("../src/modules/audit/audit.repository", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.repository");
   const createAudit = jest.fn();
   class AuditRepository extends actual.AuditRepository {
-    createAudit(...args) { return createAudit(...args); }
+    createAudit(...args) {
+      return createAudit(...args);
+    }
   }
   return { ...actual, AuditRepository, createAudit };
 });
@@ -29,14 +45,21 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
   class NotificationsRepository extends actual.NotificationsRepository {
-    createNotification(...args) { return createNotification(...args); }
+    createNotification(...args) {
+      return createNotification(...args);
+    }
   }
   return { ...actual, NotificationsRepository, createNotification };
 });
 
 const repository = require("../src/modules/exercises/exercises.repository");
 const { ExercisesService } = require("../src/modules/exercises/exercises.service");
-const service = new ExercisesService(new (require("../src/db/database.service").DatabaseService)(), new (require("../src/modules/audit/audit.repository").AuditRepository)({}), new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}), repository);
+const service = new ExercisesService(
+  new (require("../src/db/database.service").DatabaseService)(),
+  new (require("../src/modules/audit/audit.repository").AuditRepository)({}),
+  new (require("../src/modules/notifications/notifications.repository").NotificationsRepository)({}),
+  repository,
+);
 
 describe("exercises service", () => {
   test("trainer submissions are created through the trainer_submission source", async () => {

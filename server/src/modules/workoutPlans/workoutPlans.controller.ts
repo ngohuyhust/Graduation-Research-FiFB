@@ -15,17 +15,14 @@ export class WorkoutPlansController {
   constructor(private readonly service: WorkoutPlansService) {}
 
   @Get("")
-  async list(
-    @Req() req: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(paginationQuery)) query: Pagination
-  ) {
+  async list(@Req() req: AuthenticatedRequest, @Query(new ZodValidationPipe(paginationQuery)) query: Pagination) {
     return { success: true, data: await this.service.list(req.auth.userId, query), message: "OK" };
   }
 
   @Post("")
   async create(
     @Req() req: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(workoutPlanSchema)) body: WorkoutPlanPayload
+    @Body(new ZodValidationPipe(workoutPlanSchema)) body: WorkoutPlanPayload,
   ) {
     return { success: true, data: await this.service.create(req.auth.userId, body), message: "Workout plan created" };
   }
@@ -33,7 +30,7 @@ export class WorkoutPlansController {
   @Get(":id")
   async detail(
     @Req() req: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string }
+    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
   ) {
     return { success: true, data: await this.service.detail(req.auth.userId, id), message: "OK" };
   }
@@ -42,15 +39,19 @@ export class WorkoutPlansController {
   async update(
     @Req() req: AuthenticatedRequest,
     @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
-    @Body(new ZodValidationPipe(workoutPlanUpdateSchema)) body: WorkoutPlanUpdate
+    @Body(new ZodValidationPipe(workoutPlanUpdateSchema)) body: WorkoutPlanUpdate,
   ) {
-    return { success: true, data: await this.service.update(req.auth.userId, id, body), message: "Workout plan updated" };
+    return {
+      success: true,
+      data: await this.service.update(req.auth.userId, id, body),
+      message: "Workout plan updated",
+    };
   }
 
   @Delete(":id")
   async archive(
     @Req() req: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string }
+    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
   ) {
     return { success: true, data: await this.service.archive(req.auth.userId, id), message: "Workout plan archived" };
   }

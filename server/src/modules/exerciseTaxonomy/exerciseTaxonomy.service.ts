@@ -3,7 +3,6 @@ import { ExerciseTaxonomyRepository } from "./exerciseTaxonomy.repository";
 import type { TaxonomyKind } from "./exerciseTaxonomy.validation";
 const { invalidateByPrefix } = require("../../utils/cache");
 
-
 @Injectable()
 export class ExerciseTaxonomyService {
   constructor(private readonly repository: ExerciseTaxonomyRepository) {}

@@ -4,7 +4,6 @@ import type { QueryExecutor } from "../../db/database.service";
 import type { WorkoutItem, WorkoutPlanPayload, WorkoutPlanUpdate } from "./workoutPlans.validation";
 type Pagination = { page: number; limit: number };
 
-
 export function pageOffset({ page, limit }: Pagination) {
   return (page - 1) * limit;
 }
@@ -40,7 +39,10 @@ export class WorkoutPlansRepository {
   }
 
   async getPlan(client: QueryExecutor, userId: string, id: string) {
-    const plan = await client.query<Record<string, unknown> & { id: string }>("SELECT * FROM workout_plans WHERE id = $1 AND owner_id = $2", [id, userId]);
+    const plan = await client.query<Record<string, unknown> & { id: string }>(
+      "SELECT * FROM workout_plans WHERE id = $1 AND owner_id = $2",
+      [id, userId],
+    );
     if (!plan.rows[0]) return null;
     const items = await client.query<Record<string, unknown> & { id: string }>(
       "SELECT * FROM workout_plan_items WHERE workout_plan_id = $1 ORDER BY day_number ASC, sort_order ASC",
@@ -50,7 +52,10 @@ export class WorkoutPlansRepository {
   }
 
   async list(userId: string, filters: Pagination) {
-    const count = await this.db.query<{ total: number }>("SELECT count(*)::int AS total FROM workout_plans WHERE owner_id = $1", [userId]);
+    const count = await this.db.query<{ total: number }>(
+      "SELECT count(*)::int AS total FROM workout_plans WHERE owner_id = $1",
+      [userId],
+    );
     const result = await this.db.query<Record<string, unknown> & { id: string }>(
       "SELECT * FROM workout_plans WHERE owner_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
       [userId, filters.limit, pageOffset(filters)],
@@ -67,7 +72,10 @@ export class WorkoutPlansRepository {
   }
 
   async deleteItems(client: QueryExecutor, planId: string) {
-    await client.query<Record<string, unknown> & { id: string }>("DELETE FROM workout_plan_items WHERE workout_plan_id = $1", [planId]);
+    await client.query<Record<string, unknown> & { id: string }>(
+      "DELETE FROM workout_plan_items WHERE workout_plan_id = $1",
+      [planId],
+    );
   }
 
   async archive(userId: string, id: string) {

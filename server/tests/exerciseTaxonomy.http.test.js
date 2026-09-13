@@ -2,17 +2,26 @@ const request = require("supertest");
 
 jest.mock("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository", () => {
   const actual = jest.requireActual("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository");
-  const list = jest.fn(), create = jest.fn();
+  const list = jest.fn(),
+    create = jest.fn();
   class ExerciseTaxonomyRepository extends actual.ExerciseTaxonomyRepository {
-    list(...args) { return list(...args); }
-    create(...args) { return create(...args); }
+    list(...args) {
+      return list(...args);
+    }
+    create(...args) {
+      return create(...args);
+    }
   }
   return { ...actual, ExerciseTaxonomyRepository, list, create };
 });
 jest.mock("../src/modules/auth/jwt.service", () => {
   const actual = jest.requireActual("../src/modules/auth/jwt.service");
   const verifyAccessToken = jest.fn();
-  class JwtService extends actual.JwtService { verifyAccessToken(...args) { return verifyAccessToken(...args); } }
+  class JwtService extends actual.JwtService {
+    verifyAccessToken(...args) {
+      return verifyAccessToken(...args);
+    }
+  }
   return { ...actual, JwtService, verifyAccessToken };
 });
 jest.mock("../src/redis/client", () => ({ getRedisClient: jest.fn() }));

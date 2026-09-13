@@ -3,9 +3,6 @@ import { AuditRepository } from "./audit.repository";
 import type { AuditQuery } from "./audit.validation";
 const { paginate } = require("../../utils/responses");
 
-
-
-
 @Injectable()
 export class AuditService {
   constructor(private readonly repository: AuditRepository) {}

@@ -9,7 +9,6 @@ const codes = require("../../utils/errors/errorCodes");
 const { paginate } = require("../../utils/responses");
 import { ExercisesRepository } from "../exercises/exercises.repository";
 
-
 export function assertUniqueWorkoutOrder(items: WorkoutItem[] = []) {
   const seen = new Set();
   for (const item of items) {
@@ -25,7 +24,11 @@ export function assertUniqueWorkoutOrder(items: WorkoutItem[] = []) {
 
 @Injectable()
 export class WorkoutPlansService {
-  constructor(private readonly exerciseRepository: ExercisesRepository, private readonly repository: WorkoutPlansRepository, private readonly db: DatabaseService) {}
+  constructor(
+    private readonly exerciseRepository: ExercisesRepository,
+    private readonly repository: WorkoutPlansRepository,
+    private readonly db: DatabaseService,
+  ) {}
 
   async insertItems(client: QueryExecutor, planId: string, items: WorkoutItem[] = []) {
     for (const item of items) {

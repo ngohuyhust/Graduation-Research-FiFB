@@ -13,9 +13,7 @@ export class ChatController {
   constructor(private readonly service: ChatService) {}
 
   @Get("unread")
-  async unread(
-    @Req() req: AuthenticatedRequest
-  ) {
+  async unread(@Req() req: AuthenticatedRequest) {
     return { success: true, data: await this.service.unread(req.auth.userId), message: "OK" };
   }
 
@@ -23,7 +21,7 @@ export class ChatController {
   async list(
     @Req() req: AuthenticatedRequest,
     @Param(new ZodValidationPipe(connectionParam)) { connectionId }: ConnectionParam,
-    @Query(new ZodValidationPipe(messageQuery)) query: MessageQuery
+    @Query(new ZodValidationPipe(messageQuery)) query: MessageQuery,
   ) {
     return { success: true, data: await this.service.list(req.auth.userId, connectionId, query), message: "OK" };
   }
@@ -32,16 +30,24 @@ export class ChatController {
   async send(
     @Req() req: AuthenticatedRequest,
     @Param(new ZodValidationPipe(connectionParam)) { connectionId }: ConnectionParam,
-    @Body(new ZodValidationPipe(messageSchema)) body: MessagePayload
+    @Body(new ZodValidationPipe(messageSchema)) body: MessagePayload,
   ) {
-    return { success: true, data: await this.service.send(req.auth.userId, connectionId, body), message: "Message sent" };
+    return {
+      success: true,
+      data: await this.service.send(req.auth.userId, connectionId, body),
+      message: "Message sent",
+    };
   }
 
   @Patch(":connectionId/read")
   async markRead(
     @Req() req: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(connectionParam)) { connectionId }: ConnectionParam
+    @Param(new ZodValidationPipe(connectionParam)) { connectionId }: ConnectionParam,
   ) {
-    return { success: true, data: await this.service.markRead(req.auth.userId, connectionId), message: "Messages marked read" };
+    return {
+      success: true,
+      data: await this.service.markRead(req.auth.userId, connectionId),
+      message: "Messages marked read",
+    };
   }
 }

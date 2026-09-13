@@ -2,10 +2,16 @@ import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../../db/database.service";
 import type { QueryExecutor } from "../../db/database.service";
 import type { AuditQuery } from "./audit.validation";
-export interface AuditPayload { actorId?: string; action: string; entityType: string; entityId?: string | number; oldValues?: unknown; newValues?: unknown; ipAddress?: string; userAgent?: string }
-
-
-
+export interface AuditPayload {
+  actorId?: string;
+  action: string;
+  entityType: string;
+  entityId?: string | number;
+  oldValues?: unknown;
+  newValues?: unknown;
+  ipAddress?: string;
+  userAgent?: string;
+}
 
 @Injectable()
 export class AuditRepository {
@@ -46,7 +52,10 @@ export class AuditRepository {
       filters.push(`actor_id = $${values.length}`);
     }
     const where = filters.join(" AND ");
-    const count = await this.db.query<{ total: number }>(`SELECT count(*)::int AS total FROM audit_logs WHERE ${where}`, values);
+    const count = await this.db.query<{ total: number }>(
+      `SELECT count(*)::int AS total FROM audit_logs WHERE ${where}`,
+      values,
+    );
     const result = await this.db.query<Record<string, unknown>>(
       `SELECT a.*, u.email AS actor_email
        FROM audit_logs a LEFT JOIN app_users u ON u.id = a.actor_id

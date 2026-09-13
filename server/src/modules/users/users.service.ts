@@ -13,7 +13,9 @@ import { NotificationsRepository } from "../notifications/notifications.reposito
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly auditRepository: AuditRepository, private readonly notificationRepository: NotificationsRepository,
+  constructor(
+    private readonly auditRepository: AuditRepository,
+    private readonly notificationRepository: NotificationsRepository,
     private readonly repository: UsersRepository,
     private readonly database: DatabaseService,
   ) {}

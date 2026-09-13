@@ -14,24 +14,26 @@ export class NotificationsController {
   @Get("")
   async list(
     @Req() req: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(notificationQuerySchema)) query: NotificationQuery
+    @Query(new ZodValidationPipe(notificationQuerySchema)) query: NotificationQuery,
   ) {
     return { success: true, data: await this.service.listMine(req.auth.userId, query), message: "OK" };
   }
 
   @Patch("read-all")
   @HttpCode(204)
-  async markAllRead(
-    @Req() req: AuthenticatedRequest
-  ) {
+  async markAllRead(@Req() req: AuthenticatedRequest) {
     await this.service.markAllRead(req.auth.userId);
   }
 
   @Patch(":id/read")
   async markRead(
     @Req() req: AuthenticatedRequest,
-    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string }
+    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
   ) {
-    return { success: true, data: await this.service.markRead(req.auth.userId, id), message: "Notification marked read" };
+    return {
+      success: true,
+      data: await this.service.markRead(req.auth.userId, id),
+      message: "Notification marked read",
+    };
   }
 }

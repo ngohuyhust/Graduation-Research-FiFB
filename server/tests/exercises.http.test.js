@@ -3,29 +3,65 @@ const request = require("supertest");
 jest.mock("../src/db/pool", () => ({ withTransaction: (callback) => callback({ query: jest.fn() }) }));
 jest.mock("../src/modules/exercises/exercises.repository", () => {
   const actual = jest.requireActual("../src/modules/exercises/exercises.repository");
-  const list = jest.fn(), findActiveById = jest.fn(), create = jest.fn(), replaceMappings = jest.fn(), findById = jest.fn(), update = jest.fn(), setReviewStatus = jest.fn();
+  const list = jest.fn(),
+    findActiveById = jest.fn(),
+    create = jest.fn(),
+    replaceMappings = jest.fn(),
+    findById = jest.fn(),
+    update = jest.fn(),
+    setReviewStatus = jest.fn();
   class ExercisesRepository extends actual.ExercisesRepository {
-    list(...args) { return list(...args); }
-    findActiveById(...args) { return findActiveById(...args); }
-    create(...args) { return create(...args); }
-    replaceMappings(...args) { return replaceMappings(...args); }
-    findById(...args) { return findById(...args); }
-    update(...args) { return update(...args); }
-    setReviewStatus(...args) { return setReviewStatus(...args); }
+    list(...args) {
+      return list(...args);
+    }
+    findActiveById(...args) {
+      return findActiveById(...args);
+    }
+    create(...args) {
+      return create(...args);
+    }
+    replaceMappings(...args) {
+      return replaceMappings(...args);
+    }
+    findById(...args) {
+      return findById(...args);
+    }
+    update(...args) {
+      return update(...args);
+    }
+    setReviewStatus(...args) {
+      return setReviewStatus(...args);
+    }
   }
-  return { ...actual, ExercisesRepository, list, findActiveById, create, replaceMappings, findById, update, setReviewStatus };
+  return {
+    ...actual,
+    ExercisesRepository,
+    list,
+    findActiveById,
+    create,
+    replaceMappings,
+    findById,
+    update,
+    setReviewStatus,
+  };
 });
 jest.mock("../src/modules/auth/jwt.service", () => {
   const actual = jest.requireActual("../src/modules/auth/jwt.service");
   const verifyAccessToken = jest.fn();
-  class JwtService extends actual.JwtService { verifyAccessToken(...args) { return verifyAccessToken(...args); } }
+  class JwtService extends actual.JwtService {
+    verifyAccessToken(...args) {
+      return verifyAccessToken(...args);
+    }
+  }
   return { ...actual, JwtService, verifyAccessToken };
 });
 jest.mock("../src/modules/audit/audit.repository", () => {
   const actual = jest.requireActual("../src/modules/audit/audit.repository");
   const createAudit = jest.fn();
   class AuditRepository extends actual.AuditRepository {
-    createAudit(...args) { return createAudit(...args); }
+    createAudit(...args) {
+      return createAudit(...args);
+    }
   }
   return { ...actual, AuditRepository, createAudit };
 });
@@ -33,7 +69,9 @@ jest.mock("../src/modules/notifications/notifications.repository", () => {
   const actual = jest.requireActual("../src/modules/notifications/notifications.repository");
   const createNotification = jest.fn();
   class NotificationsRepository extends actual.NotificationsRepository {
-    createNotification(...args) { return createNotification(...args); }
+    createNotification(...args) {
+      return createNotification(...args);
+    }
   }
   return { ...actual, NotificationsRepository, createNotification };
 });

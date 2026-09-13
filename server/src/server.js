@@ -12,7 +12,12 @@ const { logger } = require("./utils/logger");
 async function bootstrap() {
   const app = await createApp();
   const server = app.locals.nest.getHttpServer();
-  initializeSocket(server, app.locals.nest.get(UsersRepository), app.locals.nest.get(ChatService), app.locals.nest.get(JwtService));
+  initializeSocket(
+    server,
+    app.locals.nest.get(UsersRepository),
+    app.locals.nest.get(ChatService),
+    app.locals.nest.get(JwtService),
+  );
   server.listen(env.port, () => {
     logger.info("FiFB backend listening", { port: env.port });
   });

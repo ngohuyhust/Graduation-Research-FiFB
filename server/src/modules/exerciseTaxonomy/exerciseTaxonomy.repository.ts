@@ -8,7 +8,6 @@ const tables = {
   muscles: "muscles",
 };
 
-
 export function resolveTable(kind: TaxonomyKind) {
   return tables[kind];
 }

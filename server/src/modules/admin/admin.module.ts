@@ -10,9 +10,7 @@ import { EmailDeliveriesModule } from "../emailDeliveries/emailDeliveries.module
 @Module({
   imports: [EmailDeliveriesModule, AuditModule, HttpModule, UsersModule, TrainerCertificatesModule],
   controllers: [AdminController],
-  providers: [
-    AdminService,
-  ],
+  providers: [AdminService],
   exports: [AdminService],
 })
 export class AdminModule {}
