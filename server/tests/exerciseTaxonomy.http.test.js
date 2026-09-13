@@ -4,7 +4,6 @@ jest.mock("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository", () => (
   list: jest.fn(),
   create: jest.fn(),
 }));
-jest.mock("../src/modules/users/users.repository", () => ({ findById: jest.fn() }));
 jest.mock("../src/modules/auth/jwt.service", () => ({ verifyAccessToken: jest.fn() }));
 jest.mock("../src/redis/client", () => ({ getRedisClient: jest.fn() }));
 jest.mock("../src/utils/cache", () => ({ invalidateByPrefix: jest.fn() }));
@@ -12,7 +11,8 @@ jest.mock("../src/utils/cache", () => ({ invalidateByPrefix: jest.fn() }));
 const { createApp } = require("../src/app");
 const { ExerciseTaxonomyService } = require("../src/modules/exerciseTaxonomy/exerciseTaxonomy.service");
 const repository = require("../src/modules/exerciseTaxonomy/exerciseTaxonomy.repository");
-const users = require("../src/modules/users/users.repository");
+const { UsersRepository } = require("../src/modules/users/users.repository");
+const users = UsersRepository.prototype;
 const jwt = require("../src/modules/auth/jwt.service");
 const { getRedisClient } = require("../src/redis/client");
 const { invalidateByPrefix } = require("../src/utils/cache");
@@ -39,6 +39,7 @@ describe("Nest exercise taxonomy HTTP contract", () => {
     await app.locals.nest.close();
   });
   beforeEach(() => {
+    jest.spyOn(users, "findById");
     jest.resetAllMocks();
     getRedisClient.mockResolvedValue(null);
     repository.list.mockResolvedValue([{ id: "item-id", name: "Chest" }]);

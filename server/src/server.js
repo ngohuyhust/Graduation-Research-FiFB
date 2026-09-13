@@ -1,5 +1,6 @@
 // Chay HTTP server va khoi dong ket noi thoi gian thuc.
 const { createApp } = require("./app");
+const { UsersRepository } = require("./modules/users/users.repository");
 const { env } = require("./config/env");
 const { closePool } = require("./db/pool");
 const { closeRedis } = require("./redis/client");
@@ -9,7 +10,7 @@ const { logger } = require("./utils/logger");
 async function bootstrap() {
   const app = await createApp();
   const server = app.locals.nest.getHttpServer();
-  initializeSocket(server);
+  initializeSocket(server, app.locals.nest.get(UsersRepository));
   server.listen(env.port, () => {
     logger.info("FiFB backend listening", { port: env.port });
   });

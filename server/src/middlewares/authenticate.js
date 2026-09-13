@@ -1,26 +1,32 @@
 // Xac thuc JWT va kiem tra quyen/trang thai nguoi dung.
 const { verifyAccessToken } = require("../modules/auth/jwt.service");
-const userRepository = require("../modules/users/users.repository");
 const { AppError } = require("../utils/errors/AppError");
 const codes = require("../utils/errors/errorCodes");
 
-async function authenticate(req, _res, next) {
-  try {
-    const header = req.headers.authorization || "";
-    const [scheme, token] = header.split(" ");
-    if (scheme !== "Bearer" || !token) {
-      throw new AppError(codes.UNAUTHENTICATED, "Missing bearer token", 401);
+function createAuthenticate(userRepository) {
+  return async (req, _res, next) => {
+    try {
+      const header = req.headers.authorization || "";
+      const [scheme, token] = header.split(" ");
+      if (scheme !== "Bearer" || !token) {
+        throw new AppError(codes.UNAUTHENTICATED, "Missing bearer token", 401);
+      }
+      const payload = verifyAccessToken(token);
+      const user = await userRepository.findById(payload.sub);
+      if (!user) throw new AppError(codes.UNAUTHENTICATED, "Invalid token subject", 401);
+      req.auth = { userId: user.id, role: user.role, status: user.status };
+      req.user = user;
+      next();
+    } catch (error) {
+      if (error instanceof AppError) return next(error);
+      return next(new AppError(codes.UNAUTHENTICATED, "Invalid or expired token", 401));
     }
-    const payload = verifyAccessToken(token);
-    const user = await userRepository.findById(payload.sub);
-    if (!user) throw new AppError(codes.UNAUTHENTICATED, "Invalid token subject", 401);
-    req.auth = { userId: user.id, role: user.role, status: user.status };
-    req.user = user;
-    next();
-  } catch (error) {
-    if (error instanceof AppError) return next(error);
-    return next(new AppError(codes.UNAUTHENTICATED, "Invalid or expired token", 401));
-  }
+  };
+}
+
+// Adapter for routes that still use Express; the repository is supplied by Nest.
+function authenticate(req, res, next) {
+  return req.app.locals.authenticate(req, res, next);
 }
 
 function requireRoles(...roles) {
@@ -48,4 +54,4 @@ function requireVerifiedEmail(req, _res, next) {
   next();
 }
 
-module.exports = { authenticate, requireRoles, requireActiveUser, requireVerifiedEmail };
+module.exports = { authenticate, createAuthenticate, requireRoles, requireActiveUser, requireVerifiedEmail };

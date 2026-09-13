@@ -1,6 +1,5 @@
 // Gom tat ca route module vao mot router /api.
 const express = require("express");
-const userRoutes = require("../modules/users/users.routes");
 const trainerRoutes = require("../modules/trainers/trainers.routes");
 const trainerCertificateRoutes = require("../modules/trainerCertificates/trainerCertificates.routes");
 const trainerReviewRoutes = require("../modules/reviews/reviews.routes");
@@ -8,7 +7,6 @@ const connectionRoutes = require("../modules/trainerConnections/trainerConnectio
 const favoriteRoutes = require("../modules/favorites/favorites.routes");
 const workoutPlanRoutes = require("../modules/workoutPlans/workoutPlans.routes");
 const notificationRoutes = require("../modules/notifications/notifications.routes");
-const adminRoutes = require("../modules/admin/admin.routes");
 const workoutSessionRoutes = require("../modules/workoutSessions/workoutSessions.routes");
 const chatRoutes = require("../modules/chat/chat.routes");
 
@@ -18,7 +16,6 @@ router.get("/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" }, message: "OK" });
 });
 
-router.use("/users", userRoutes);
 router.use("/trainers", trainerRoutes);
 router.use("/trainers", trainerCertificateRoutes);
 router.use("/trainers", trainerReviewRoutes);
@@ -28,6 +25,5 @@ router.use("/workout-plans", workoutPlanRoutes);
 router.use("/workout-sessions", workoutSessionRoutes);
 router.use("/chat", chatRoutes);
 router.use("/notifications", notificationRoutes);
-router.use("/admin", adminRoutes);
 
 module.exports = router;

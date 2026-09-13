@@ -1,11 +1,11 @@
+import { UsersRepository } from "../users/users.repository";
 import { Inject, Injectable } from "@nestjs/common";
 import type { PoolClient } from "pg";
 import type * as AuthRepository from "./auth.repository";
 import type { RegisterPayload, LoginPayload } from "./auth.validation";
-import type { AuthUserRepository, RequestMeta, TokenUser } from "./auth.types";
+import type { RequestMeta, TokenUser } from "./auth.types";
 
 export const AUTH_REPOSITORY = Symbol("AUTH_REPOSITORY");
-export const AUTH_USER_REPOSITORY = Symbol("AUTH_USER_REPOSITORY");
 
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -61,7 +61,7 @@ async function hashPassword(password: string) {
 export class AuthService {
   constructor(
     @Inject(AUTH_REPOSITORY) private readonly authRepository: typeof AuthRepository,
-    @Inject(AUTH_USER_REPOSITORY) private readonly userRepository: AuthUserRepository,
+    private readonly userRepository: UsersRepository,
   ) {}
 
   private async createTokenPair(client: PoolClient, user: TokenUser, reqMeta: RequestMeta) {

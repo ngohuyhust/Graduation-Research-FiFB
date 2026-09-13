@@ -10,7 +10,6 @@ jest.mock("../src/modules/exercises/exercises.repository", () => ({
   update: jest.fn(),
   setReviewStatus: jest.fn(),
 }));
-jest.mock("../src/modules/users/users.repository", () => ({ findById: jest.fn() }));
 jest.mock("../src/modules/auth/jwt.service", () => ({ verifyAccessToken: jest.fn() }));
 jest.mock("../src/modules/audit/audit.repository", () => ({ createAudit: jest.fn() }));
 jest.mock("../src/modules/notifications/notifications.repository", () => ({ createNotification: jest.fn() }));
@@ -20,7 +19,8 @@ jest.mock("../src/utils/cache", () => ({ invalidateByPrefix: jest.fn() }));
 const { createApp } = require("../src/app");
 const { ExercisesService } = require("../src/modules/exercises/exercises.service");
 const repository = require("../src/modules/exercises/exercises.repository");
-const users = require("../src/modules/users/users.repository");
+const { UsersRepository } = require("../src/modules/users/users.repository");
+const users = UsersRepository.prototype;
 const jwt = require("../src/modules/auth/jwt.service");
 const { createAudit } = require("../src/modules/audit/audit.repository");
 const { createNotification } = require("../src/modules/notifications/notifications.repository");
@@ -48,6 +48,7 @@ describe("Nest exercise HTTP contract", () => {
     await app.locals.nest.close();
   });
   beforeEach(() => {
+    jest.spyOn(users, "findById");
     jest.resetAllMocks();
     getRedisClient.mockResolvedValue(null);
     repository.list.mockResolvedValue({ rows: [{ id, name: "Push up" }], total: 1 });

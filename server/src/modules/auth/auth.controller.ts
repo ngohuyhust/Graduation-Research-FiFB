@@ -20,7 +20,7 @@ import type {
   ResetPasswordPayload,
   ChangePasswordPayload,
 } from "./auth.validation";
-const { publicUser } = require("../users/users.presenter");
+import { publicUser } from "../users/users.presenter";
 const { AppError } = require("../../utils/errors/AppError");
 const codes = require("../../utils/errors/errorCodes");
 const { getRefreshTokenCookie, setRefreshTokenCookie, clearRefreshTokenCookie } = require("./refreshCookie");
@@ -83,7 +83,7 @@ export class AuthController {
 
   @Get("me")
   @UseGuards(AuthGuard)
-  me(@Req() req: AuthenticatedRequest & { user: unknown }) {
+  me(@Req() req: AuthenticatedRequest) {
     return { success: true, data: { user: publicUser(req.user) }, message: "OK" };
   }
 

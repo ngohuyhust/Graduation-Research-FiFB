@@ -1,5 +1,5 @@
-// Dinh dang du lieu users truoc khi tra ve client.
-function publicUser(user) {
+import type { UserRow } from "./users.types";
+export function publicUser(user: UserRow | null | undefined) {
   if (!user) return null;
   return {
     id: user.id,
@@ -20,5 +20,3 @@ function publicUser(user) {
     updatedAt: user.updated_at,
   };
 }
-
-module.exports = { publicUser };

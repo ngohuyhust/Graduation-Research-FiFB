@@ -1,19 +1,15 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { HttpModule } from "../../common/http.module";
 import { AuthController } from "./auth.controller";
-import { AuthService, AUTH_REPOSITORY, AUTH_USER_REPOSITORY } from "./auth.service";
+import { AuthService, AUTH_REPOSITORY } from "./auth.service";
 import * as authRepository from "./auth.repository";
-import * as userRepository from "../users/users.repository";
+import { UsersPersistenceModule } from "../users/users-persistence.module";
 const { authRateLimiter } = require("../../middlewares/rateLimiters");
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, UsersPersistenceModule],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    { provide: AUTH_REPOSITORY, useValue: authRepository },
-    { provide: AUTH_USER_REPOSITORY, useValue: userRepository },
-  ],
+  providers: [AuthService, { provide: AUTH_REPOSITORY, useValue: authRepository }],
   exports: [AuthService],
 })
 export class AuthModule implements NestModule {

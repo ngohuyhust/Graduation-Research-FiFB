@@ -3,6 +3,8 @@ require("reflect-metadata");
 const { NestFactory } = require("@nestjs/core");
 const { ExpressAdapter } = require("@nestjs/platform-express");
 const { AppModule } = require("./app.module");
+const { UsersRepository } = require("./modules/users/users.repository");
+const { createAuthenticate } = require("./middlewares/authenticate");
 const { ApiExceptionFilter } = require("./common/api-exception.filter");
 const express = require("express");
 const helmet = require("helmet");
@@ -54,6 +56,7 @@ async function createApp() {
   nest.useGlobalFilters(new ApiExceptionFilter());
   await nest.init();
   app.locals.nest = nest;
+  app.locals.authenticate = createAuthenticate(nest.get(UsersRepository));
   return app;
 }
 

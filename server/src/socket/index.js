@@ -2,12 +2,11 @@
 const { Server } = require("socket.io");
 const { env } = require("../config/env");
 const { verifyAccessToken } = require("../modules/auth/jwt.service");
-const userRepository = require("../modules/users/users.repository");
 const { registerChatHandlers } = require("./chatHandler");
 
 let io;
 
-function initializeSocket(httpServer) {
+function initializeSocket(httpServer, userRepository) {
   if (!env.socketIoEnabled) return null;
   io = new Server(httpServer, {
     cors: {

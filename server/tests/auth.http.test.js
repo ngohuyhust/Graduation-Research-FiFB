@@ -1,11 +1,11 @@
 const request = require("supertest");
 
-jest.mock("../src/modules/users/users.repository", () => ({ findById: jest.fn() }));
 jest.mock("../src/modules/emailDeliveries/emailDeliveries.repository", () => ({ sendEmail: jest.fn() }));
 const { createApp } = require("../src/app");
 const { AuthService } = require("../src/modules/auth/auth.service");
 const { signAccessToken } = require("../src/modules/auth/jwt.service");
-const users = require("../src/modules/users/users.repository");
+const { UsersRepository } = require("../src/modules/users/users.repository");
+const users = UsersRepository.prototype;
 const { authRateLimiter } = require("../src/middlewares/rateLimiters");
 const { env } = require("../src/config/env");
 const { AppError } = require("../src/utils/errors/AppError");
@@ -34,6 +34,7 @@ describe("Nest auth HTTP contract", () => {
     await app.locals.nest.close();
   });
   beforeEach(() => {
+    jest.spyOn(users, "findById");
     authRateLimiter.resetKey("::ffff:127.0.0.1");
     authRateLimiter.resetKey("127.0.0.1");
     users.findById.mockResolvedValue(user);

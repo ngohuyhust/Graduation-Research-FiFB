@@ -35,10 +35,14 @@ client/
 The backend is migrating module by module to NestJS 11 with TypeScript. `ExercisesModule` owns
 `/api/exercises` and `/api/admin/exercises`; `ExerciseTaxonomyModule` owns `/api/exercise-taxonomy`.
 `AuthModule` owns `/api/auth`, including the existing auth rate limit and refresh-token cookies.
+`UsersModule` owns `/api/users`; `AdminModule` owns user administration, certificates, audit logs,
+and email deliveries under `/api/admin`. All files in these two modules are TypeScript. `UsersRepository`
+is an injectable provider shared by auth, Nest guards, remaining Express routes, and Socket.IO. Admin
+delegates to the owning business services and has no separate repository.
 Other modules still use Express. Nest uses the existing
 Express 4 application through `ExpressAdapter`, preserving legacy middleware and request validation.
-Controllers and services use Nest dependency injection; the existing PostgreSQL repository is registered
-as a provider. Shared guards, Zod pipes, exception handling and cache interceptors preserve the API contract.
+Controllers, services and repositories use Nest dependency injection. The exercise and taxonomy SQL
+repositories remain registered as existing providers during their incremental migration. Shared guards, Zod pipes, exception handling and cache interceptors preserve the API contract.
 
 The backend keeps the existing module pattern:
 
