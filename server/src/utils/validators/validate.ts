@@ -1,9 +1,10 @@
 // Middleware validate request bang schema.
-const { ZodError } = require("zod");
+import { ZodError, type ZodTypeAny } from "zod";
+import type { RequestHandler } from "express";
 const { AppError } = require("../errors/AppError");
 const codes = require("../errors/errorCodes");
 
-function validate(schema, source = "body") {
+export function validate(schema: ZodTypeAny, source: "body" | "query" | "params" = "body"): RequestHandler {
   return (req, _res, next) => {
     try {
       req[source] = schema.parse(req[source]);
@@ -17,5 +18,3 @@ function validate(schema, source = "body") {
     }
   };
 }
-
-module.exports = { validate };

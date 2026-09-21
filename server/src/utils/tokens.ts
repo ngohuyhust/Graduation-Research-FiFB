@@ -1,24 +1,22 @@
 // Tao, hash va tinh han token noi bo.
-const crypto = require("crypto");
+import * as crypto from "crypto";
 
-function createOpaqueToken(bytes = 48) {
+export function createOpaqueToken(bytes = 48) {
   return crypto.randomBytes(bytes).toString("base64url");
 }
 
-function hashToken(token) {
+export function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-function addMinutes(date, minutes) {
+export function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
-function addHours(date, hours) {
+export function addHours(date: Date, hours: number) {
   return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
 
-function addDays(date, days) {
+export function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
-
-module.exports = { createOpaqueToken, hashToken, addMinutes, addHours, addDays };

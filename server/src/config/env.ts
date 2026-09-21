@@ -1,18 +1,18 @@
 const dotenv = require("dotenv");
-const { z } = require("zod");
+import { z } from "zod";
 
 dotenv.config();
 
 const DEV_ACCESS_SECRET = "dev_access_secret_change_me_32_chars";
 const DEV_REFRESH_SECRET = "dev_refresh_secret_change_me_32_chars";
 
-const toBool = (value, fallback = false) => {
+const toBool = (value: unknown, fallback = false) => {
   if (value === undefined || value === null || value === "") return fallback;
   return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
 };
 
 const boolSchema = (fallback = false) => z.preprocess((value) => toBool(value, fallback), z.boolean());
-const optionalTrimmed = z.preprocess((value) => {
+const optionalTrimmed = z.preprocess((value: unknown) => {
   if (value === undefined || value === null) return undefined;
   const trimmed = String(value).trim();
   return trimmed || undefined;
@@ -54,7 +54,7 @@ const envSchema = z.object({
   EXERCISEDB_IMPORT_DELAY_MS: z.coerce.number().int().positive().default(350),
 });
 
-function formatIssues(issues) {
+function formatIssues(issues: z.ZodIssue[]) {
   return issues.map((issue) => {
     const path = issue.path.join(".") || "ENV";
     return `- ${path} ${issue.message}`;
@@ -64,7 +64,7 @@ function formatIssues(issues) {
 function validateEnv() {
   const parsed = envSchema.safeParse(process.env);
   const issues = parsed.success ? [] : formatIssues(parsed.error.issues);
-  const data = parsed.success ? parsed.data : {};
+  const data = parsed.success ? parsed.data : ({} as z.infer<typeof envSchema>);
   const nodeEnv = data.NODE_ENV || process.env.NODE_ENV || "development";
   const isProduction = nodeEnv === "production";
   const accessSecret = data.JWT_ACCESS_SECRET || (!isProduction ? DEV_ACCESS_SECRET : undefined);
@@ -75,7 +75,13 @@ function validateEnv() {
     .filter(Boolean);
 
   if (isProduction) {
-    for (const key of ["DATABASE_URL", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "JWT_ACCESS_EXPIRES_IN", "CORS_ORIGIN"]) {
+    for (const key of [
+      "DATABASE_URL",
+      "JWT_ACCESS_SECRET",
+      "JWT_REFRESH_SECRET",
+      "JWT_ACCESS_EXPIRES_IN",
+      "CORS_ORIGIN",
+    ] as const) {
       if (!data[key]) issues.push(`- ${key} is required in production`);
     }
     if (data.REDIS_DISABLED) issues.push("- REDIS_DISABLED cannot be true in production");
@@ -138,4 +144,4 @@ const env = {
   },
 };
 
-module.exports = { env };
+export { env };

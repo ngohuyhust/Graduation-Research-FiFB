@@ -1,5 +1,5 @@
 // Tap trung cac ma loi dung chung trong API.
-module.exports = {
+const codes = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   UNAUTHENTICATED: "UNAUTHENTICATED",
   FORBIDDEN: "FORBIDDEN",
@@ -7,4 +7,5 @@ module.exports = {
   CONFLICT: "CONFLICT",
   SERVER_ERROR: "SERVER_ERROR",
   BAD_REQUEST: "BAD_REQUEST",
-};
+} as const;
+export = codes;
