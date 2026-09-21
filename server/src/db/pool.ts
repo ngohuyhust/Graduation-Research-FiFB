@@ -1,17 +1,20 @@
 // Quan ly pool ket noi PostgreSQL va transaction helper.
-const { Pool } = require("pg");
-const { env } = require("../config/env");
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+import { env } from "../config/env";
 
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: env.databaseUrl,
   ssl: env.dbSsl ? { rejectUnauthorized: false } : false,
 });
 
-async function query(text, params = []) {
-  return pool.query(text, params);
+export async function query<Row extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params: unknown[] = [],
+): Promise<QueryResult<Row>> {
+  return pool.query<Row>(text, params);
 }
 
-async function withTransaction(callback) {
+export async function withTransaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -26,8 +29,6 @@ async function withTransaction(callback) {
   }
 }
 
-async function closePool() {
+export async function closePool() {
   await pool.end();
 }
-
-module.exports = { pool, query, withTransaction, closePool };

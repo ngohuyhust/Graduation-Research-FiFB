@@ -1,7 +1,7 @@
 // Cung cap helper cache dung chung cho server.
-const { getRedisClient } = require("../redis/client");
+import { getRedisClient } from "../redis/client";
 
-async function invalidateByPrefix(prefix) {
+export async function invalidateByPrefix(prefix: string) {
   const redis = await getRedisClient();
   if (!redis) return;
 
@@ -14,5 +14,3 @@ async function invalidateByPrefix(prefix) {
     cursor = String(nextCursor);
   } while (cursor !== "0");
 }
-
-module.exports = { invalidateByPrefix };

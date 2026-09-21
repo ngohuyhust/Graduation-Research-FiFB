@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { PoolClient, QueryResult, QueryResultRow } from "pg";
-const pool = require("./pool");
+import * as pool from "./pool";
 
 export interface QueryExecutor {
   query<Row extends QueryResultRow>(text: string, params?: unknown[]): Promise<QueryResult<Row>>;
