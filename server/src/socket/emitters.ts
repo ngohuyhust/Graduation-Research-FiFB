@@ -1,9 +1,7 @@
 // Phat su kien realtime tu server den client.
-const { getIO } = require("./index");
+import { getIO } from "./index";
 
-function emitToUser(userId, event, data) {
+export function emitToUser(userId: string, event: string, data: unknown) {
   const io = getIO();
   if (io) io.to(`user:${userId}`).emit(event, data);
 }
-
-module.exports = { emitToUser };

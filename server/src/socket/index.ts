@@ -1,11 +1,21 @@
 // Khoi tao Socket.IO va gan cac handler realtime.
-const { Server } = require("socket.io");
-const { env } = require("../config/env");
-const { registerChatHandlers } = require("./chatHandler");
+import { Server, type Socket } from "socket.io";
+import type { Server as HttpServer } from "http";
+import type { UsersRepository } from "../modules/users/users.repository";
+import type { ChatService } from "../modules/chat/chat.service";
+import type { JwtService } from "../modules/auth/jwt.service";
+import { env } from "../config/env";
+import { registerChatHandlers } from "./chatHandler";
 
-let io;
+export type AuthenticatedSocket = Socket & { user: { id: string; role: string; status: string } };
+let io: Server | null = null;
 
-function initializeSocket(httpServer, userRepository, chatService, jwtService) {
+export function initializeSocket(
+  httpServer: HttpServer,
+  userRepository: UsersRepository,
+  chatService: ChatService,
+  jwtService: JwtService,
+) {
   if (!env.socketIoEnabled) return null;
   io = new Server(httpServer, {
     cors: {
@@ -23,7 +33,7 @@ function initializeSocket(httpServer, userRepository, chatService, jwtService) {
       if (!user) return next(new Error("Invalid token subject"));
       if (user.status !== "active") return next(new Error("Account is not active"));
       if (!user.email_verified_at) return next(new Error("Email verification required"));
-      socket.user = { id: user.id, role: user.role, status: user.status };
+      (socket as AuthenticatedSocket).user = { id: user.id, role: user.role, status: user.status };
       return next();
     } catch {
       return next(new Error("Invalid or expired token"));
@@ -31,21 +41,19 @@ function initializeSocket(httpServer, userRepository, chatService, jwtService) {
   });
 
   io.on("connection", (socket) => {
-    socket.join(`user:${socket.user.id}`);
-    registerChatHandlers(socket, chatService);
+    socket.join(`user:${(socket as AuthenticatedSocket).user.id}`);
+    registerChatHandlers(socket as AuthenticatedSocket, chatService);
   });
   return io;
 }
 
-function getIO() {
+export function getIO() {
   return io || null;
 }
 
-async function closeSocket() {
+export async function closeSocket() {
   if (io) {
     await io.close();
     io = null;
   }
 }
-
-module.exports = { initializeSocket, getIO, closeSocket };
