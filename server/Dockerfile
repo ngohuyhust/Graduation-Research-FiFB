@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
-COPY scripts/*.ts ./scripts/
+COPY scripts ./scripts
 COPY server.ts ./server.ts
 RUN npm run build
 RUN npm prune --omit=dev

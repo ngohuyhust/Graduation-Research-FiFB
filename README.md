@@ -58,6 +58,8 @@ existing non-production memory fallback; email-delivery history remains process-
 Backend source, CLI scripts, Jest tests and tooling configuration are TypeScript. `npm run build`
 produces `server/dist/server.js` and compiled commands under `server/dist/scripts/`;
 `npm run typecheck` checks application and tests. The client continues to use React.
+After direct exercise data cleanup, run `node dist/scripts/data_quality/clear_exercise_cache.js`
+from `server/` (or inside the API container) to clear the exercise library cache.
 
 The backend keeps the existing module pattern:
 
