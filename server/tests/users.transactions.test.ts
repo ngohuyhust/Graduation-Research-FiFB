@@ -61,3 +61,5 @@ describe("user status transaction boundary", () => {
     expect(client.release).toHaveBeenCalledTimes(1);
   });
 });
+
+export {};

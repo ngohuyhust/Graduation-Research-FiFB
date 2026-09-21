@@ -27,7 +27,7 @@ describe("Socket auth uses the injected users repository", () => {
     const next = jest.fn();
     await authenticate(socket, next);
     expect(repository.findById).toHaveBeenCalledWith(user.id);
-    expect(socket.user).toEqual({ id: user.id, role: user.role, status: user.status });
+    expect((socket as { user?: unknown }).user).toEqual({ id: user.id, role: user.role, status: user.status });
     expect(next).toHaveBeenCalledWith();
   });
 
@@ -41,3 +41,5 @@ describe("Socket auth uses the injected users repository", () => {
     },
   );
 });
+
+export {};

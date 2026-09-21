@@ -170,7 +170,7 @@ describe("Nest exercise HTTP contract", () => {
       ["trainer", { status: "locked" }],
       ["admin", { email_verified_at: null }],
     ]) {
-      login(role, overrides);
+      login(role as string, overrides);
       await request(app)
         .post("/api/exercises")
         .set("Authorization", "Bearer token")
@@ -306,3 +306,5 @@ describe("Nest exercise HTTP contract", () => {
     expect(redis.set).not.toHaveBeenCalled();
   });
 });
+
+export {};

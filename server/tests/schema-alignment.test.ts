@@ -23,3 +23,5 @@ describe("database schema alignment", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+export {};

@@ -101,7 +101,7 @@ describe("Nest exercise taxonomy HTTP contract", () => {
       ["admin", { status: "locked" }],
       ["admin", { email_verified_at: null }],
     ]) {
-      login(role, overrides);
+      login(role as string, overrides);
       await request(app).post(path).set("Authorization", "Bearer token").send({ name: "Chest" }).expect(403);
     }
     expect(repository.create).not.toHaveBeenCalled();
@@ -173,3 +173,5 @@ describe("Nest exercise taxonomy HTTP contract", () => {
     expect(invalidateByPrefix).not.toHaveBeenCalled();
   });
 });
+
+export {};

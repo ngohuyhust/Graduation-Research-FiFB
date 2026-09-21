@@ -47,3 +47,5 @@ describe("trainer certificates service", () => {
     });
   });
 });
+
+export {};

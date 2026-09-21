@@ -104,3 +104,5 @@ describe("Redis adapters and cache invalidation", () => {
     expect(upstash.del.mock.calls).toEqual([["exercise:one"], ["exercise:two"]]);
   });
 });
+
+export {};

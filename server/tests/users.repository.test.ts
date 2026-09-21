@@ -86,3 +86,5 @@ describe("Nest users repository", () => {
     expect(database.query).not.toHaveBeenCalled();
   });
 });
+
+export {};

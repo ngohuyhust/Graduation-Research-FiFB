@@ -121,3 +121,5 @@ describe("Nest workout plans with real repository and transaction handling", () 
     await request(app).get("/api/workout-plans").set("Authorization", auth(actor)).expect(200);
   });
 });
+
+export {};

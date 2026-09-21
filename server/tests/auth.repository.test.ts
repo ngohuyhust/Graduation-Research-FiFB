@@ -7,11 +7,9 @@ describe("Nest auth persistence", () => {
   beforeEach(() => {
     nodeEnv = env.nodeEnv;
     db = {
-      query: jest
-        .fn()
-        .mockResolvedValue({
-          rows: [{ id: "user", role: "trainer", status: "active", email_verified_at: "2026-01-01" }],
-        }),
+      query: jest.fn().mockResolvedValue({
+        rows: [{ id: "user", role: "trainer", status: "active", email_verified_at: "2026-01-01" }],
+      }),
     };
     client = { query: jest.fn() };
     repository = new AuthRepository(db);
@@ -89,3 +87,5 @@ describe("Nest auth persistence", () => {
     expect(redis.del).toHaveBeenCalledWith("user_sessions:user");
   });
 });
+
+export {};

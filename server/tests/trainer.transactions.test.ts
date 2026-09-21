@@ -85,3 +85,5 @@ describe("trainer transaction boundaries", () => {
     expect(client.release).toHaveBeenCalledTimes(1);
   });
 });
+
+export {};

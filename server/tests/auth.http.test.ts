@@ -292,3 +292,5 @@ describe("Nest auth HTTP contract", () => {
     await request(app).post("/api/auth/unknown").expect(404);
   });
 });
+
+export {};

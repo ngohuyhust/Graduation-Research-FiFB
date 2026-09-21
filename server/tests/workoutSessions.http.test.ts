@@ -142,3 +142,5 @@ describe("Nest workout sessions", () => {
     await request(app).get("/api/workout-sessions/stats").set("Authorization", auth(actor)).expect(403);
   });
 });
+
+export {};

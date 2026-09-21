@@ -401,3 +401,5 @@ describe("Nest trainer-related HTTP contracts", () => {
     });
   });
 });
+
+export {};

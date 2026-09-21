@@ -81,3 +81,5 @@ describe("exercises service", () => {
     });
   });
 });
+
+export {};

@@ -55,6 +55,10 @@ and cache interceptors preserve existing URLs, permissions, status codes and res
 Database transactions use the injected `DatabaseService`. Auth storage still uses Redis with the
 existing non-production memory fallback; email-delivery history remains process-local.
 
+Backend source, CLI scripts, Jest tests and tooling configuration are TypeScript. `npm run build`
+produces `server/dist/server.js` and compiled commands under `server/dist/scripts/`;
+`npm run typecheck` checks application and tests. The client continues to use React.
+
 The backend keeps the existing module pattern:
 
 ```text

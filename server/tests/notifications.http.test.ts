@@ -17,11 +17,9 @@ describe("Nest notifications", () => {
   beforeEach(() => {
     actor = { id: userId, role: "user", status: "active", email_verified_at: "2026-01-01" };
     jest.spyOn(app.locals.nest.get(UsersRepository), "findById").mockImplementation(async () => actor);
-    query = jest
-      .spyOn(app.locals.nest.get(DatabaseService), "query")
-      .mockImplementation(async (sql) => ({
-        rows: sql.includes("count(*)") ? [{ total: 1 }] : [{ id, recipient_id: userId }],
-      }));
+    query = jest.spyOn(app.locals.nest.get(DatabaseService), "query").mockImplementation(async (sql) => ({
+      rows: String(sql).includes("count(*)") ? [{ total: 1 }] : [{ id, recipient_id: userId }],
+    }));
   });
   afterEach(() => jest.restoreAllMocks());
   const auth = (actor) => `Bearer ${signAccessToken(actor)}`;
@@ -87,3 +85,5 @@ describe("Nest notifications", () => {
     await request(app).get("/api/notifications").set("Authorization", auth(actor)).expect(200);
   });
 });
+
+export {};

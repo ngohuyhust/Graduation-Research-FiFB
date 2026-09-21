@@ -22,3 +22,5 @@ describe("token utilities", () => {
     expect(payload.role).toBe("trainer");
   });
 });
+
+export {};

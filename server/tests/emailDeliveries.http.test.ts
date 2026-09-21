@@ -82,3 +82,5 @@ describe("Nest email deliveries with mocked provider", () => {
     await request(app).get("/api/admin/email-deliveries?page=0").set("Authorization", auth(actor)).expect(400);
   });
 });
+
+export {};

@@ -17,3 +17,5 @@ describe("reviews repository", () => {
     expect(query.mock.calls[0][0]).toContain("status = 'active'");
   });
 });
+
+export {};

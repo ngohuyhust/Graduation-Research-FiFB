@@ -40,3 +40,5 @@ describe("favorites service", () => {
     });
   });
 });
+
+export {};

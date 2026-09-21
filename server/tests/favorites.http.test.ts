@@ -23,7 +23,7 @@ describe("Nest favorites", () => {
     jest.spyOn(app.locals.nest.get(UsersRepository), "findById").mockImplementation(async () => actor);
     jest
       .spyOn(app.locals.nest.get(DatabaseService), "withTransaction")
-      .mockImplementation((cb) => cb({ query: jest.fn() }));
+      .mockImplementation((cb) => (cb as (client: { query: jest.Mock }) => Promise<unknown>)({ query: jest.fn() }));
     jest.spyOn(exerciseRepository, "ensureActive").mockResolvedValue(true);
     jest.spyOn(repository, "list").mockResolvedValue({ rows: [{ id: exerciseId }], total: 1 });
     jest.spyOn(repository, "add").mockResolvedValue({ user_id: userId, exercise_id: exerciseId });
@@ -80,3 +80,5 @@ describe("Nest favorites", () => {
     await request(app)[method](path).set("Authorization", token(actor)).expect(403);
   });
 });
+
+export {};

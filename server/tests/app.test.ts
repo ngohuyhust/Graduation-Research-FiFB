@@ -33,3 +33,5 @@ describe("app", () => {
     expect(response.body.error.code).toBe("NOT_FOUND");
   });
 });
+
+export {};

@@ -96,3 +96,5 @@ describe("trainer SQL repository contracts", () => {
     expect(database.query.mock.calls[1][1]).toEqual(["trainer", 5, 10]);
   });
 });
+
+export {};

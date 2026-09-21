@@ -132,3 +132,5 @@ describe("Nest chat HTTP and injected Socket.IO service", () => {
     expect(ack).toHaveBeenLastCalledWith({ ok: false, error: "Too many chat events. Try again later." });
   });
 });
+
+export {};

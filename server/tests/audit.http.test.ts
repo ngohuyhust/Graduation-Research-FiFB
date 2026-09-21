@@ -16,11 +16,9 @@ describe("Nest audit module behind admin endpoints", () => {
   beforeEach(() => {
     actor = { id, role: "admin", status: "active", email_verified_at: "2026-01-01" };
     jest.spyOn(app.locals.nest.get(UsersRepository), "findById").mockImplementation(async () => actor);
-    query = jest
-      .spyOn(app.locals.nest.get(DatabaseService), "query")
-      .mockImplementation(async (sql) => ({
-        rows: sql.includes("count(*)") ? [{ total: 1 }] : [{ id, action: "trainer.verify" }],
-      }));
+    query = jest.spyOn(app.locals.nest.get(DatabaseService), "query").mockImplementation(async (sql) => ({
+      rows: String(sql).includes("count(*)") ? [{ total: 1 }] : [{ id, action: "trainer.verify" }],
+    }));
   });
   afterEach(() => jest.restoreAllMocks());
   const auth = (actor) => `Bearer ${signAccessToken(actor)}`;
@@ -46,18 +44,16 @@ describe("Nest audit module behind admin endpoints", () => {
   });
   test("audit insertion preserves caller transaction and metadata", async () => {
     const client = { query: jest.fn() };
-    await app.locals.nest
-      .get(AuditRepository)
-      .createAudit(client, {
-        actorId: id,
-        action: "user.locked",
-        entityType: "user",
-        entityId: id,
-        oldValues: { status: "active" },
-        newValues: { status: "locked" },
-        ipAddress: "127.0.0.1",
-        userAgent: "test",
-      });
+    await app.locals.nest.get(AuditRepository).createAudit(client, {
+      actorId: id,
+      action: "user.locked",
+      entityType: "user",
+      entityId: id,
+      oldValues: { status: "active" },
+      newValues: { status: "locked" },
+      ipAddress: "127.0.0.1",
+      userAgent: "test",
+    });
     expect(client.query).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO audit_logs"), [
       id,
       "user.locked",
@@ -82,3 +78,5 @@ describe("Nest audit module behind admin endpoints", () => {
     expect(query).not.toHaveBeenCalled();
   });
 });
+
+export {};

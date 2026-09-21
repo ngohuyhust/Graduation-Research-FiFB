@@ -6,13 +6,17 @@
     "rootDir": ".",
     "outDir": "dist",
     "allowJs": false,
+    "checkJs": false,
     "strict": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noEmit": true,
+    "types": ["jest", "node"],
+    "noImplicitAny": false
   },
-  "include": ["src/**/*", "scripts/*.ts", "server.ts"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "scripts"]
 }

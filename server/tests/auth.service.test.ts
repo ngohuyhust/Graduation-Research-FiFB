@@ -263,3 +263,5 @@ describe("Nest auth service", () => {
     expect(repository.revokeUserSessions).not.toHaveBeenCalled();
   });
 });
+
+export {};

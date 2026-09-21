@@ -33,3 +33,5 @@ describe("workout sessions service", () => {
     });
   });
 });
+
+export {};

@@ -91,7 +91,7 @@ describe("Nest users and admin HTTP contracts", () => {
     jest.spyOn(repository, "listUsers").mockResolvedValue({ rows: [user], total: 1 });
     jest
       .spyOn(repository, "updateProfile")
-      .mockImplementation(async (_id, data) => ({ ...actor, full_name: data.fullName }));
+      .mockImplementation(async (_id, data) => ({ ...actor, full_name: (data as { fullName: string }).fullName }));
     jest
       .spyOn(repository, "setStatus")
       .mockImplementation(async (_client, _id, status) => ({ oldUser: user, user: { ...user, status } }));
@@ -335,3 +335,5 @@ describe("Nest users and admin HTTP contracts", () => {
     expect(repository.findById).toHaveBeenCalledWith(actorId);
   });
 });
+
+export {};
