@@ -1,10 +1,10 @@
 // Gioi han tan suat request cho API va auth endpoints.
-const rateLimit = require("express-rate-limit");
-const { RedisStore } = require("rate-limit-redis");
+import rateLimit, { type Options } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
 const { getRedisClient } = require("../redis/client");
 const { env } = require("../config/env");
 
-function createRedisStore(prefix) {
+function createRedisStore(prefix: string) {
   const redisConfigured =
     !env.redisDisabled && ((env.upstashRedisUrl && env.upstashRedisToken) || Boolean(env.redisUrl));
   if (!redisConfigured) return undefined;
@@ -12,12 +12,13 @@ function createRedisStore(prefix) {
     prefix,
     sendCommand: async (...args) => {
       const redis = await getRedisClient();
-      return redis.sendCommand(args);
+      if (!redis) throw new Error("Redis is not configured");
+      return redis.sendCommand(args) as Promise<string | number | boolean | Array<string | number | boolean>>;
     },
   });
 }
 
-function createRateLimiter(options) {
+function createRateLimiter(options: Partial<Options>) {
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
@@ -25,7 +26,7 @@ function createRateLimiter(options) {
   });
 }
 
-const authRateLimiter = createRateLimiter({
+export const authRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   store: createRedisStore("rate-limit:auth:"),
@@ -42,7 +43,7 @@ const authRateLimiter = createRateLimiter({
   },
 });
 
-const apiRateLimiter = createRateLimiter({
+export const apiRateLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   limit: 200,
   store: createRedisStore("rate-limit:api:"),
@@ -59,5 +60,3 @@ const apiRateLimiter = createRateLimiter({
     });
   },
 });
-
-module.exports = { authRateLimiter, apiRateLimiter };

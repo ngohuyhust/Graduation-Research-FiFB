@@ -1,13 +1,13 @@
-const { JwtService } = require("./modules/auth/jwt.service");
+import { JwtService } from "./modules/auth/jwt.service";
 // Chay HTTP server va khoi dong ket noi thoi gian thuc.
-const { createApp } = require("./app");
-const { ChatService } = require("./modules/chat/chat.service");
-const { UsersRepository } = require("./modules/users/users.repository");
-const { env } = require("./config/env");
-const { closePool } = require("./db/pool");
-const { closeRedis } = require("./redis/client");
-const { initializeSocket, closeSocket } = require("./socket");
-const { logger } = require("./utils/logger");
+import { createApp } from "./app";
+import { ChatService } from "./modules/chat/chat.service";
+import { UsersRepository } from "./modules/users/users.repository";
+import { env } from "./config/env";
+import { closePool } from "./db/pool";
+import { closeRedis } from "./redis/client";
+import { initializeSocket, closeSocket } from "./socket";
+import { logger } from "./utils/logger";
 
 async function bootstrap() {
   const app = await createApp();

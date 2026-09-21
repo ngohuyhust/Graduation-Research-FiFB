@@ -1,25 +1,25 @@
 // Nest owns all API routes; Express supplies the HTTP adapter and shared middleware.
-require("reflect-metadata");
-const { NestFactory } = require("@nestjs/core");
-const { ExpressAdapter } = require("@nestjs/platform-express");
-const { AppModule } = require("./app.module");
-const { ApiExceptionFilter } = require("./common/api-exception.filter");
-const express = require("express");
-const helmet = require("helmet");
-const compression = require("compression");
-const cors = require("cors");
-const morgan = require("morgan");
-const { env } = require("./config/env");
-const { requestId } = require("./middlewares/requestId");
-const { errorHandler } = require("./middlewares/errorHandler");
-const { apiRateLimiter } = require("./middlewares/rateLimiters");
-const { AppError } = require("./utils/errors/AppError");
-const codes = require("./utils/errors/errorCodes");
-const { logger } = require("./utils/logger");
+import "reflect-metadata";
+import { NestFactory } from "@nestjs/core";
+import { ExpressAdapter } from "@nestjs/platform-express";
+import { AppModule } from "./app.module";
+import { ApiExceptionFilter } from "./common/api-exception.filter";
+import express, { type Request } from "express";
+import helmet from "helmet";
+import compression from "compression";
+import cors from "cors";
+import morgan from "morgan";
+import { env } from "./config/env";
+import { requestId } from "./middlewares/requestId";
+import { errorHandler } from "./middlewares/errorHandler";
+import { apiRateLimiter } from "./middlewares/rateLimiters";
+import { AppError } from "./utils/errors/AppError";
+import codes = require("./utils/errors/errorCodes");
+import { logger } from "./utils/logger";
 
-morgan.token("request-id", (req) => req.requestId || "-");
+morgan.token("request-id", (req) => (req as Request).requestId || "-");
 
-function resolveCorsOrigin(origin, callback) {
+function resolveCorsOrigin(origin: string | undefined, callback: (error: Error | null, allowed?: boolean) => void) {
   if (!origin || env.corsOrigins.includes(origin)) {
     callback(null, true);
     return;
@@ -27,7 +27,7 @@ function resolveCorsOrigin(origin, callback) {
   callback(new AppError(codes.FORBIDDEN, "Origin is not allowed by CORS", 403));
 }
 
-async function createApp() {
+export async function createApp() {
   const app = express();
   app.set("trust proxy", 1);
   app.use(requestId);
@@ -54,5 +54,3 @@ async function createApp() {
   app.locals.nest = nest;
   return app;
 }
-
-module.exports = { createApp };

@@ -1,10 +1,12 @@
+import type { ErrorRequestHandler, Request, Response } from "express";
 // Chuan hoa response loi va log loi ngoai du kien.
-const { AppError } = require("../utils/errors/AppError");
+import { AppError } from "../utils/errors/AppError";
 const codes = require("../utils/errors/errorCodes");
 const { env } = require("../config/env");
 const { logger } = require("../utils/logger");
 
-function errorHandler(error, req, res, _next) {
+export function errorHandler(error: unknown, req: Request, res: Response, _next?: Parameters<ErrorRequestHandler>[3]) {
+  void _next;
   const requestId = req.requestId;
 
   if (error instanceof AppError) {
@@ -30,11 +32,14 @@ function errorHandler(error, req, res, _next) {
     success: false,
     error: {
       code: codes.SERVER_ERROR,
-      message: env.nodeEnv === "production" ? "Internal server error" : error.message || "Internal server error",
+      message:
+        env.nodeEnv === "production"
+          ? "Internal server error"
+          : error instanceof Error
+            ? error.message
+            : "Internal server error",
       details: null,
     },
     requestId,
   });
 }
-
-module.exports = { errorHandler };
