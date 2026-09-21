@@ -1,17 +1,40 @@
 // Script ho tro import exercisedb cho server.
-const { env } = require("../src/config/env");
-const { withTransaction, closePool } = require("../src/db/pool");
+import { env } from "../src/config/env";
+import { withTransaction, closePool } from "../src/db/pool";
+import type { PoolClient } from "pg";
+interface ExerciseDbItem {
+  id?: string | number;
+  exerciseId?: string | number;
+  external_id?: string | number;
+  name?: string;
+  gifUrl?: string;
+  gif_url?: string;
+  instructions?: string[];
+  bodyPart?: string;
+  body_part?: string;
+  equipment?: string;
+  target?: string;
+  targetMuscle?: string;
+  secondaryMuscles?: string[];
+  secondary_muscles?: string[];
+  [key: string]: unknown;
+}
+interface Page {
+  items: ExerciseDbItem[];
+  nextCursor: string | null;
+  isLast: boolean;
+}
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function upsertTaxonomy(client, table, name) {
+async function upsertTaxonomy(client: PoolClient, table: string, name: string | undefined) {
   if (!name) return null;
-  const result = await client.query(
+  const result = await client.query<{ id: string }>(
     `INSERT INTO ${table} (name) VALUES ($1)
      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
      RETURNING id`,
@@ -20,11 +43,11 @@ async function upsertTaxonomy(client, table, name) {
   return result.rows[0].id;
 }
 
-async function importExercise(client, item) {
+async function importExercise(client: PoolClient, item: ExerciseDbItem): Promise<"created" | "updated"> {
   const externalId = item.id || item.exerciseId || item.external_id;
   if (!externalId || !item.name) throw new Error("Exercise payload is missing id/name");
 
-  const result = await client.query(
+  const result = await client.query<{ id: string; created: boolean }>(
     `INSERT INTO exercises (external_id, source, name, gif_url, instructions, status, raw_data)
      VALUES ($1, 'exercisedb_v1', $2, $3, $4, 'active', $5)
      ON CONFLICT (external_id) DO UPDATE SET
@@ -74,32 +97,33 @@ async function importExercise(client, item) {
   return result.rows[0].created ? "created" : "updated";
 }
 
-async function fetchPage(cursorOrPage) {
-  const url = new URL(env.exercisedb.apiUrl);
+async function fetchPage(cursorOrPage: string | number) {
+  const url = new URL(env.exercisedb.apiUrl || "");
   if (cursorOrPage) {
     if (typeof cursorOrPage === "number") url.searchParams.set("page", String(cursorOrPage));
     else url.searchParams.set("cursor", cursorOrPage);
   }
-  const headers = {};
+  const headers: Record<string, string> = {};
   if (env.exercisedb.apiKey) headers["x-rapidapi-key"] = env.exercisedb.apiKey;
   const response = await fetch(url, { headers });
   if (!response.ok) throw new Error(`ExerciseDB request failed: ${response.status}`);
   return response.json();
 }
 
-function normalizeResponse(payload) {
+function normalizeResponse(payload: unknown): Page {
   if (Array.isArray(payload)) return { items: payload, nextCursor: null, isLast: true };
+  const data = payload as Record<string, unknown>;
   return {
-    items: payload.items || payload.data || payload.results || [],
-    nextCursor: payload.nextCursor || payload.next_cursor || null,
-    isLast: !payload.nextCursor && !payload.next_cursor && !(payload.hasNext || payload.has_next),
+    items: (data.items || data.data || data.results || []) as ExerciseDbItem[],
+    nextCursor: (data.nextCursor || data.next_cursor || null) as string | null,
+    isLast: !data.nextCursor && !data.next_cursor && !(data.hasNext || data.has_next),
   };
 }
 
 async function main() {
   if (!env.exercisedb.apiUrl) throw new Error("EXERCISEDB_API_URL is required");
   const stats = { created: 0, updated: 0, skipped: 0, failed: 0 };
-  let cursor = null;
+  let cursor: string | null = null;
   let page = 1;
   let done = false;
 
@@ -115,7 +139,9 @@ async function main() {
         }
       } catch (error) {
         stats.failed += 1;
-        console.error(`failed ${item.id || item.name || "unknown"}: ${error.message}`);
+        console.error(
+          `failed ${item.id || item.name || "unknown"}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
     done = payload.isLast;

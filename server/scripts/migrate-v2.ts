@@ -1,5 +1,5 @@
 // Script ho tro migrate v2 cho server.
-const { pool } = require("../src/db/pool");
+import { pool } from "../src/db/pool";
 
 const sql = `
 CREATE TABLE IF NOT EXISTS public.workout_sessions (

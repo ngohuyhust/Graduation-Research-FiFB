@@ -1,5 +1,5 @@
 // Script ho tro migrate indexes cho server.
-const { pool } = require("../src/db/pool");
+import { pool } from "../src/db/pool";
 
 const sql = `
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

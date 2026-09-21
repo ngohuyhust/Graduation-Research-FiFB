@@ -1,9 +1,10 @@
 // Script ho tro migrate cho server.
-const fs = require("fs");
-const path = require("path");
-const { pool } = require("../src/db/pool");
+import * as fs from "fs";
+import * as path from "path";
+import { pool } from "../src/db/pool";
+import type { PoolClient } from "pg";
 
-async function ensureMigrationsTable(client) {
+async function ensureMigrationsTable(client: PoolClient) {
   await client.query(`
     CREATE TABLE IF NOT EXISTS public.schema_migrations (
       filename text PRIMARY KEY,
@@ -22,7 +23,7 @@ async function migrate() {
   const client = await pool.connect();
   try {
     await ensureMigrationsTable(client);
-    const dir = path.join(__dirname, "..", "migrations");
+    const dir = path.resolve(__dirname, "..", "..", "migrations");
     const files = fs
       .readdirSync(dir)
       .filter((file) => file.endsWith(".sql"))
