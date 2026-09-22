@@ -1,5 +1,6 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
+-- Reference snapshot of the base schema plus the runtime v2 migrations.
+-- WARNING: This schema is for context only and is not meant to be run directly.
+-- Use server/scripts/migrate-v2.js and server/scripts/migrate-indexes.js to apply v2 changes.
 
 CREATE TABLE public.app_users (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -101,6 +102,18 @@ CREATE TABLE public.user_trainer_connections (
   CONSTRAINT user_trainer_connections_trainer_id_fkey FOREIGN KEY (trainer_id) REFERENCES public.trainer_profiles(trainer_id),
   CONSTRAINT user_trainer_connections_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.trainer_connection_requests(id)
 );
+CREATE TABLE public.chat_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  connection_id uuid NOT NULL,
+  sender_id uuid NOT NULL,
+  content text NOT NULL,
+  message_type text NOT NULL DEFAULT 'text'::text CHECK (message_type = ANY (ARRAY['text'::text, 'image'::text, 'system'::text])),
+  read_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_messages_connection_id_fkey FOREIGN KEY (connection_id) REFERENCES public.user_trainer_connections(id),
+  CONSTRAINT chat_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.app_users(id)
+);
 CREATE TABLE public.body_parts (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
@@ -199,6 +212,33 @@ CREATE TABLE public.workout_plan_items (
   CONSTRAINT workout_plan_items_workout_plan_id_fkey FOREIGN KEY (workout_plan_id) REFERENCES public.workout_plans(id),
   CONSTRAINT workout_plan_items_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
 );
+CREATE TABLE public.workout_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  workout_plan_id uuid,
+  title text NOT NULL,
+  notes text,
+  started_at timestamp with time zone NOT NULL DEFAULT now(),
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT workout_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.app_users(id),
+  CONSTRAINT workout_sessions_plan_id_fkey FOREIGN KEY (workout_plan_id) REFERENCES public.workout_plans(id)
+);
+CREATE TABLE public.session_exercise_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL,
+  exercise_id uuid NOT NULL,
+  set_number integer NOT NULL DEFAULT 1 CHECK (set_number > 0),
+  actual_reps integer CHECK (actual_reps IS NULL OR actual_reps > 0),
+  actual_weight_kg numeric(8,2) CHECK (actual_weight_kg IS NULL OR actual_weight_kg >= 0),
+  duration_seconds integer CHECK (duration_seconds IS NULL OR duration_seconds > 0),
+  note text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT session_exercise_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT session_exercise_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.workout_sessions(id) ON DELETE CASCADE,
+  CONSTRAINT session_exercise_logs_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
 CREATE TABLE public.audit_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   actor_id uuid,
@@ -229,3 +269,19 @@ CREATE TABLE public.notifications (
   CONSTRAINT notifications_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES public.app_users(id),
   CONSTRAINT notifications_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES public.app_users(id)
 );
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX idx_exercises_status ON public.exercises(status);
+CREATE INDEX idx_exercises_name_trgm ON public.exercises USING gin(name gin_trgm_ops);
+CREATE INDEX idx_notifications_recipient_unread ON public.notifications(recipient_id) WHERE read_at IS NULL;
+CREATE INDEX idx_connection_requests_status ON public.trainer_connection_requests(status);
+CREATE INDEX idx_user_trainer_connections_status ON public.user_trainer_connections(status);
+CREATE INDEX idx_workout_plans_owner ON public.workout_plans(owner_id) WHERE status = 'active';
+CREATE INDEX idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
+CREATE INDEX idx_favorite_exercises_user ON public.favorite_exercises(user_id);
+CREATE INDEX idx_workout_sessions_user_started ON public.workout_sessions(user_id, started_at DESC);
+CREATE INDEX idx_session_exercise_logs_session_id ON public.session_exercise_logs(session_id);
+CREATE INDEX idx_session_exercise_logs_exercise_id ON public.session_exercise_logs(exercise_id);
+CREATE INDEX idx_chat_messages_connection_created ON public.chat_messages(connection_id, created_at DESC);
+CREATE INDEX idx_chat_messages_unread ON public.chat_messages(connection_id, sender_id) WHERE read_at IS NULL;

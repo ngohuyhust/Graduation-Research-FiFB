@@ -22,6 +22,27 @@ describe("database schema alignment", () => {
     const offenders = files.filter((file) => forbiddenSqlObject.test(fs.readFileSync(file, "utf8")));
     expect(offenders).toEqual([]);
   });
+
+  test("documented v2 schema includes the runtime tables and indexes", () => {
+    const schema = fs.readFileSync(
+      path.join(__dirname, "..", "..", "Document", "DatabaseSQL-v2.txt"),
+      "utf8",
+    );
+
+    for (const table of ["workout_sessions", "session_exercise_logs", "chat_messages"]) {
+      expect(schema).toMatch(new RegExp(`CREATE TABLE public\\.${table}\\s*\\(`));
+    }
+
+    for (const index of [
+      "idx_workout_sessions_user_started",
+      "idx_session_exercise_logs_session_id",
+      "idx_session_exercise_logs_exercise_id",
+      "idx_chat_messages_connection_created",
+      "idx_chat_messages_unread",
+    ]) {
+      expect(schema).toContain(`CREATE INDEX ${index}`);
+    }
+  });
 });
 
 export {};
