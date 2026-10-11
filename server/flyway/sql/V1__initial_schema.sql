@@ -1,5 +1,5 @@
--- Initial FiFB schema for a new PostgreSQL database.
--- Existing databases adopt this version with an explicit Flyway baseline.
+-- Complete FiFB schema: all current tables, constraints and indexes.
+-- An empty schema executes V1; an existing matching schema is baselined at V1.
 -- Reuse the extension wherever Supabase installed it. Test schemas must not
 -- install or relocate shared extensions or modify objects in public.
 DO $fifb$
@@ -272,3 +272,87 @@ CREATE TABLE "${flyway:defaultSchema}".notifications (
   CONSTRAINT notifications_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES "${flyway:defaultSchema}".app_users(id),
   CONSTRAINT notifications_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES "${flyway:defaultSchema}".app_users(id)
 );
+
+
+CREATE TABLE "${flyway:defaultSchema}".workout_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  workout_plan_id uuid,
+  title text NOT NULL,
+  notes text,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT workout_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES "${flyway:defaultSchema}".app_users(id),
+  CONSTRAINT workout_sessions_plan_id_fkey FOREIGN KEY (workout_plan_id) REFERENCES "${flyway:defaultSchema}".workout_plans(id)
+);
+
+CREATE TABLE "${flyway:defaultSchema}".session_exercise_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL,
+  exercise_id uuid NOT NULL,
+  set_number int NOT NULL DEFAULT 1 CHECK (set_number > 0),
+  actual_reps int CHECK (actual_reps IS NULL OR actual_reps > 0),
+  actual_weight_kg numeric(8,2) CHECK (actual_weight_kg IS NULL OR actual_weight_kg >= 0),
+  duration_seconds int CHECK (duration_seconds IS NULL OR duration_seconds > 0),
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT session_exercise_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT session_exercise_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES "${flyway:defaultSchema}".workout_sessions(id) ON DELETE CASCADE,
+  CONSTRAINT session_exercise_logs_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES "${flyway:defaultSchema}".exercises(id)
+);
+
+CREATE TABLE "${flyway:defaultSchema}".chat_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  connection_id uuid NOT NULL,
+  sender_id uuid NOT NULL,
+  content text NOT NULL,
+  message_type text NOT NULL DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'system')),
+  read_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_messages_connection_id_fkey FOREIGN KEY (connection_id) REFERENCES "${flyway:defaultSchema}".user_trainer_connections(id),
+  CONSTRAINT chat_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES "${flyway:defaultSchema}".app_users(id)
+);
+
+CREATE INDEX idx_workout_sessions_user_started ON "${flyway:defaultSchema}".workout_sessions(user_id, started_at DESC);
+CREATE INDEX idx_session_exercise_logs_session_id ON "${flyway:defaultSchema}".session_exercise_logs(session_id);
+CREATE INDEX idx_session_exercise_logs_exercise_id ON "${flyway:defaultSchema}".session_exercise_logs(exercise_id);
+CREATE INDEX idx_chat_messages_connection_created ON "${flyway:defaultSchema}".chat_messages(connection_id, created_at DESC);
+CREATE INDEX idx_chat_messages_unread ON "${flyway:defaultSchema}".chat_messages(connection_id, sender_id) WHERE read_at IS NULL;
+
+
+-- Resolve the shared pg_trgm operator class without changing its schema.
+DO $fifb$
+DECLARE
+  extension_schema text;
+BEGIN
+  SELECT n.nspname INTO extension_schema
+  FROM pg_catalog.pg_extension e
+  JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
+  WHERE e.extname = 'pg_trgm';
+
+  IF extension_schema IS NULL THEN
+    IF '${flyway:defaultSchema}' <> 'public' THEN
+      RAISE EXCEPTION 'pg_trgm must already be installed before migrating test schema %', '${flyway:defaultSchema}';
+    END IF;
+    CREATE EXTENSION pg_trgm WITH SCHEMA public;
+    extension_schema := 'public';
+  END IF;
+
+  PERFORM pg_catalog.set_config(
+    'search_path',
+    pg_catalog.format('%I,%I,pg_catalog', '${flyway:defaultSchema}', extension_schema),
+    true
+  );
+END;
+$fifb$;
+CREATE INDEX idx_exercises_status ON "${flyway:defaultSchema}".exercises(status);
+CREATE INDEX idx_exercises_name_trgm ON "${flyway:defaultSchema}".exercises USING gin(name gin_trgm_ops);
+CREATE INDEX idx_notifications_recipient_unread ON "${flyway:defaultSchema}".notifications(recipient_id) WHERE read_at IS NULL;
+CREATE INDEX idx_connection_requests_status ON "${flyway:defaultSchema}".trainer_connection_requests(status);
+CREATE INDEX idx_user_trainer_connections_status ON "${flyway:defaultSchema}".user_trainer_connections(status);
+CREATE INDEX idx_workout_plans_owner ON "${flyway:defaultSchema}".workout_plans(owner_id) WHERE status = 'active';
+CREATE INDEX idx_audit_logs_created_at ON "${flyway:defaultSchema}".audit_logs(created_at DESC);
+CREATE INDEX idx_favorite_exercises_user ON "${flyway:defaultSchema}".favorite_exercises(user_id);

@@ -17,6 +17,5 @@ COPY --from=build /app/dist ./dist
 COPY package*.json ./
 COPY src ./src
 COPY scripts ./scripts
-COPY flyway ./flyway
 EXPOSE 4000
 CMD ["node", "dist/server.js"]

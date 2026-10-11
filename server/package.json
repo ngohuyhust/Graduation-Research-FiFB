@@ -11,13 +11,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest --runInBand",
-    "migrate": "node dist/scripts/flyway.js migrate",
-    "migrate:info": "node dist/scripts/flyway.js info",
-    "migrate:validate": "node dist/scripts/flyway.js validate",
-    "migrate:baseline": "node dist/scripts/flyway.js baseline",
-    "migrate:repair": "node dist/scripts/flyway.js repair",
-    "migrate:v2": "npm run migrate --",
-    "migrate:indexes": "npm run migrate --",
     "import:exercisedb": "node dist/scripts/import-exercisedb.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.spec.json"
