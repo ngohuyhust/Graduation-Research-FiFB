@@ -2,12 +2,11 @@
 
 ## 1. Định hướng sản phẩm
 
-> **FiFB là nền tảng fitness mobile-first dành cho người mới, hỗ trợ xây dựng chương trình tập, thực hiện workout, theo dõi tiến bộ và kết nối Trainer.**
+> **FiFB là nền tảng fitness mobile-first dành cho người mới, cá nhân hoá chương trình theo mục tiêu và điều kiện tập, hỗ trợ ghi workout và điều chỉnh dựa trên kết quả thực tế.**
 
-Một Flutter codebase phục vụ cả ba vai trò:
+Một Flutter codebase phục vụ hai vai trò:
 
 - User.
-- Trainer.
 - Admin.
 
 Nền tảng triển khai:
@@ -15,16 +14,17 @@ Nền tảng triển khai:
 - Android là sản phẩm chính.
 - iOS có thể build từ cùng codebase.
 - Flutter Web cung cấp giao diện màn hình lớn.
-- NestJS, PostgreSQL, Redis và Socket.IO hiện tại tiếp tục được sử dụng.
+- Tái sử dụng NestJS, PostgreSQL và Redis hiện có; Socket.IO không phải thành phần bắt buộc khi không triển khai chat.
 
 Người tập có thể hoàn thành 100% hành trình trên mobile. Web chỉ là một lựa chọn bổ sung, không phải điều kiện bắt buộc.
+
+Phạm vi GR2 không triển khai vai trò huấn luyện viên, kết nối học viên, giao plan, chứng chỉ hoặc chat. Các mô-đun cũ trong repository không phải yêu cầu cần chuyển sang Flutter; việc loại khỏi kế hoạch không đồng nghĩa xóa mã nguồn hoặc dữ liệu hiện có.
 
 ## 2. Kiến trúc tổng thể
 
 ```text
 Flutter Application
 ├── User Shell
-├── Trainer Shell
 └── Admin Shell
         │
         ├── Android
@@ -38,14 +38,12 @@ Flutter Application
         ├── Workout Plans
         ├── Workout Sessions
         ├── Recommendation
-        ├── Trainer
         ├── Admin
-        ├── Chat
         └── Notifications
                 │
-       ┌────────┼─────────┐
-       ▼        ▼         ▼
- PostgreSQL   Redis    Socket.IO
+       ┌────────┐
+       ▼        ▼
+ PostgreSQL   Redis
 ```
 
 React web hiện tại được giữ trong giai đoạn chuyển đổi để kiểm tra API. Khi Flutter Web đạt đủ chức năng thì có thể ngừng sử dụng React.
@@ -109,29 +107,20 @@ Phiên bản đầu sử dụng:
 
 Không để LLM tự tạo workout không kiểm soát.
 
-### 3.4. Trainer và Content Governance
+### 3.4. Chất lượng dữ liệu và kiểm chứng cá nhân hoá
 
-Trainer có thể:
+Cá nhân hoá là vòng lặp **onboarding → đề xuất → workout log và feedback → đề xuất điều chỉnh**. Mỗi đề xuất phải truy vết được dữ liệu và rule đã sử dụng; người dùng giữ quyền chỉnh sửa hoặc từ chối.
 
-- Quản lý hồ sơ.
-- Nộp chứng chỉ.
-- Nhận yêu cầu kết nối.
-- Xem danh sách học viên.
-- Giao workout plan.
-- Theo dõi buổi tập.
-- Để lại nhận xét.
-- Chat.
-- Đề xuất bài tập mới.
+Đầu tư vào dữ liệu bài tập cốt lõi, template, kiểm thử nhiều hồ sơ và đánh giá mức phù hợp thay vì mở rộng nghiệp vụ nhiều vai trò.
 
 Admin có thể:
 
 - Quản lý tài khoản.
 - Duyệt bài tập.
-- Duyệt chứng chỉ.
 - Quản lý taxonomy.
 - Xem audit log.
-- Theo dõi notification và email.
 - Kiểm tra nội dung recommendation.
+- Kiểm duyệt template cốt lõi và quản lý phiên bản rule cá nhân hoá; chưa cần trình chỉnh sửa rule phức tạp.
 
 ## 4. Chức năng theo vai trò
 
@@ -155,8 +144,7 @@ Admin có thể:
 - Workout history.
 - Progress analytics.
 - Smart progression.
-- Kết nối Trainer.
-- Chat và notification.
+- Đánh giá độ khó, ghi sở thích và nhận giải thích cho đề xuất điều chỉnh.
 
 #### Có thể bổ sung
 
@@ -165,28 +153,7 @@ Admin có thể:
 - Nhắc lịch tập.
 - Chia sẻ kết quả dưới dạng ảnh.
 
-### 4.2. Trainer
-
-#### Bắt buộc
-
-- Toàn bộ chức năng User.
-- Trainer profile.
-- Gửi chứng chỉ.
-- Xử lý yêu cầu kết nối.
-- Danh sách học viên.
-- Xem lịch sử workout của học viên được kết nối.
-- Tạo hoặc chỉnh plan cho học viên.
-- Nhận xét một buổi tập.
-- Chat.
-- Đề xuất bài tập.
-
-#### Có thể bổ sung
-
-- Dashboard thống kê học viên.
-- Template workout riêng của Trainer.
-- Gửi thông báo hàng loạt cho học viên.
-
-### 4.3. Admin
+### 4.2. Admin
 
 #### Bắt buộc
 
@@ -194,9 +161,9 @@ Admin có thể:
 - User management.
 - Khóa, mở khóa và vô hiệu hóa tài khoản.
 - Exercise moderation.
-- Certificate moderation.
 - Audit logs.
 - Quản lý taxonomy.
+- Kiểm duyệt template và theo dõi phiên bản rule cá nhân hoá.
 
 #### Có thể bổ sung
 
@@ -213,15 +180,7 @@ Admin có thể:
 Home | Explore | Workout | Progress | Profile
 ```
 
-### 5.2. Trainer
-
-```text
-Home | Clients | Workout | Chat | Profile
-```
-
-Trainer vẫn truy cập Exercise Library và chức năng tập luyện cá nhân từ `Workout` hoặc `Profile`.
-
-### 5.3. Admin
+### 5.2. Admin
 
 ```text
 Dashboard | Review | Users | Audit | Profile
@@ -303,6 +262,15 @@ Người dùng có thể chọn:
 
 Hệ thống tạo lại phần bị ảnh hưởng, không xóa toàn bộ kế hoạch.
 
+### 6.5. Chấm điểm và học từ phản hồi
+
+- Ràng buộc thiết bị, bài bị loại trừ và mức khó được kiểm tra trước khi xếp hạng; điểm cao không được ghi đè ràng buộc.
+- Trọng số ban đầu là tham số ở cấp tiêu chí, không phải nhập điểm thủ công cho từng bài. Giải thích giả định, phiên bản hoá và hiệu chỉnh bằng các hồ sơ thử nghiệm cùng góp ý của người có chuyên môn.
+- Xếp hạng dựa trên metadata đã duyệt, độ phù hợp mục tiêu, sở thích và lịch sử cá nhân; dùng tie-break ổn định để tái hiện kết quả.
+- Feedback dễ/khó và thích/không thích cập nhật hồ sơ cá nhân và gợi ý lần sau; không gọi đây là mô hình học máy nếu chỉ dùng rule.
+- Nếu không đủ ứng viên hợp lệ hoặc thời lượng không khả thi, thông báo ràng buộc cần điều chỉnh; không âm thầm bỏ qua điều kiện.
+- Lưu input, phiên bản rule, lý do chọn/loại và phản hồi để đánh giá chất lượng recommendation.
+
 ## 7. Smart Progression
 
 Áp dụng double progression:
@@ -381,12 +349,11 @@ LLM không được:
 
 - Lưu device token.
 - Push notification.
-- Deep link vào chat, request hoặc màn hình moderation.
+- Nhắc lịch tập và deep link vào workout hoặc màn hình moderation; là phần bổ sung theo tiến độ.
 
 ### 9.4. Upload
 
 - Avatar.
-- Chứng chỉ.
 - Exercise media.
 - Giới hạn loại và dung lượng file.
 
@@ -416,9 +383,6 @@ recommendation_runs
 recommendation_items
 recommendation_feedback
 
-trainer_plan_assignments
-trainer_workout_comments
-
 user_devices
 sync_operations
 ```
@@ -439,23 +403,23 @@ Các giá trị chiều cao, cân nặng và giới tính không nên tự tạo
 | Thời gian | Công việc | Kết quả |
 | --- | --- | --- |
 | Tuần 1–2 | Ổn định backend, test, API versioning, OpenAPI, migration | Backend sẵn sàng cho Flutter |
-| Tuần 3–4 | Flutter foundation, auth, role navigation, responsive layout | User, Trainer và Admin đăng nhập được |
+| Tuần 3–4 | Flutter foundation, auth, role navigation, responsive layout | User và Admin đăng nhập được |
 | Tuần 5–6 | Onboarding, profile, exercise library và detail | Hoàn thành luồng khám phá bài tập |
 | Tuần 7–8 | Workout plan, Today Workout và plan editor | Tạo và chỉnh chương trình trên mobile |
 | Tuần 9–10 | Live workout, timer, resume và offline draft | Hoàn thành một buổi tập thực tế |
 | Tuần 11–12 | Recommendation, substitution và progression | Kế hoạch tự điều chỉnh có giải thích |
-| Tuần 13 | Trainer clients, assign plan, comment và chat | Hoàn thành luồng Trainer |
-| Tuần 14 | Admin moderation, users, certificates và audit | Hoàn thành luồng Admin |
+| Tuần 13 | Hiệu chỉnh scoring, feedback, kiểm thử hồ sơ và trường hợp thiếu ứng viên | Cá nhân hoá có giải thích và đo được mức phù hợp |
+| Tuần 14 | Admin bài tập/taxonomy, kiểm duyệt template, users và audit tối thiểu | Bảo đảm chất lượng dữ liệu đầu vào |
 | Tuần 15 | Flutter Web responsive, push và deep links | Đồng bộ đa nền tảng |
 | Tuần 16 | E2E, usability test, sửa lỗi và deploy | Sẵn sàng demo và bảo vệ |
 
-Nếu tiến độ chậm, ưu tiên User và Recommendation; rút gọn Trainer analytics, Admin email logs và AI explanation.
+Nếu tiến độ chậm, giữ User, Recommendation và chất lượng workout; rút gọn dashboard Admin, push/deep links và AI explanation. Không bổ sung luồng nhiều vai trò trước khi các tác vụ chính ổn định.
 
 ## 12. Phân chia phạm vi
 
 ### 12.1. Graduation MVP bắt buộc
 
-- Một Flutter app đa role.
+- Một Flutter app cho User và Admin.
 - Android và Flutter Web.
 - Onboarding.
 - Exercise library.
@@ -466,8 +430,8 @@ Nếu tiến độ chậm, ưu tiên User và Recommendation; rút gọn Trainer
 - Smart progression.
 - Exercise substitution.
 - Progress analytics.
-- Trainer giao plan và nhận xét.
-- Admin duyệt bài và chứng chỉ.
+- Feedback cá nhân và lý do recommendation có thể truy vết.
+- Admin quản lý bài tập, taxonomy và template cốt lõi.
 - Unit, widget và E2E tests.
 
 ### 12.2. Stretch goals
@@ -510,13 +474,13 @@ Nếu tiến độ chậm, ưu tiên User và Recommendation; rút gọn Trainer
 - Không vượt thời lượng quá mức cho phép.
 - 100% recommendation có lý do.
 - So sánh với baseline chọn bài theo nhóm cơ.
-- Đánh giá mức phù hợp bởi Trainer.
+- Đánh giá mức phù hợp bằng bộ hồ sơ mẫu và phản biện của người có chuyên môn; không yêu cầu vai trò chuyên gia trong ứng dụng.
 - Đo tỷ lệ người dùng chấp nhận hoặc đổi bài.
 
 ### 13.3. Kỹ thuật
 
 - Các service quan trọng có unit test.
-- Có E2E cho auth, tạo plan, workout, Trainer và Admin.
+- Có E2E cho auth, onboarding, tạo plan, workout, feedback/progression và Admin.
 - Không tạo log trùng khi đồng bộ.
 - Phân quyền được kiểm tra tại backend.
 - Không có lỗi build, lint hoặc test trong pipeline.
@@ -527,7 +491,7 @@ Tên định hướng phù hợp:
 
 > **FiFB Mobile First Adaptive Fitness Platform for Beginner Gym Users**
 
-Sản phẩm cuối là một ứng dụng Flutter đa nền tảng, đa vai trò, trong đó phần được đầu tư sâu nhất là:
+Sản phẩm cuối là một ứng dụng Flutter đa nền tảng, tập trung vào hành trình tập luyện cá nhân, trong đó phần được đầu tư sâu nhất là:
 
 1. Onboarding.
 2. Tạo chương trình beginner.
@@ -535,10 +499,10 @@ Sản phẩm cuối là một ứng dụng Flutter đa nền tảng, đa vai tr�
 4. Live workout logger.
 5. Exercise substitution.
 6. Smart progression.
-7. Trainer feedback.
+7. Phản hồi cá nhân và kiểm chứng mức phù hợp của đề xuất.
 8. Admin moderation.
 
-Đây là phạm vi đủ phức tạp cho đồ án, tận dụng gần như toàn bộ backend hiện có, nhưng không chứa các chức năng không phục vụ trực tiếp trải nghiệm tập luyện.
+Phạm vi tận dụng các mô-đun tài khoản, bài tập, plan, session và thống kê hiện có; độ sâu của đồ án nằm ở vòng lặp cá nhân hoá có thể kiểm chứng và trải nghiệm ghi buổi tập, không ở số lượng vai trò.
 
 ## 15. Nguồn tham khảo sản phẩm
 
@@ -549,3 +513,126 @@ Sản phẩm cuối là một ứng dụng Flutter đa nền tảng, đa vai tr�
 - [Liftosaur](https://www.liftosaur.com/)
 - [wger Flutter](https://github.com/wger-project/flutter)
 - [Workout.cool](https://github.com/Snouzy/workout-cool)
+
+## 16. Giai đoạn tiếp theo: Nhật ký tập luyện và trạng thái cơ thể
+
+### 16.1. Vị trí trong kế hoạch
+
+Phần này được triển khai **sau khi hoàn thành và kiểm chứng phạm vi nền tảng tại các mục 1–14**, tiếp nối lộ trình 16 tuần ở mục 11. Đây là hướng mở rộng tiếp theo, không bổ sung yêu cầu bắt buộc vào Graduation MVP và không thay thế các chức năng đã chốt về Recommendation, Smart Progression hoặc Admin.
+
+Chỉ bắt đầu khi luồng tạo plan, ghi workout, khôi phục session, lịch sử và thống kê đã hoạt động ổn định. Nếu chưa đủ thời gian trong đồ án, giữ phần này làm kế hoạch phát triển sau đồ án.
+
+### 16.2. Định hướng sản phẩm và giá trị sử dụng
+
+> **FiFB mở rộng thành ứng dụng ghi lại quá trình tập luyện và cảm nhận cơ thể hằng ngày, giúp người dùng biết mình đã tập gì, đang cảm thấy thế nào và quá trình tập đang thay đổi ra sao.**
+
+Người dùng có thể tự tìm hiểu bài tập, dùng chương trình của mình hoặc nhận plan cá nhân hoá từ hệ thống. Nhật ký hoạt động với cả chương trình tự tạo và chương trình được đề xuất.
+
+Các nhu cầu chính:
+
+- Nhớ bài tập, mức tạ và kết quả buổi trước.
+- Xem nhóm cơ nào đã được tập gần đây.
+- Ghi nhận vùng cơ thể đang ê, đau hoặc khó chịu.
+- Xem cảm nhận cơ thể thay đổi thế nào sau các buổi tập.
+- Xem lại lịch sử riêng tư của bản thân trong cùng ứng dụng.
+
+Trọng tâm là liên kết **workout log → nhóm cơ liên quan → check-in → timeline**, giúp người dùng theo dõi thuận tiện hơn. Chạy bộ và các hoạt động khác sẽ được bổ sung ở giai đoạn xa hơn.
+
+### 16.3. Phân biệt dữ liệu tập và cảm nhận cơ thể
+
+| Thông tin | Nguồn dữ liệu | Cách hiển thị |
+| --- | --- | --- |
+| Nhóm cơ đã được tập | Workout log và mapping cơ chính/cơ phụ của bài tập | Bài, số set, lần tập gần nhất |
+| Vùng đang ê hoặc khó chịu | Người dùng tự ghi nhận trong check-in | Vị trí, mức cảm nhận, thời điểm và ghi chú |
+| Vùng chưa có check-in | Thiếu dữ liệu người dùng | “Chưa ghi nhận”, không tự coi là “không đau” |
+| Mức độ hồi phục | Chưa có mô hình được kiểm chứng | Không hiển thị phần trăm hồi phục hay khẳng định sẵn sàng tập |
+
+Việc một nhóm cơ được tập không chứng minh nhóm cơ đó đang đau. Cảm nhận đau/ê cũng không tự xác định nguyên nhân hoặc chấn thương. Theo dõi cảm nhận và lịch sử tập phải được trình bày riêng, không biến thời gian từ buổi tập thành kết luận y khoa.
+
+Không dùng hệ số tùy ý để quy đổi set cơ phụ thành mức tải sinh lý chính xác. Nếu tổng hợp số set theo cơ, phải nêu rõ đó là số set có cơ được gắn nhãn chính hoặc phụ; một set có thể liên quan nhiều nhóm cơ.
+
+### 16.4. Chức năng cốt lõi của giai đoạn mở rộng
+
+#### A. Nhật ký tập luyện
+
+- Kế thừa workout logger, rest timer, kết quả buổi trước và resume session đã xây ở giai đoạn nền tảng.
+- Bổ sung cảm nhận cuối buổi: nhẹ, vừa hoặc nặng; ghi chú tùy chọn.
+- Khi sửa/xóa log, cập nhật lại dữ liệu nhóm cơ và thống kê liên quan.
+- Không yêu cầu người dùng nhập lại thông tin bài, cơ hoặc thiết bị đã có trong workout.
+
+#### B. Body map tương tác
+
+- Hiển thị cơ thể mặt trước và mặt sau; hỗ trợ vùng trái/phải khi phù hợp.
+- Chạm vào vùng cơ thể để xem bài đã tập, số set liên quan, lần tập gần nhất và check-in.
+- Có hai chế độ riêng: **“Đã tập”** và **“Cảm nhận”**, với chú giải rõ ràng.
+- Chế độ “Đã tập” thể hiện hoạt động trong khoảng ngày người dùng chọn, không gắn màu với kết luận đau hay hồi phục.
+- Chế độ “Cảm nhận” chỉ thể hiện dữ liệu người dùng đã ghi; luôn hiển thị ngày check-in để tránh coi dữ liệu cũ là trạng thái hiện tại.
+- Cung cấp danh sách vùng cơ thể tương đương để sử dụng thuận tiện trên màn hình nhỏ hoặc khi không thao tác được trên hình.
+
+#### C. Check-in hằng ngày
+
+- Mục tiêu thao tác khoảng 20–30 giây.
+- Ghi mức năng lượng bằng các lựa chọn đơn giản.
+- Chọn vùng đang ê/khó chịu và mức cảm nhận: không ê, nhẹ, vừa hoặc nhiều.
+- Ghi chú tự do tùy chọn; không tự phân loại mọi cảm giác thành đau cơ sau tập.
+- Giấc ngủ và cân nặng là trường tùy chọn, không yêu cầu nhập đủ mỗi ngày.
+- Gợi ý các nhóm cơ vừa tập để giảm thao tác, đồng thời cho phép chọn vùng khác.
+- Cho phép chỉnh sửa/xóa check-in và phân biệt rõ ngày chưa ghi với ngày chủ động ghi “không ê”.
+
+#### D. Timeline và báo cáo
+
+- Liên kết buổi tập với các check-in theo thời gian; cho phép lọc theo vùng cơ thể hoặc khoảng ngày.
+- Xem một buổi tập cùng các cảm nhận sau đó, hoặc xem lịch sử riêng của một vùng.
+- Kế thừa biểu đồ tiến bộ theo bài; bổ sung tổng hợp set theo nhóm cơ với cách đếm minh bạch.
+- Hiển thị nhận xét mô tả từ dữ liệu, ví dụ: “Sau ba buổi tập chân gần nhất, bạn đều ghi nhận đùi ê nhiều vào ngày tiếp theo”.
+- Không kết luận quan hệ nhân quả hoặc hiệu quả tăng cơ chỉ từ các quan sát này.
+- Check-in và nhật ký cơ thể là dữ liệu cá nhân; không có luồng chia sẻ với người dùng khác trong giai đoạn này. Admin không mặc nhiên được đọc nội dung nhật ký cá nhân.
+
+### 16.5. Dữ liệu và tích hợp dự kiến
+
+Tái sử dụng `workout_sessions`, `session_exercise_logs`, taxonomy cơ và các API thống kê hiện có. Rà soát mapping cơ chính/cơ phụ trước khi dùng cho body map.
+
+Các nhóm dữ liệu cần thiết kế thêm khi bắt đầu giai đoạn này:
+
+| Nhóm dữ liệu | Nội dung chính |
+| --- | --- |
+| Body regions | Vùng hiển thị, vị trí trái/phải, mapping với taxonomy cơ |
+| Daily check-ins | Người dùng, ngày địa phương, thời điểm ghi, năng lượng, giấc ngủ/cân nặng tùy chọn |
+| Region observations | Check-in, vùng cơ thể, mức cảm nhận và ghi chú |
+| Session feedback | Cảm nhận sau buổi, liên kết workout session |
+
+Thời điểm lưu cần hỗ trợ múi giờ người dùng để workout và check-in xuất hiện đúng ngày. Thống kê phải cập nhật khi dữ liệu thay đổi; dữ liệu thiếu không được tự điền thành 0. Bảng và API cụ thể sẽ chốt ở bước thiết kế giai đoạn mở rộng, chưa đưa vào schema triển khai của giai đoạn nền tảng.
+
+### 16.6. Thứ tự thực hiện và kiểm chứng
+
+| Bước | Công việc | Điều kiện hoàn thành |
+| --- | --- | --- |
+| 1 | Prototype body map và check-in | Người thử hiểu khác biệt giữa “đã tập” và “cảm nhận”; ghi nhanh được trạng thái |
+| 2 | Xây check-in, body map và liên kết workout | Xem được dữ liệu thật, phân biệt thiếu dữ liệu và lịch sử cũ |
+| 3 | Timeline và báo cáo cá nhân | Xem lại được một vùng qua nhiều ngày; dữ liệu chỉ truy cập bởi chủ sở hữu |
+| 4 | Thử nghiệm sử dụng trong hai tuần | Đánh giá mức thuận tiện và quyết định có tiếp tục mở rộng hay cần đơn giản hóa |
+
+Các chỉ số đánh giá:
+
+- Thời gian và số thao tác để hoàn thành check-in.
+- Tỷ lệ ngày có check-in, có ghi nhận rõ ngày thiếu dữ liệu.
+- Khả năng tìm lại buổi tập gần nhất liên quan một nhóm cơ.
+- Mức độ hiểu đúng hai chế độ body map và các nhận xét trên timeline.
+- Người dùng có thấy nhật ký hỗ trợ việc nhìn lại quá trình tập hay không.
+- Kiểm tra tài khoản khác không đọc/sửa được check-in; quyền quản trị nội dung không cấp quyền xem nhật ký cá nhân.
+
+Đây là đánh giá khả năng sử dụng và chất lượng dữ liệu, không phải thử nghiệm xác nhận hiệu quả điều trị hoặc độ chính xác chẩn đoán.
+
+### 16.7. Chạy bộ và các phần mở rộng xa hơn
+
+Chạy bộ **chưa nằm trong phạm vi triển khai của giai đoạn nhật ký cơ thể đầu tiên**. Sau khi nhật ký gym và check-in ổn định, bổ sung chạy/đi bộ như một loại hoạt động trong cùng lịch sử:
+
+- Quãng đường, thời lượng, pace và sau đó là GPS route trên mobile.
+- Pause/resume, quyền vị trí, theo dõi khi khóa màn hình và kiểm thử sai số GPS.
+- Tái sử dụng check-in, body map và timeline; không tự suy ra vùng đang đau từ buổi chạy.
+- Giữ chỉ số tiến bộ riêng theo môn; không cộng kilomet và kilogram thành một điểm sức khỏe chung.
+- Thiết kế lớp hoạt động chung khi tích hợp đa môn, thay vì ép dữ liệu chạy vào bảng set/rep.
+
+Wearable, theo dõi giấc ngủ tự động, dinh dưỡng và mô hình ước tính hồi phục là các phần phát triển sau. AI tóm tắt nhật ký chỉ là tùy chọn, phải dẫn lại workout/check-in liên quan và không chẩn đoán hoặc tự thay đổi plan.
+
+Tham khảo giới hạn khi diễn đạt cảm nhận và hồi phục: [Cleveland Clinic — Delayed Onset Muscle Soreness](https://my.clevelandclinic.org/health/symptoms/delayed-onset-muscle-soreness).
