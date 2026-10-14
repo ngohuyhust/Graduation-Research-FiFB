@@ -81,6 +81,20 @@ describe("Nest auth HTTP contract", () => {
     expect(response.headers["set-cookie"]).toBeUndefined();
   });
 
+  test("versioned browser login, refresh and logout keep the correct cookie path", async () => {
+    const agent = request.agent(app);
+    const login = await agent
+      .post("/api/v1/auth/login")
+      .send({ email: user.email, password: "password123" })
+      .expect(200);
+    expect(login.headers["set-cookie"][0]).toContain("Path=/api/v1/auth;");
+    await agent.post("/api/v1/auth/refresh").expect(200);
+    expect(service.refresh).toHaveBeenCalledWith("refresh-value", expect.any(Object));
+    const logout = await agent.post("/api/v1/auth/logout").expect(204);
+    expect(service.logout).toHaveBeenCalledWith("refresh-value");
+    expect(logout.headers["set-cookie"][0]).toContain("Path=/api/v1/auth;");
+  });
+
   test.each([
     ["register", { ...registration, role: "admin" }],
     ["register", { ...registration, phone: "" }],
@@ -260,16 +274,12 @@ describe("Nest auth HTTP contract", () => {
     const paths = ["register", "login", "request-password-reset", "reset-password", "verify-email"];
     for (let i = 0; i < 20; i++) {
       await request(app)
-        .post(`/api/auth/${paths[i % paths.length]}`)
+        .post(`${i % 2 ? "/api/v1" : "/api"}/auth/${paths[i % paths.length]}`)
         .send({})
         .expect(400);
     }
-    for (const path of paths) {
-      const response = await request(app)
-        .post(`/api/auth/${path}`)
-        .set("X-Request-Id", "auth-limit")
-        .send({})
-        .expect(429);
+    for (const path of [...paths.map((path) => `/api/auth/${path}`), ...paths.map((path) => `/api/v1/auth/${path}`)]) {
+      const response = await request(app).post(path).set("X-Request-Id", "auth-limit").send({}).expect(429);
       expect(response.body).toEqual({
         success: false,
         error: { code: "RATE_LIMITED", message: "Too many auth attempts. Try again later.", details: null },

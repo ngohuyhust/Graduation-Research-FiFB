@@ -21,12 +21,12 @@ function parseCookieHeader(header = "") {
   }, {});
 }
 
-function refreshCookieOptions(expiresAt?: Date | string) {
+function refreshCookieOptions(res: Response, expiresAt?: Date | string) {
   const options: CookieOptions = {
     httpOnly: true,
     secure: env.nodeEnv === "production",
     sameSite: env.refreshCookieSameSite,
-    path: REFRESH_COOKIE_PATH,
+    path: res.req.originalUrl.startsWith("/api/v1/") ? "/api/v1/auth" : REFRESH_COOKIE_PATH,
   };
 
   if (expiresAt) {
@@ -43,9 +43,9 @@ export function getRefreshTokenCookie(req: Request) {
 }
 
 export function setRefreshTokenCookie(res: Response, refreshToken: string, expiresAt: Date | string) {
-  res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(expiresAt));
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions(res, expiresAt));
 }
 
 export function clearRefreshTokenCookie(res: Response) {
-  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(new Date(0)));
+  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions(res));
 }

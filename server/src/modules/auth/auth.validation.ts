@@ -12,7 +12,7 @@ export const registerSchema = z.object({
   phone: z.string().trim().min(1).max(40),
   role: z.enum(["user", "trainer"]).default("user"),
   fitnessGoal: fitnessGoal.optional(),
-  gender,
+  gender: gender.optional(),
   weight: z.number().positive().max(500).optional(),
   height: z.number().positive().max(300).optional(),
   experienceLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),

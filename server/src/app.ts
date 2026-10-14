@@ -1,6 +1,8 @@
 // Nest owns all API routes; Express supplies the HTTP adapter and shared middleware.
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import { VERSION_NEUTRAL, VersioningType } from "@nestjs/common";
+import { setupOpenApi } from "./common/openapi";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
@@ -49,7 +51,9 @@ export async function createApp() {
     abortOnError: false,
   });
   nest.setGlobalPrefix("api");
+  nest.enableVersioning({ type: VersioningType.URI, defaultVersion: [VERSION_NEUTRAL, "1"] });
   nest.useGlobalFilters(new ApiExceptionFilter());
+  setupOpenApi(nest);
   await nest.init();
   app.locals.nest = nest;
   return app;

@@ -1,4 +1,16 @@
 services:
+  flyway:
+    image: redgate/flyway:13.10.0
+    env_file:
+      - ./server/flyway/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./server/flyway/flyway.conf:/flyway/conf/flyway.conf:ro
+      - ./server/flyway/sql:/flyway/sql:ro
+    command: ["migrate"]
+    restart: "no"
+
   api:
     build:
       context: ./server
@@ -11,7 +23,10 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      - redis
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     command: node dist/server.js
 
   client:

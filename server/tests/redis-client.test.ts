@@ -70,6 +70,31 @@ describe("Redis adapters and cache invalidation", () => {
     expect(tcp.quit).toHaveBeenCalledTimes(1);
   });
 
+  test("concurrent callers share a single pending TCP connection", async () => {
+    env.redisUrl = "redis://localhost:6379";
+    let resolveConnect;
+    const tcp = {
+      on: jest.fn(),
+      connect: jest.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveConnect = resolve;
+          }),
+      ),
+      quit: jest.fn(),
+      isOpen: true,
+    };
+    createClient.mockReturnValue(tcp);
+    const first = getRedisClient();
+    const second = getRedisClient();
+    expect(createClient).toHaveBeenCalledTimes(1);
+    resolveConnect();
+    const [one, two] = await Promise.all([first, second]);
+    expect(one).toBe(two);
+    await closeRedis();
+    expect(tcp.quit).toHaveBeenCalledTimes(1);
+  });
+
   test("Upstash adapter maps options and cache scan deletion", async () => {
     env.upstashRedisUrl = "https://example.com";
     env.upstashRedisToken = "token";

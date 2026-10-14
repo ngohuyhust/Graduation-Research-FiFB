@@ -5,7 +5,6 @@ import type { Actor } from "../../common/auth.guard";
 import type { ExercisePayload, ExerciseUpdate, ExerciseQuery } from "./exercises.validation";
 import type { ExerciseRow } from "./exercises.types";
 
-
 export function pageOffset({ page, limit }: ExerciseQuery) {
   return (page - 1) * limit;
 }
@@ -51,7 +50,15 @@ export function camelExercise(row: ExerciseRow | null | undefined) {
   };
 }
 
-export function addTaxonomyFilter(values: unknown[], clauses: string[], filters: ExerciseQuery, table: string, nameColumn: { table: string; fk: string }, alias: keyof ExerciseQuery, role?: string) {
+export function addTaxonomyFilter(
+  values: unknown[],
+  clauses: string[],
+  filters: ExerciseQuery,
+  table: string,
+  nameColumn: { table: string; fk: string },
+  alias: keyof ExerciseQuery,
+  role?: string,
+) {
   values.push(`%${filters[alias]}%`);
   let sql = `EXISTS (SELECT 1 FROM ${table} x JOIN ${nameColumn.table} n ON n.id = x.${nameColumn.fk} WHERE x.exercise_id = e.id AND n.name ILIKE $${values.length})`;
   if (role) sql += ` AND x.muscle_role = '${role}'`;
@@ -111,7 +118,10 @@ export class ExercisesRepository {
       );
 
     const where = clauses.join(" AND ");
-    const count = await this.db.query<{ total: number }>(`SELECT count(*)::int AS total FROM exercises e WHERE ${where}`, values);
+    const count = await this.db.query<{ total: number }>(
+      `SELECT count(*)::int AS total FROM exercises e WHERE ${where}`,
+      values,
+    );
     const result = await this.db.query<ExerciseRow>(
       `SELECT ${exerciseLibrarySelect("e")}
        FROM exercises e
@@ -136,7 +146,9 @@ export class ExercisesRepository {
   }
 
   async ensureActive(client: QueryExecutor, id: string) {
-    const result = await client.query<{ id: string }>("SELECT id FROM exercises WHERE id = $1 AND status = 'active'", [id]);
+    const result = await client.query<{ id: string }>("SELECT id FROM exercises WHERE id = $1 AND status = 'active'", [
+      id,
+    ]);
     return Boolean(result.rows[0]);
   }
 

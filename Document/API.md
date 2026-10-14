@@ -2,15 +2,29 @@
 
 ## Overview
 
-Base URL: `/api`
+Base URL for Flutter: `/api/v1`. Legacy `/api` remains available for React during the transition.
+
+Swagger UI: `/api/docs`. Machine-readable OpenAPI: `/api/openapi.json`.
+The paths below use the legacy prefix; replace `/api` with `/api/v1` for version 1.
+Both prefixes share validation, access control, envelopes and authentication rate limits.
+Unknown versions return 404. OpenAPI request schemas come from runtime Zod validators;
+endpoint-specific response data schemas remain untyped.
 
 The backend is the authority for authentication, authorization, validation, business rules, notifications, audit logs, and database writes. The future frontend must call these APIs only. Protected APIs derive identity from the access token and never trust frontend-sent `user_id`.
 
-The API matches the existing Supabase schema from `Document/DatabaseSQL.txt`. It does not require token tables, `email_deliveries`, or exercise library views.
+Flyway migrations in `server/flyway/sql` define the executable schema. `Document/DatabaseSQL-v2.txt`
+is a reference snapshot. V2 makes gender, height and weight optional without fabricating values
+when omitted, while preserving existing measurements. It does not require token tables,
+`email_deliveries`, or exercise library views.
 
 ## Auth And Tokens
 
 Custom backend auth issues JWT access tokens and opaque refresh tokens.
+
+Browser refresh tokens use the HTTP-only `fifb_refresh_token` cookie, scoped to `/api/auth`
+for legacy login or `/api/v1/auth` for version 1. Refresh reads the cookie and rotates it;
+logout revokes the session and clears the cookie at the matching path. The response JSON
+contains the access token, not the refresh token. Native device sessions are a later phase.
 
 - `app_users.password_hash` stores bcrypt password hashes.
 - Refresh/session/reset token hashes and email verification OTP hashes are stored in Redis when enabled.

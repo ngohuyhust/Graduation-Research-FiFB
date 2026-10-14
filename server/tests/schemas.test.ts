@@ -5,6 +5,16 @@ const reviewsValidation = require("../src/modules/reviews/reviews.validation");
 const workoutPlansValidation = require("../src/modules/workoutPlans/workoutPlans.validation");
 
 describe("request schemas", () => {
+  test("register preserves missing body measurements as unknown", () => {
+    const parsed = authSchemas.registerSchema.parse({
+      email: "demo@example.com",
+      password: "password123",
+      phone: "0900000000",
+    });
+    expect(parsed.gender).toBeUndefined();
+    expect(parsed.height).toBeUndefined();
+    expect(parsed.weight).toBeUndefined();
+  });
   test("register requires a strong enough password", () => {
     const parsed = authSchemas.registerSchema.safeParse({
       email: "demo@example.com",

@@ -24,10 +24,7 @@ describe("database schema alignment", () => {
   });
 
   test("documented v2 schema includes the runtime tables and indexes", () => {
-    const schema = fs.readFileSync(
-      path.join(__dirname, "..", "..", "Document", "DatabaseSQL-v2.txt"),
-      "utf8",
-    );
+    const schema = fs.readFileSync(path.join(__dirname, "..", "..", "Document", "DatabaseSQL-v2.txt"), "utf8");
 
     for (const table of ["workout_sessions", "session_exercise_logs", "chat_messages"]) {
       expect(schema).toMatch(new RegExp(`CREATE TABLE public\\.${table}\\s*\\(`));

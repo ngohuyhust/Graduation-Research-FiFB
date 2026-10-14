@@ -25,6 +25,7 @@ export interface RedisClient {
 }
 let redisClient: RedisClient | null = null;
 let tcpClient: ReturnType<typeof createClient> | null = null;
+let connecting: Promise<RedisClient> | null = null;
 
 function normalizeSetOptions(options: RedisSetOptions = {}) {
   const normalized: { ex?: number; px?: number; nx?: true; xx?: true } = {};
@@ -83,6 +84,7 @@ function createTcpAdapter(client: ReturnType<typeof createClient>): RedisClient 
 export async function getRedisClient(): Promise<RedisClient | null> {
   if (env.redisDisabled) return null;
   if (redisClient) return redisClient;
+  if (connecting) return connecting;
 
   if (env.upstashRedisUrl && env.upstashRedisToken) {
     redisClient = createUpstashAdapter(new Redis({ url: env.upstashRedisUrl, token: env.upstashRedisToken }));
@@ -90,16 +92,29 @@ export async function getRedisClient(): Promise<RedisClient | null> {
   }
 
   if (!env.redisUrl) return null;
-  tcpClient = createClient({ url: env.redisUrl });
-  tcpClient.on("error", (error) => {
+  const client = createClient({ url: env.redisUrl });
+  tcpClient = client;
+  client.on("error", (error) => {
     logger.error("Redis error", { error });
   });
-  await tcpClient.connect();
-  redisClient = createTcpAdapter(tcpClient);
-  return redisClient;
+  connecting = (async () => {
+    try {
+      await client.connect();
+      redisClient = createTcpAdapter(client);
+      return redisClient;
+    } catch (error) {
+      if (client.isOpen) await client.disconnect();
+      tcpClient = null;
+      throw error;
+    } finally {
+      connecting = null;
+    }
+  })();
+  return connecting;
 }
 
 export async function closeRedis() {
+  if (connecting) await connecting.catch(() => undefined);
   if (tcpClient?.isOpen) await tcpClient.quit();
   tcpClient = null;
   redisClient = null;

@@ -7,7 +7,7 @@ export const uuidParamSchema = z.object({ id: z.string().uuid() });
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private readonly schema: ZodTypeAny) {}
+  constructor(readonly schema: ZodTypeAny) {}
 
   transform(value: unknown) {
     try {

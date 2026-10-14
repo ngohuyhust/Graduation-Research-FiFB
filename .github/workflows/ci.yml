@@ -7,6 +7,82 @@ on:
     branches: [main, develop]
 
 jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: fifb_migrations
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fifb_migrations"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure the disposable database
+        run: |
+          cp server/.env.example server/.env
+          printf '%s\n' 'FLYWAY_URL=jdbc:postgresql://host.docker.internal:5432/fifb_migrations?sslmode=disable' 'FLYWAY_USER=postgres' 'FLYWAY_PASSWORD=postgres' > server/flyway/.env
+          docker exec ${{ job.services.postgres.id }} psql -U postgres -d fifb_migrations -v ON_ERROR_STOP=1 -c "CREATE EXTENSION citext; CREATE EXTENSION pg_trgm; CREATE TABLE public.keep_data (id integer PRIMARY KEY); INSERT INTO public.keep_data VALUES (1)"
+      - name: Migrate and validate the test schema
+        run: |
+          docker compose run --rm -e FLYWAY_SCHEMAS=fifb_test -e FLYWAY_DEFAULT_SCHEMA=fifb_test flyway migrate
+          docker compose run --rm -e FLYWAY_SCHEMAS=fifb_test -e FLYWAY_DEFAULT_SCHEMA=fifb_test flyway validate
+          docker compose run --rm -e FLYWAY_SCHEMAS=fifb_test -e FLYWAY_DEFAULT_SCHEMA=fifb_test flyway migrate
+          test "$(docker exec ${{ job.services.postgres.id }} psql -U postgres -d fifb_migrations -Atc "SELECT count(*) FROM fifb_test.flyway_schema_history WHERE version = '1' AND success")" = 1
+          test "$(docker exec ${{ job.services.postgres.id }} psql -U postgres -d fifb_migrations -Atc "SELECT count(*) FROM fifb_test.flyway_schema_history WHERE version = '2' AND success")" = 1
+          test "$(docker exec ${{ job.services.postgres.id }} psql -U postgres -d fifb_migrations -Atc 'SELECT count(*) FROM public.keep_data WHERE id = 1')" = 1
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: fifb_integration
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fifb_integration"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FIFB_INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/fifb_integration
+      FIFB_INTEGRATION_REDIS_URL: redis://127.0.0.1:6379/15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - name: Migrate an empty public schema, validate, and repeat
+        run: |
+          for action in migrate validate migrate; do
+            docker run --rm --network host \
+              -v "$PWD/server/flyway/sql:/flyway/sql:ro" \
+              -v "$PWD/server/flyway/flyway.conf:/flyway/conf/flyway.conf:ro" \
+              -e FLYWAY_URL=jdbc:postgresql://127.0.0.1:5432/fifb_integration \
+              -e FLYWAY_USER=postgres -e FLYWAY_PASSWORD=postgres \
+              redgate/flyway:13.10.0 "$action"
+          done
+      - run: npm run test:integration
+        working-directory: server
+
   server:
     runs-on: ubuntu-latest
     defaults:
@@ -21,6 +97,8 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
       - run: npm run build
       - run: npm test
 
@@ -41,18 +119,22 @@ jobs:
       - run: npm run build
 
   notify:
-    if: always() && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != ''
-    needs: [server, client]
+    if: always()
+    needs: [server, client, migrations, integration]
     runs-on: ubuntu-latest
+    env:
+      BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - name: Notify Telegram
+        if: env.BOT_TOKEN != '' && env.CHAT_ID != ''
         env:
-          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SERVER_RESULT: ${{ needs.server.result }}
           CLIENT_RESULT: ${{ needs.client.result }}
+          MIGRATIONS_RESULT: ${{ needs.migrations.result }}
+          INTEGRATION_RESULT: ${{ needs.integration.result }}
         run: |
           curl --fail --silent --show-error \
             --data-urlencode "chat_id=${CHAT_ID}" \
-            --data-urlencode "text=FiFB CI: server=${SERVER_RESULT}, client=${CLIENT_RESULT}, commit=${GITHUB_SHA}" \
+            --data-urlencode "text=FiFB CI: server=${SERVER_RESULT}, client=${CLIENT_RESULT}, migrations=${MIGRATIONS_RESULT}, integration=${INTEGRATION_RESULT}, commit=${GITHUB_SHA}" \
             "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"

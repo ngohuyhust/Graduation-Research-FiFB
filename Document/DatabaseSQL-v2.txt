@@ -1,6 +1,6 @@
 -- Reference snapshot of the base schema plus the runtime v2 migrations.
 -- WARNING: This schema is for context only and is not meant to be run directly.
--- Use server/scripts/migrate-v2.js and server/scripts/migrate-indexes.js to apply v2 changes.
+-- Executable schema migrations live in server/flyway/sql; see README.md for Flyway setup.
 
 CREATE TABLE public.app_users (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -19,9 +19,9 @@ CREATE TABLE public.app_users (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   deleted_at timestamp with time zone,
-  gender character varying NOT NULL DEFAULT 'male'::character varying CHECK (gender::text = ANY (ARRAY['male'::character varying, 'female'::character varying]::text[])),
-  height real NOT NULL DEFAULT '170'::real CHECK (height > 0::double precision),
-  weight real NOT NULL DEFAULT '50'::real CHECK (weight > 0::double precision),
+  gender character varying CHECK (gender::text = ANY (ARRAY['male'::character varying, 'female'::character varying]::text[])),
+  height real CHECK (height > 0::double precision),
+  weight real CHECK (weight > 0::double precision),
   CONSTRAINT app_users_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.trainer_profiles (

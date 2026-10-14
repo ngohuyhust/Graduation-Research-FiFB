@@ -55,6 +55,23 @@ and cache interceptors preserve existing URLs, permissions, status codes and res
 Database transactions use the injected `DatabaseService`. Auth storage still uses Redis with the
 existing non-production memory fallback; email-delivery history remains process-local.
 
+### Phase 1: backend foundation (weeks 1–2)
+
+Flutter clients use `/api/v1`. Existing `/api` routes continue to serve the React client during
+the transition. Both use the same controllers, validation, permissions, response envelopes,
+and shared authentication rate limit. Unsupported versions return the standard 404 envelope.
+
+- Swagger UI: `http://localhost:4000/api/docs`
+- OpenAPI JSON: `http://localhost:4000/api/openapi.json`
+- Versioned health: `http://localhost:4000/api/v1/health`
+
+OpenAPI derives request bodies, query filters, defaults and path parameters from the existing
+Zod validators. It documents bearer authentication, refresh cookies, roles and response envelopes.
+Endpoint-specific response `data` is still described by the existing API contract rather than
+fully typed OpenAPI schemas. Field names retain the current contract during the migration.
+Browser refresh cookies are scoped to `/api/auth` or `/api/v1/auth` according to the login route.
+Flutter device sessions and secure token storage are subsequent authentication work.
+
 Backend source, CLI scripts, Jest tests and tooling configuration are TypeScript. `npm run build`
 produces `server/dist/server.js` and compiled commands under `server/dist/scripts/`;
 `npm run typecheck` checks application and tests. The client continues to use React.
@@ -71,7 +88,7 @@ controller -> service -> repository -> PostgreSQL
 
 ## Local Setup
 
-Requirements: Node.js 20+, PostgreSQL, and optionally Redis.
+Requirements: Node.js 20+, PostgreSQL, Docker (for Flyway), and optionally Redis.
 
 ```powershell
 cd server
@@ -93,16 +110,68 @@ Edit `server/.env`:
 - Redis or Upstash values if `REDIS_DISABLED=false`
 
 PowerShell blocks `npm.ps1` on this machine, so use `npm.cmd`.
-The existing base schema is documented in `Document/DatabaseSQL.txt`.
 
-Apply the non-AI v2 additions:
+### Database migrations (Flyway)
 
-```powershell
-cd server
-npm.cmd run migrate:v2 -- --dry-run
-npm.cmd run migrate:v2
-npm.cmd run migrate:indexes
-```
+Docker Compose runs the official Flyway image directly. All current tables, constraints and
+indexes are in one migration: server/flyway/sql/V1__initial_schema.sql.
+V2 (`V2__optional_body_measurements.sql`) makes gender, height and weight nullable and removes
+their defaults. Registration may omit these fields. Existing values are preserved, because
+historical defaults cannot reliably be distinguished from values the user entered.
+The target is public, configured in server/flyway/flyway.conf. The existing cloud schema
+has been adopted at baseline V1 after filling its missing V1 tables and indexes.
+
+Copy server/flyway/.env.example to server/flyway/.env and fill in the native Flyway settings:
+
+~~~dotenv
+FLYWAY_URL=jdbc:postgresql://HOST:5432/postgres?sslmode=require
+FLYWAY_USER=postgres.PROJECT_REF
+FLYWAY_PASSWORD='YOUR_DATABASE_PASSWORD'
+~~~
+
+For Supabase, use the Session pooler connection from the Connect panel (port 5432).
+The password is literal, not URL-encoded, because it is a separate setting. Keep this file local;
+Git ignores it. The API continues to use server/.env; migration credentials are separate.
+
+From the repository root, start Flyway:
+
+~~~powershell
+docker compose up flyway
+~~~
+
+The container checks public.flyway_schema_history and applies pending migrations, then exits
+with code 0. V1 is already baselined on the existing cloud database, so its CREATE statements
+are skipped. A new empty schema executes V1 normally. A successful migration container is
+expected to stop; it is not a web service. No npm build or custom migration scripts are needed.
+
+~~~powershell
+docker compose run --rm flyway info
+docker compose run --rm flyway validate
+~~~
+
+All application objects and foreign keys are created in the selected schema. To run against
+the existing isolated test schema instead of public, override both schema settings:
+
+~~~powershell
+docker compose run --rm flyway -schemas=fifb_test -defaultSchema=fifb_test migrate
+~~~
+
+The test schema reuses existing citext and pg_trgm extensions and stops if they are missing;
+it does not install or move shared extensions. The API reads public.
+
+For another existing database, first compare its schema with V1 and fill any missing objects,
+then adopt it with a one-time baseline. This records version 1 without executing the CREATE statements:
+
+~~~powershell
+docker compose run --rm flyway -schemas=public -defaultSchema=public baseline
+~~~
+
+Do not baseline an empty schema. Automatic baseline and clean are disabled.
+
+For future changes, add V2__description.sql, then V3__description.sql, and run
+docker compose up flyway. Use the same default-schema placeholder as V1 for all objects.
+Leave applied migrations unchanged. Flyway validates checksums, not live structural drift.
+Document/DatabaseSQL-v2.txt is a reference snapshot; V1 is the executable initial schema.
 
 Run both applications:
 
@@ -120,6 +189,7 @@ npm.cmd run dev
 - Docker Compose frontend: `http://localhost:3000`
 - Backend API: `http://localhost:4000/api` by default, or the port configured by `server/.env` `PORT`
 - Health: `http://localhost:4000/api/health`
+- Flutter REST API: `http://localhost:4000/api/v1`
 
 ## New API Endpoints
 
@@ -149,11 +219,15 @@ All existing API response formats remain unchanged.
 
 ## Docker
 
-```powershell
+~~~powershell
 docker compose up --build
-```
+~~~
 
-This starts the API, Vite client, and Redis. Build the production API image independently with:
+This starts Flyway, Redis, the API and Vite. The API waits for Flyway to finish successfully.
+To run only migrations, use docker compose up flyway. Flyway uses the schema configured in
+server/flyway/flyway.conf; the default public target is the same schema used by the API.
+
+Build the production API image independently with:
 
 ```powershell
 docker build -t fifb-api .\server
@@ -165,6 +239,7 @@ docker run --env-file .\server\.env -p 4000:4000 fifb-api
 ```powershell
 cd server
 npm.cmd run lint
+npm.cmd run typecheck
 npm.cmd run build
 npm.cmd test
 npm.cmd run format:check
@@ -179,6 +254,27 @@ For production, run `npm run build` then `npm start` in `server/`. `npm run dev`
 with automatic restarts. Docker builds the compiled backend; rebuild with `docker compose up --build`
 after source changes. Existing database/import scripts continue to run directly with Node.
 
-GitHub Actions runs server lint/build/tests and client lint/build. The Render Blueprint deploys the
+GitHub Actions runs server lint/build/tests, client lint/build, and the same Flyway container against an isolated PostgreSQL service to check V1 and repeated migrations. The Render Blueprint deploys the
 `main` branch automatically after those checks pass. Telegram notifications optionally use
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+
+Backend unit/HTTP tests override service settings before loading `.env`, so they do not connect
+to developer Redis, PostgreSQL or SendGrid. Formatting accepts native Windows and Unix line endings.
+CI also checks formatting and TypeScript types, verifies V1/V2 in an isolated schema, and runs
+the integration suite against an empty public schema with PostgreSQL and Redis.
+
+To run integration tests locally, provision disposable PostgreSQL and Redis services and migrate
+the **local database named `fifb_integration`** with Flyway first. Use separate Flyway credentials;
+do not reuse the production migration settings. Then:
+
+```powershell
+cd server
+$env:FIFB_INTEGRATION_DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/fifb_integration'
+$env:FIFB_INTEGRATION_REDIS_URL = 'redis://127.0.0.1:6379/15'
+npm.cmd run test:integration
+```
+
+The suite refuses remote services and other database names, creates its own uniquely identified
+fixtures, and deletes only those fixtures. It verifies migration versions, nullable measurements,
+constraints, rollback, Redis session expiry/revocation, and authenticated workout logging,
+ownership and volume statistics. It runs separately from `npm test` and requires live services.
