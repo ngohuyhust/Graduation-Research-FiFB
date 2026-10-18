@@ -30,6 +30,7 @@ The application code lives in:
 ```text
 server/
 client/
+mobile/  # Flutter app for Android, iOS and Web
 ```
 
 All business modules use NestJS 11 and TypeScript, including their repositories, validation schemas,
@@ -70,7 +71,20 @@ Zod validators. It documents bearer authentication, refresh cookies, roles and r
 Endpoint-specific response `data` is still described by the existing API contract rather than
 fully typed OpenAPI schemas. Field names retain the current contract during the migration.
 Browser refresh cookies are scoped to `/api/auth` or `/api/v1/auth` according to the login route.
-Flutter device sessions and secure token storage are subsequent authentication work.
+Flutter native authentication uses `/api/v1/auth/mobile` with OS secure refresh-token
+storage. Device management and per-device revocation UI remain follow-up work.
+
+### Phase 2: Flutter foundation (weeks 3–4)
+
+`mobile/` contains the Flutter app with registration, email verification, login,
+password reset, session restoration and separate User/Admin navigation. Navigation
+uses a bottom bar on phones and a rail/sidebar on larger screens. Account details
+and logout work; subsequent exercise/workout/Admin modules show coming-soon states.
+
+See [Flutter setup and checks](mobile/README.md). Flutter Web runs on port 5174;
+add that origin to the backend CORS settings. Native apps use secure token storage,
+while Web uses the existing HTTP-only cookie flow. CI checks Flutter analysis,
+tests, Web build and debug APK build.
 
 Backend source, CLI scripts, Jest tests and tooling configuration are TypeScript. `npm run build`
 produces `server/dist/server.js` and compiled commands under `server/dist/scripts/`;

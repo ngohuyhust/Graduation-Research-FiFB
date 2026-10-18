@@ -1,3 +1,9 @@
+## Báo cáo ngày 18/10/2026
+
+- Xây dựng nền tảng Flutter cho Android, iOS và Web, có điều hướng User/Admin và bố cục responsive
+- Thêm đăng ký, xác minh email, đăng nhập, đặt lại mật khẩu, khôi phục phiên và đăng xuất
+- Bổ sung API xác thực mobile, lưu refresh token an toàn trên thiết bị và kiểm thử Flutter trong CI
+
 ## Báo cáo ngày 14/10/2026
 
 - Tích hợp Flyway vào Docker Compose để tự động quản lý phiên bản cơ sở dữ liệu

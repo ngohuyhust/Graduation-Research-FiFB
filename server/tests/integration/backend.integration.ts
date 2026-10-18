@@ -8,6 +8,7 @@ import { closeRedis, getRedisClient } from "../../src/redis/client";
 import { AuthRepository } from "../../src/modules/auth/auth.repository";
 import { DatabaseService } from "../../src/db/database.service";
 import { JwtService } from "../../src/modules/auth/jwt.service";
+import { hash as hashPassword } from "bcryptjs";
 
 describe("migrated PostgreSQL and Redis backend", () => {
   const userId = randomUUID();
@@ -25,8 +26,14 @@ describe("migrated PostgreSQL and Redis backend", () => {
     );
     expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2"]);
     await pool.query(
-      "INSERT INTO app_users (id, email, password_hash, email_verified_at) VALUES ($1, $2, 'test-hash', now()), ($3, $4, 'test-hash', now())",
-      [userId, `${userId}@example.com`, otherId, `${otherId}@example.com`],
+      "INSERT INTO app_users (id, email, password_hash, email_verified_at) VALUES ($1, $2, $5, now()), ($3, $4, $5, now())",
+      [
+        userId,
+        `${userId}@example.com`,
+        otherId,
+        `${otherId}@example.com`,
+        await hashPassword("integration-password", 8),
+      ],
     );
     await pool.query("INSERT INTO exercises (id, name) VALUES ($1, 'Integration exercise')", [exerciseId]);
     app = await createApp();
@@ -58,6 +65,30 @@ describe("migrated PostgreSQL and Redis backend", () => {
     await expect(pool.query("UPDATE app_users SET weight = -1 WHERE id = $1", [userId])).rejects.toMatchObject({
       code: "23514",
     });
+  });
+
+  test("native login rotates and revokes real Redis sessions", async () => {
+    const login = await request(app)
+      .post("/api/v1/auth/mobile/login")
+      .send({ email: `${userId}@example.com`, password: "integration-password" })
+      .expect(200);
+    const original = login.body.data.refreshToken;
+    const refresh = await request(app).post("/api/v1/auth/mobile/refresh").send({ refreshToken: original }).expect(200);
+    expect(refresh.body.data.refreshToken).not.toBe(original);
+    await request(app).post("/api/v1/auth/mobile/refresh").send({ refreshToken: original }).expect(401);
+    const me = await request(app)
+      .get("/api/v1/auth/me")
+      .auth(refresh.body.data.accessToken, { type: "bearer" })
+      .expect(200);
+    expect(me.body.data.user.id).toBe(userId);
+    await request(app)
+      .post("/api/v1/auth/mobile/logout")
+      .send({ refreshToken: refresh.body.data.refreshToken })
+      .expect(204);
+    await request(app)
+      .post("/api/v1/auth/mobile/refresh")
+      .send({ refreshToken: refresh.body.data.refreshToken })
+      .expect(401);
   });
 
   test("transactions roll back real writes", async () => {

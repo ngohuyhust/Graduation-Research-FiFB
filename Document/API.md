@@ -24,7 +24,21 @@ Custom backend auth issues JWT access tokens and opaque refresh tokens.
 Browser refresh tokens use the HTTP-only `fifb_refresh_token` cookie, scoped to `/api/auth`
 for legacy login or `/api/v1/auth` for version 1. Refresh reads the cookie and rotates it;
 logout revokes the session and clears the cookie at the matching path. The response JSON
-contains the access token, not the refresh token. Native device sessions are a later phase.
+contains the access token, not the refresh token.
+
+Native Flutter clients use these version-1-only endpoints (no browser cookies):
+
+- `POST /api/v1/auth/mobile/login`: `{ email, password }`; returns
+  `{ accessToken, refreshToken, expiresAt }` in the success envelope.
+- `POST /api/v1/auth/mobile/refresh`: `{ refreshToken }`; rotates the refresh token
+  and returns the new token pair. `expiresAt` is the refresh-session expiry.
+- `POST /api/v1/auth/mobile/logout`: `{ refreshToken }`; revokes that session and returns 204.
+
+Token responses include `Cache-Control: no-store`. Mobile login shares the existing
+authentication rate limit. Native clients store only refresh tokens in OS secure
+storage and use access tokens in the Authorization header. Registration, verification,
+password reset and `/auth/me` are shared with Web. Device listing and per-device
+management are follow-up work.
 
 - `app_users.password_hash` stores bcrypt password hashes.
 - Refresh/session/reset token hashes and email verification OTP hashes are stored in Redis when enabled.

@@ -24,6 +24,8 @@ export const loginSchema = z.object({
 });
 
 export const refreshSchema = z.object({});
+export const mobileRefreshSchema = z.object({ refreshToken: z.string().min(20).max(512) }).strict();
+export type MobileRefreshPayload = z.infer<typeof mobileRefreshSchema>;
 export const logoutSchema = refreshSchema;
 export const verifyEmailSchema = z.object({
   email: z.string().trim().email().max(320),

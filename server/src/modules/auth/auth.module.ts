@@ -3,6 +3,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/c
 import type { RouteInfo } from "@nestjs/common/interfaces";
 import { HttpModule } from "../../common/http.module";
 import { AuthController } from "./auth.controller";
+import { MobileAuthController } from "./mobile-auth.controller";
 import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repository";
 import { DatabaseModule } from "../../db/database.module";
@@ -12,7 +13,7 @@ const { authRateLimiter } = require("../../middlewares/rateLimiters");
 
 @Module({
   imports: [DatabaseModule, AuthTokensModule, EmailDeliveriesModule, HttpModule, UsersPersistenceModule],
-  controllers: [AuthController],
+  controllers: [AuthController, MobileAuthController],
   providers: [AuthService, AuthRepository],
   exports: [AuthService, AuthRepository],
 })
@@ -20,6 +21,7 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Preserve the same shared limiter and run it before request validation.
     consumer.apply(authRateLimiter).forRoutes(
+      { path: "auth/mobile/login", method: RequestMethod.POST, version: "1" },
       ...["register", "login", "request-password-reset", "reset-password", "verify-email"].flatMap<RouteInfo>(
         (path) => [
           { path: `auth/${path}`, method: RequestMethod.POST },

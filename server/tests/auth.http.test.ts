@@ -81,6 +81,34 @@ describe("Nest auth HTTP contract", () => {
     expect(response.headers["set-cookie"]).toBeUndefined();
   });
 
+  test("native login returns tokens without issuing a browser cookie", async () => {
+    const response = await request(app)
+      .post("/api/v1/auth/mobile/login")
+      .send({ email: user.email, password: "password123" })
+      .expect(200);
+    expect(response.body.data).toMatchObject({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(response.headers["cache-control"]).toBe("no-store");
+    await request(app).post("/api/auth/mobile/login").send({ email: user.email, password: "password123" }).expect(404);
+  });
+
+  test("native refresh and logout require a body token and ignore browser cookies", async () => {
+    const refreshToken = "native-refresh-token-at-least-20-characters";
+    await request(app)
+      .post("/api/v1/auth/mobile/refresh")
+      .set("Cookie", `${cookieName}=cookie-token`)
+      .send({})
+      .expect(400);
+    expect(service.refresh).not.toHaveBeenCalled();
+    const refreshed = await request(app).post("/api/v1/auth/mobile/refresh").send({ refreshToken }).expect(200);
+    expect(service.refresh).toHaveBeenCalledWith(refreshToken, expect.any(Object));
+    expect(refreshed.body.data.refreshToken).toBe(tokens.refreshToken);
+    expect(refreshed.headers["cache-control"]).toBe("no-store");
+    expect(refreshed.headers["set-cookie"]).toBeUndefined();
+    await request(app).post("/api/v1/auth/mobile/logout").send({ refreshToken }).expect(204);
+    expect(service.logout).toHaveBeenCalledWith(refreshToken);
+  });
+
   test("versioned browser login, refresh and logout keep the correct cookie path", async () => {
     const agent = request.agent(app);
     const login = await agent
@@ -278,7 +306,11 @@ describe("Nest auth HTTP contract", () => {
         .send({})
         .expect(400);
     }
-    for (const path of [...paths.map((path) => `/api/auth/${path}`), ...paths.map((path) => `/api/v1/auth/${path}`)]) {
+    for (const path of [
+      ...paths.map((path) => `/api/auth/${path}`),
+      ...paths.map((path) => `/api/v1/auth/${path}`),
+      "/api/v1/auth/mobile/login",
+    ]) {
       const response = await request(app).post(path).set("X-Request-Id", "auth-limit").send({}).expect(429);
       expect(response.body).toEqual({
         success: false,

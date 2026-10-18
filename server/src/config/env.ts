@@ -45,7 +45,7 @@ const envSchema = z.object({
     if (value === undefined || value === null || value === "") return process.env.NODE_ENV !== "production";
     return toBool(value, false);
   }, z.boolean()),
-  CORS_ORIGIN: optionalTrimmed.default("http://localhost:5173,http://localhost:3000"),
+  CORS_ORIGIN: optionalTrimmed.default("http://localhost:5173,http://localhost:5174,http://localhost:3000"),
   SENDGRID_API_KEY: optionalTrimmed,
   SENDGRID_FROM_EMAIL: optionalTrimmed,
   SENDGRID_FROM_NAME: optionalTrimmed.default("FiFB"),
