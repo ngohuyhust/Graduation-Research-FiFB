@@ -24,7 +24,7 @@ describe("migrated PostgreSQL and Redis backend", () => {
     const migrations = await pool.query(
       "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank",
     );
-    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2"]);
+    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2", "3"]);
     await pool.query(
       "INSERT INTO app_users (id, email, password_hash, email_verified_at) VALUES ($1, $2, $5, now()), ($3, $4, $5, now())",
       [
@@ -65,6 +65,41 @@ describe("migrated PostgreSQL and Redis backend", () => {
     await expect(pool.query("UPDATE app_users SET weight = -1 WHERE id = $1", [userId])).rejects.toMatchObject({
       code: "23514",
     });
+  });
+
+  test("training profiles persist, replace selections, and isolate owners", async () => {
+    const path = "/api/v1/users/me/training-profile";
+    const profile = {
+      goal: "strength",
+      experienceLevel: "beginner",
+      daysPerWeek: 3,
+      sessionMinutes: 45,
+      location: "home",
+      equipmentIds: [],
+      priorityMuscleIds: [],
+      dislikedExerciseIds: [exerciseId],
+      limitations: "No jumping",
+    };
+    await request(app).put(path).auth(token, { type: "bearer" }).send(profile).expect(200);
+    const saved = await request(app).get(path).auth(token, { type: "bearer" }).expect(200);
+    expect(saved.body.data.profile).toMatchObject(profile);
+    const other = await request(app).get(path).auth(otherToken, { type: "bearer" }).expect(200);
+    expect(other.body.data.profile).toBeNull();
+    await request(app)
+      .put(path)
+      .auth(token, { type: "bearer" })
+      .send({ ...profile, equipmentIds: [randomUUID()] })
+      .expect(400);
+    const unchanged = await request(app).get(path).auth(token, { type: "bearer" }).expect(200);
+    expect(unchanged.body.data.profile).toEqual(saved.body.data.profile);
+    await request(app)
+      .put(path)
+      .auth(token, { type: "bearer" })
+      .send({ ...profile, dislikedExerciseIds: [] })
+      .expect(200);
+    const updated = await request(app).get(path).auth(token, { type: "bearer" }).expect(200);
+    expect(updated.body.data.profile.dislikedExerciseIds).toEqual([]);
+    expect(updated.body.data.profile.completedAt).toBe(saved.body.data.profile.completedAt);
   });
 
   test("native login rotates and revokes real Redis sessions", async () => {

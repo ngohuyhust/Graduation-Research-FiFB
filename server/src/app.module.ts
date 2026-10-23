@@ -1,4 +1,5 @@
 import { HealthController } from "./common/health.controller";
+import { TrainingProfilesModule } from "./modules/trainingProfiles/trainingProfiles.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ChatModule } from "./modules/chat/chat.module";
 import { WorkoutSessionsModule } from "./modules/workoutSessions/workoutSessions.module";
@@ -18,6 +19,7 @@ import { AdminModule } from "./modules/admin/admin.module";
 @Module({
   controllers: [HealthController],
   imports: [
+    TrainingProfilesModule,
     NotificationsModule,
     ChatModule,
     WorkoutSessionsModule,
