@@ -1,3 +1,8 @@
+## Báo cáo ngày 23/10/2026
+
+- Thêm API và migration lưu hồ sơ tập luyện riêng tư cho User
+- Thêm onboarding Flutter và chỉnh sửa mục tiêu, lịch tập, thiết bị, cơ ưu tiên, bài không thích và hạn chế
+
 ## Báo cáo ngày 18/10/2026
 
 - Xây dựng nền tảng Flutter cho Android, iOS và Web, có điều hướng User/Admin và bố cục responsive

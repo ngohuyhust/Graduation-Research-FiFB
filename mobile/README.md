@@ -2,15 +2,18 @@
 
 Weeks 3–4 foundation: one app for Android, iOS and Web, with registration, email OTP,
 login, password reset, session restoration, User/Admin route guards, responsive
-navigation and an account screen. Other tabs show explicit coming-soon states;
-onboarding, exercise browsing and workout features belong to subsequent phases.
+navigation and an account screen. Weeks 5–6 now include a three-step onboarding
+and editable training profile, accessible from User Home and Profile. Goals,
+schedule, taxonomy equipment/muscles, disliked exercises and limitations persist
+through the authenticated API. Loading and save failures can be retried without
+discarding edits. Exercise browsing and workout features are still pending.
 
 Use Flutter **3.47.7** (Dart 3.13.5), matching CI. Commit `pubspec.lock` for reproducible installs.
 The workspace SDK used during development is at `../tmp/sdk/flutter`; it is ignored by Git.
 
 ## Run
 
-Start the Nest backend and apply pending Flyway migrations, including V2. Add
+Start the Nest backend and apply pending Flyway migrations, including V3. Add
 `http://localhost:5174` to `CORS_ORIGIN` in `server/.env`. To send verification/reset
 links to Flutter Web, set `FRONTEND_URL=http://localhost:5174` and restart the server.
 Email delivery requires the existing SendGrid settings.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_controller.dart';
+import '../training/training_profile_page.dart';
 
 class AppDestination {
   const AppDestination(this.path, this.label, this.icon, this.description);
@@ -140,6 +141,25 @@ class AppShell extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                             const SizedBox(height: 28),
+                            if (!user.isAdmin &&
+                                (tab == 'home' || tab == 'profile'))
+                              Card(
+                                child: ListTile(
+                                  leading: const Icon(Icons.tune),
+                                  title: const Text('Your training profile'),
+                                  subtitle: const Text(
+                                    'Set up or edit your goals, schedule and equipment.',
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => TrainingProfilePage(
+                                        repository: auth.repository,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             if (tab == 'profile')
                               Card(
                                 child: Padding(
