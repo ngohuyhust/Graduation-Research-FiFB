@@ -92,6 +92,11 @@ describe("migrated PostgreSQL and Redis backend", () => {
       .expect(400);
     const unchanged = await request(app).get(path).auth(token, { type: "bearer" }).expect(200);
     expect(unchanged.body.data.profile).toEqual(saved.body.data.profile);
+    // Retiring an already excluded exercise must not prevent unrelated profile edits.
+    await pool.query("UPDATE exercises SET status = 'inactive' WHERE id = $1", [exerciseId]);
+    await request(app).put(path).auth(token, { type: "bearer" }).send(profile).expect(200);
+    await request(app).put(path).auth(otherToken, { type: "bearer" }).send(profile).expect(400);
+    await pool.query("UPDATE exercises SET status = 'active' WHERE id = $1", [exerciseId]);
     await request(app)
       .put(path)
       .auth(token, { type: "bearer" })

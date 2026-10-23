@@ -234,9 +234,8 @@ Only important backend events create database notifications.
 | PATCH  | `/admin/exercises/:id/deactivate` | Admin | Deactivate exercise.                                         |
 | GET    | `/admin/audit-logs`               | Admin | List audit logs; filters: `action`, `entityType`, `actorId`. |
 | GET    | `/admin/email-deliveries`         | Admin | Runtime-only SMTP delivery attempts from current process.    |
-# Training profile (Flutter onboarding)
+## Training profile (Flutter onboarding)
 
 `GET /api/v1/users/me/training-profile` returns `{ profile: null }` before onboarding, otherwise the saved profile. `PUT` fully replaces the authenticated User's profile; Admin and Trainer accounts cannot access it. Both responses use the standard success envelope and `Cache-Control: no-store`.
 
-Required JSON fields: `goal` (`general_fitness`, `build_muscle`, `lose_fat`, `strength`), `experienceLevel` (`beginner`, `intermediate`, `advanced`), `daysPerWeek` (1–7), `sessionMinutes` (15–180), `location` (`home`, `gym`, `both`), `equipmentIds`, `priorityMuscleIds`, `dislikedExerciseIds` (unique UUID arrays, at most 100 each), and `limitations` (at most 1000 characters; empty is allowed). Empty selections are valid. Taxonomy IDs must exist; disliked exercises must be active. Saves are atomic; `completedAt` records the first successful save and `updatedAt` the latest. Apply Flyway V3 before using these endpoints. These preferences are inputs for the later recommendation milestone, not a generated program.
-
+Required JSON fields: `goal` (`general_fitness`, `build_muscle`, `lose_fat`, `strength`), `experienceLevel` (`beginner`, `intermediate`, `advanced`), `daysPerWeek` (1–7), `sessionMinutes` (15–180), `location` (`home`, `gym`, `both`), `equipmentIds`, `priorityMuscleIds`, `dislikedExerciseIds` (unique UUID arrays, at most 100 each), and `limitations` (at most 1000 characters; empty is allowed). Empty selections are valid. Taxonomy IDs must exist; new disliked exercises must be active; previously excluded retired exercises may be retained. Saves are atomic; `completedAt` records the first successful save and `updatedAt` the latest. Apply Flyway V3 before using these endpoints. These preferences are inputs for the later recommendation milestone, not a generated program.

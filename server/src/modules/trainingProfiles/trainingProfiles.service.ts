@@ -30,8 +30,8 @@ export class TrainingProfilesService {
         ["exercises", profile.dislikedExerciseIds],
       ] as const) {
         const result = await db.query(
-          `SELECT id FROM ${table} WHERE id = ANY($1::uuid[])${table === "exercises" ? " AND status = 'active' AND deleted_at IS NULL" : ""} FOR KEY SHARE`,
-          [ids],
+          `SELECT id FROM ${table} WHERE id = ANY($1::uuid[])${table === "exercises" ? " AND ((status = 'active' AND deleted_at IS NULL) OR id IN (SELECT exercise_id FROM user_exercise_preferences WHERE user_id = $2 AND preference = 'disliked'))" : ""} FOR KEY SHARE`,
+          table === "exercises" ? [ids, userId] : [ids],
         );
         if (result.rows.length !== ids.length) throw new BadRequestException(`Invalid ${table} selection`);
       }
