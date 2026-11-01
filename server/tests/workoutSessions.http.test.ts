@@ -27,6 +27,8 @@ describe("Nest workout sessions", () => {
       detail: { id },
       update: { id },
       addLog: { id },
+      changeLog: { id },
+      previous: { items: [] },
       ensureActiveExercise: true,
       list: { rows: [{ id }], total: 1 },
       progression: { exercise: { id, name: "Squat" }, progression: [], personalRecord: null },
@@ -41,6 +43,55 @@ describe("Nest workout sessions", () => {
   });
   afterEach(() => jest.restoreAllMocks());
   const auth = (actor) => `Bearer ${signAccessToken(actor)}`;
+  test("mobile retry keys and selected plan day pass through without bypassing ownership in repository", async () => {
+    const operation = "c49a779c-11ec-4ee0-bffb-ab18e53fdadd";
+    await request(app)
+      .post("/api/v1/workout-sessions")
+      .set("Authorization", auth(actor))
+      .send({ title: "Day 2", workoutPlanId: id, dayNumber: 2, clientOperationId: operation })
+      .expect(201);
+    expect(repo.create).toHaveBeenCalledWith(userId, {
+      title: "Day 2",
+      workoutPlanId: id,
+      dayNumber: 2,
+      clientOperationId: operation,
+    });
+    await request(app)
+      .post("/api/v1/workout-sessions")
+      .set("Authorization", auth(actor))
+      .send({ title: "Invalid", dayNumber: 2 })
+      .expect(400);
+    await request(app)
+      .post(`/api/v1/workout-sessions/${id}/logs`)
+      .set("Authorization", auth(actor))
+      .send({ exerciseId: id, actualReps: 8, clientOperationId: operation, restEndsAt: "2026-11-01T10:00:00.000Z" })
+      .expect(201);
+    expect(repo.addLog).toHaveBeenCalledWith(userId, id, expect.objectContaining({ clientOperationId: operation }));
+  });
+  test("set edits/deletes and previous results use the caller and session IDs", async () => {
+    const path = `/api/v1/workout-sessions/${id}/logs/${id}`;
+    await request(app)
+      .put(path)
+      .set("Authorization", auth(actor))
+      .send({ exerciseId: id, actualReps: 12, actualWeightKg: 0 })
+      .expect(200);
+    expect(repo.changeLog).toHaveBeenCalledWith(userId, id, id, {
+      exerciseId: id,
+      actualReps: 12,
+      actualWeightKg: 0,
+      setNumber: 1,
+    });
+    await request(app).delete(path).set("Authorization", auth(actor)).expect(200);
+    expect(repo.changeLog).toHaveBeenCalledWith(userId, id, id, undefined);
+    await request(app)
+      .get(`/api/v1/workout-sessions/${id}/previous?exerciseId=${id}`)
+      .set("Authorization", auth(actor))
+      .expect(200);
+    expect(repo.previous).toHaveBeenCalledWith(userId, id, id);
+    repo.changeLog.mockResolvedValue(null);
+    await request(app).delete(path).set("Authorization", auth(actor)).expect(404);
+    await request(app).put(path).send({ exerciseId: id, actualReps: 12 }).expect(401);
+  });
   test("create and update use actor identity and invalidate statistics", async () => {
     const created = await request(app)
       .post("/api/workout-sessions")

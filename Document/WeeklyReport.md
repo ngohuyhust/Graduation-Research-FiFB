@@ -1,3 +1,28 @@
+## Báo cáo ngày 01/11/2026
+
+- Bổ sung live workout trên Flutter: bắt đầu ngày tập từ Today Workout, ghi rep/tạ/thời lượng/ghi chú, sao chép set trước, sửa và xóa set
+- Thêm rest timer, tạm dừng/tiếp tục, hoàn thành buổi tập, lịch sử và mở lại session; xem hướng dẫn bài tập và kết quả buổi hoàn thành trước
+- Thêm migration V5: snapshot ngày tập, trạng thái pause/rest, mã thao tác chống tạo trùng session/set khi retry và soft delete set
+- Lưu cache và một thay đổi đã gửi nhưng chưa được xác nhận theo từng tài khoản để khôi phục sau lỗi mạng hoặc đóng app; chưa hỗ trợ ghi toàn bộ buổi tập offline hay xử lý xung đột nhiều thiết bị
+- Kiểm tra: 287 backend tests và 40 Flutter tests đạt; lint/typecheck/build/format backend, Flutter analyze/format và build Web đạt
+- Đã bổ sung integration tests nhưng chưa chạy PostgreSQL/Redis thực tế do Docker chưa hoạt động; chưa áp dụng V4/V5 lên production và chưa kiểm chứng lưu trữ/lifecycle trên thiết bị thật
+- Bước tiếp theo: kiểm chứng migration và khôi phục session trên môi trường thực, sau đó mở rộng hàng đợi offline; recommendation/substitution/progression chưa triển khai
+
+## Báo cáo ngày 31/10/2026
+
+- Thêm danh sách và trình chỉnh sửa workout plan trên Flutter: tạo/sửa, chọn bài, chia ngày, đặt mục tiêu, sắp xếp/xóa bài, archive/restore
+- Thêm lịch tập tuần và Today Workout theo ngày địa phương của thiết bị; hỗ trợ giữ nội dung khi lưu lỗi và xác nhận khi bỏ thay đổi
+- Thêm migration V4 và API lịch tập; kiểm tra quyền sở hữu, chỉ hiển thị plan active và rollback khi lịch trỏ đến ngày không có bài
+- Kiểm tra: 280 backend tests và 31 Flutter tests đạt; backend checks và Flutter Web build đạt; integration tests chưa chạy do Docker không phản hồi
+
+## Báo cáo ngày 26/10/2026
+
+- Rà soát triển khai hiện có theo kế hoạch cuối; ghi rõ phần đã có API, phần Flutter còn thiếu và thứ tự tiếp tục
+- Thêm Explore trên Flutter: tìm kiếm/lọc/phân trang bài tập, xem GIF/hướng dẫn và quản lý favorites
+- Sửa lỗi phạm vi alias SQL khi lọc nhóm cơ; thêm API trạng thái favorite theo tài khoản và thứ tự phân trang ổn định
+- Kiểm tra: 274 backend tests và 24 Flutter tests đạt; backend/React build và Flutter Web build đạt
+- Ghi nhận tồn đọng: Docker chưa chạy, thiếu Android SDK và 56 file React cũ chưa đạt formatting; không thực hiện reformat hàng loạt
+
 ## Báo cáo ngày 23/10/2026
 
 - Thêm API và migration lưu hồ sơ tập luyện riêng tư cho User

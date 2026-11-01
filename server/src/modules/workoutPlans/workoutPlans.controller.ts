@@ -4,7 +4,7 @@ import type { AuthenticatedRequest } from "../../common/auth.guard";
 import { ZodValidationPipe, uuidParamSchema } from "../../common/zod-validation.pipe";
 import { paginationQuery } from "../../utils/validators/commonSchemas";
 type Pagination = { page: number; limit: number };
-import { workoutPlanSchema, workoutPlanUpdateSchema } from "./workoutPlans.validation";
+import { workoutPlanSchema, workoutPlanUpdateSchema, todayQuerySchema } from "./workoutPlans.validation";
 import type { WorkoutPlanPayload, WorkoutPlanUpdate } from "./workoutPlans.validation";
 import { WorkoutPlansService } from "./workoutPlans.service";
 
@@ -25,6 +25,14 @@ export class WorkoutPlansController {
     @Body(new ZodValidationPipe(workoutPlanSchema)) body: WorkoutPlanPayload,
   ) {
     return { success: true, data: await this.service.create(req.auth.userId, body), message: "Workout plan created" };
+  }
+
+  @Get("today")
+  async today(
+    @Req() req: AuthenticatedRequest,
+    @Query(new ZodValidationPipe(todayQuerySchema)) query: { weekday: number },
+  ) {
+    return { success: true, data: await this.service.today(req.auth.userId, query.weekday), message: "OK" };
   }
 
   @Get(":id")

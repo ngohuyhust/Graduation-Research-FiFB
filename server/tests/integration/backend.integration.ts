@@ -24,7 +24,7 @@ describe("migrated PostgreSQL and Redis backend", () => {
     const migrations = await pool.query(
       "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank",
     );
-    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2", "3"]);
+    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2", "3", "4", "5"]);
     await pool.query(
       "INSERT INTO app_users (id, email, password_hash, email_verified_at) VALUES ($1, $2, $5, now()), ($3, $4, $5, now())",
       [
@@ -142,6 +142,89 @@ describe("migrated PostgreSQL and Redis backend", () => {
     expect(rows[0].full_name).toBeNull();
   });
 
+  test("scheduled plans persist, isolate owners, and validate edits atomically", async () => {
+    let planId: string | undefined;
+    try {
+      const created = await request(app)
+        .post("/api/v1/workout-plans")
+        .auth(token, { type: "bearer" })
+        .send({
+          title: "Scheduled",
+          items: [{ exerciseId, dayNumber: 2, sortOrder: 1, restSeconds: 0 }],
+          schedule: [{ weekday: 1, dayNumber: 2 }],
+        })
+        .expect(201);
+      planId = created.body.data.plan.id;
+      expect(created.body.data.plan.items[0].exercise_name).toBe("Integration exercise");
+      const today = () => request(app).get("/api/v1/workout-plans/today?weekday=1").auth(token, { type: "bearer" });
+      expect((await today().expect(200)).body.data.items).toHaveLength(1);
+      const other = await request(app)
+        .get("/api/v1/workout-plans/today?weekday=1")
+        .auth(otherToken, { type: "bearer" })
+        .expect(200);
+      expect(other.body.data.items).toEqual([]);
+      await request(app)
+        .patch(`/api/v1/workout-plans/${planId}`)
+        .auth(token, { type: "bearer" })
+        .send({ items: [] })
+        .expect(400);
+      expect((await today().expect(200)).body.data.items[0].items).toHaveLength(1);
+      await request(app)
+        .patch(`/api/v1/workout-plans/${planId}`)
+        .auth(token, { type: "bearer" })
+        .send({ title: "Renamed", description: "" })
+        .expect(200);
+      expect((await today().expect(200)).body.data.items[0].title).toBe("Renamed");
+      await request(app).delete(`/api/v1/workout-plans/${planId}`).auth(token, { type: "bearer" }).expect(200);
+      expect((await today().expect(200)).body.data.items).toEqual([]);
+      await request(app)
+        .patch(`/api/v1/workout-plans/${planId}`)
+        .auth(token, { type: "bearer" })
+        .send({ status: "active" })
+        .expect(200);
+      expect((await today().expect(200)).body.data.items).toHaveLength(1);
+      await request(app)
+        .patch(`/api/v1/workout-plans/${planId}`)
+        .auth(token, { type: "bearer" })
+        .send({ items: [], schedule: [] })
+        .expect(200);
+      expect((await today().expect(200)).body.data.items).toEqual([]);
+    } finally {
+      if (planId) {
+        await pool.query("DELETE FROM workout_plan_items WHERE workout_plan_id = $1", [planId]);
+        await pool.query("DELETE FROM workout_plans WHERE id = $1", [planId]);
+      }
+    }
+  });
+
+  test("muscle filters execute with role isolation and favorites remain private", async () => {
+    const muscleId = randomUUID();
+    const name = `integration-${muscleId}`;
+    try {
+      await pool.query("INSERT INTO muscles (id, name) VALUES ($1, $2)", [muscleId, name]);
+      await pool.query("INSERT INTO exercise_muscles VALUES ($1, $2, 'target')", [exerciseId, muscleId]);
+      const target = await request(app).get("/api/v1/exercises").query({ targetMuscle: name }).expect(200);
+      expect(target.body.data.items.map((item) => item.id)).toEqual([exerciseId]);
+      const secondary = await request(app).get("/api/v1/exercises").query({ secondaryMuscle: name }).expect(200);
+      expect(secondary.body.data.items).toEqual([]);
+      await request(app).post("/api/v1/favorites").auth(token, { type: "bearer" }).send({ exerciseId }).expect(201);
+      const saved = await request(app)
+        .get(`/api/v1/favorites/${exerciseId}`)
+        .auth(token, { type: "bearer" })
+        .expect(200);
+      expect(saved.body.data.isFavorite).toBe(true);
+      const other = await request(app)
+        .get(`/api/v1/favorites/${exerciseId}`)
+        .auth(otherToken, { type: "bearer" })
+        .expect(200);
+      expect(other.body.data.isFavorite).toBe(false);
+    } finally {
+      await pool.query("DELETE FROM favorite_exercises WHERE user_id = $1 AND exercise_id = $2", [userId, exerciseId]);
+      await pool.query("DELETE FROM exercise_muscles WHERE muscle_id = $1", [muscleId]);
+      await pool.query("DELETE FROM muscles WHERE id = $1", [muscleId]);
+    }
+  });
+
   test("Redis auth sessions have a TTL, join real users, and can be revoked", async () => {
     const repository = nest.get(AuthRepository);
     const db = nest.get(DatabaseService);
@@ -151,6 +234,105 @@ describe("migrated PostgreSQL and Redis backend", () => {
     expect(await repository.findSessionByHash(db, hash)).toMatchObject({ user_id: userId, role: "user" });
     await repository.revokeSessionByHash(db, hash);
     expect(await repository.findSessionByHash(db, hash)).toBeNull();
+  });
+
+  test("session snapshots and retry keys survive edits, deletion and completion", async () => {
+    let planId: string | undefined, sessionId: string | undefined;
+    try {
+      const plan = await request(app)
+        .post("/api/v1/workout-plans")
+        .auth(token, { type: "bearer" })
+        .send({ title: "Snapshot plan", items: [{ exerciseId, dayNumber: 2, sortOrder: 1, reps: 8 }] })
+        .expect(201);
+      planId = plan.body.data.plan.id;
+      const body = { title: "Snapshot session", workoutPlanId: planId, dayNumber: 2, clientOperationId: randomUUID() };
+      const starts = await Promise.all(
+        [1, 2].map(() =>
+          request(app).post("/api/v1/workout-sessions").auth(token, { type: "bearer" }).send(body).expect(201),
+        ),
+      );
+      sessionId = starts[0].body.data.session.id;
+      expect(starts[1].body.data.session.id).toBe(sessionId);
+      await request(app)
+        .patch(`/api/v1/workout-plans/${planId}`)
+        .auth(token, { type: "bearer" })
+        .send({ items: [] })
+        .expect(200);
+      const get = () =>
+        request(app).get(`/api/v1/workout-sessions/${sessionId}`).auth(token, { type: "bearer" }).expect(200);
+      expect((await get()).body.data.session.planned_exercises[0]).toMatchObject({
+        exercise_id: exerciseId,
+        day_number: 2,
+        reps: 8,
+      });
+      const log = {
+        exerciseId,
+        actualReps: 8,
+        actualWeightKg: 0,
+        clientOperationId: randomUUID(),
+        restEndsAt: new Date(Date.now() + 60000).toISOString(),
+      };
+      const add = () =>
+        request(app)
+          .post(`/api/v1/workout-sessions/${sessionId}/logs`)
+          .auth(token, { type: "bearer" })
+          .send(log)
+          .expect(201);
+      const logs = await Promise.all([add(), add()]);
+      const logId = logs[0].body.data.log.id;
+      expect(logs[1].body.data.log.id).toBe(logId);
+      expect((await get()).body.data.session.logs).toHaveLength(1);
+      await request(app)
+        .post(`/api/v1/workout-sessions/${sessionId}/logs`)
+        .auth(token, { type: "bearer" })
+        .send({ ...log, actualReps: 9 })
+        .expect(409);
+      await request(app)
+        .put(`/api/v1/workout-sessions/${sessionId}/logs/${logId}`)
+        .auth(otherToken, { type: "bearer" })
+        .send({ exerciseId, actualReps: 12 })
+        .expect(404);
+      await request(app)
+        .put(`/api/v1/workout-sessions/${sessionId}/logs/${logId}`)
+        .auth(token, { type: "bearer" })
+        .send({ exerciseId, actualReps: 12 })
+        .expect(200);
+      expect((await get()).body.data.session.logs[0].actual_reps).toBe(12);
+      await request(app)
+        .delete(`/api/v1/workout-sessions/${sessionId}/logs/${logId}`)
+        .auth(token, { type: "bearer" })
+        .expect(200);
+      await add();
+      expect((await get()).body.data.session.logs).toEqual([]);
+      await request(app)
+        .patch(`/api/v1/workout-sessions/${sessionId}`)
+        .auth(token, { type: "bearer" })
+        .send({ paused: true, restEndsAt: null })
+        .expect(200);
+      expect((await get()).body.data.session.paused).toBe(true);
+      await request(app)
+        .patch(`/api/v1/workout-sessions/${sessionId}`)
+        .auth(token, { type: "bearer" })
+        .send({ completed: true })
+        .expect(200);
+      await add();
+      await request(app)
+        .post(`/api/v1/workout-sessions/${sessionId}/logs`)
+        .auth(token, { type: "bearer" })
+        .send({ exerciseId, actualReps: 5, clientOperationId: randomUUID() })
+        .expect(404);
+      await request(app)
+        .delete(`/api/v1/workout-sessions/${sessionId}/logs/${logId}`)
+        .auth(token, { type: "bearer" })
+        .expect(404);
+    } finally {
+      if (sessionId) await pool.query("DELETE FROM workout_sessions WHERE id = $1", [sessionId]);
+      if (planId) {
+        await pool.query("DELETE FROM workout_plan_items WHERE workout_plan_id = $1", [planId]);
+        await pool.query("DELETE FROM workout_plans WHERE id = $1", [planId]);
+      }
+      await (await getRedisClient())!.del(`stats:${userId}`);
+    }
   });
 
   test("versioned workout logging persists and enforces ownership and completion", async () => {

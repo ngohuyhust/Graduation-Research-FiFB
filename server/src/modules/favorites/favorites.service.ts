@@ -28,6 +28,10 @@ export class FavoritesService {
     await this.repository.remove(userId, exerciseId);
   }
 
+  async favoriteStatus(userId: string, exerciseId: string) {
+    return { isFavorite: await this.repository.contains(userId, exerciseId) };
+  }
+
   async listFavorites(userId: string, filters: { page: number; limit: number }) {
     const result = await this.repository.list(userId, filters);
     return paginate({ items: result.rows, page: filters.page, limit: filters.limit, total: result.total });

@@ -53,6 +53,7 @@ describe("Nest workout plans with real repository and transaction handling", () 
       "Push",
       null,
       "private",
+      "[]",
     ]);
     expect(queries.find(([sql]) => sql.startsWith("INSERT INTO workout_plan_items"))[1]).toEqual([
       id,
@@ -119,6 +120,43 @@ describe("Nest workout plans with real repository and transaction handling", () 
     await request(app).get("/api/workout-plans/bad").set("Authorization", auth(actor)).expect(400);
     expect(queries).toEqual([]);
     await request(app).get("/api/workout-plans").set("Authorization", auth(actor)).expect(200);
+  });
+
+  test.each([
+    [{ weekday: 0, dayNumber: 1 }],
+    [{ weekday: 8, dayNumber: 1 }],
+    [{ weekday: 1, dayNumber: 0 }],
+    [
+      { weekday: 1, dayNumber: 1 },
+      { weekday: 1, dayNumber: 2 },
+    ],
+  ])("rejects invalid schedule %j before writes", async (...entries) => {
+    await request(app)
+      .post("/api/v1/workout-plans")
+      .set("Authorization", auth(actor))
+      .send({ title: "Plan", schedule: entries })
+      .expect(400);
+    expect(queries).toEqual([]);
+  });
+
+  test("rejects scheduling a day without exercises and rolls back", async () => {
+    await request(app)
+      .post("/api/v1/workout-plans")
+      .set("Authorization", auth(actor))
+      .send({ title: "Plan", items: [], schedule: [{ weekday: 1, dayNumber: 2 }] })
+      .expect(400);
+    expect(queries.at(-1)[0]).toBe("ROLLBACK");
+    expect(queries.some(([sql]) => sql.startsWith("INSERT"))).toBe(false);
+  });
+
+  test("today requires a valid local weekday and queries only active owned plans", async () => {
+    await request(app).get("/api/v1/workout-plans/today?weekday=1").expect(401);
+    await request(app).get("/api/v1/workout-plans/today").set("Authorization", auth(actor)).expect(400);
+    await request(app).get("/api/v1/workout-plans/today?weekday=8").set("Authorization", auth(actor)).expect(400);
+    expect(queries).toEqual([]);
+    await request(app).get("/api/v1/workout-plans/today?weekday=7").set("Authorization", auth(actor)).expect(200);
+    expect(queries.at(-1)[1]).toEqual([userId, 7]);
+    expect(queries.at(-1)[0]).toContain("p.owner_id = $1 AND p.status = 'active'");
   });
 });
 

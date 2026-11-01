@@ -6,14 +6,24 @@ navigation and an account screen. Weeks 5–6 now include a three-step onboardin
 and editable training profile, accessible from User Home and Profile. Goals,
 schedule, taxonomy equipment/muscles, disliked exercises and limitations persist
 through the authenticated API. Loading and save failures can be retried without
-discarding edits. Exercise browsing and workout features are still pending.
+discarding edits. Explore now provides paginated exercise search, body-part,
+equipment and target-muscle filters, exercise details with GIF/instructions,
+and a paginated favorites view. Detail pages support adding/removing favorites
+with retryable errors and a fallback for missing media. Weeks 7–8 add a paginated
+plan list, create/edit/archive/restore, exercise selection, targets, ordering and
+optional weekly schedules. Home previews Today Workout from active scheduled plans.
+The first weeks 9–10 slice starts a selected day from Home and provides a live
+logger, one-tap set copy, edit/delete, previous completed results, instructions,
+rest countdown, pause/resume, completion, and session history/reopen in Workout.
+Submitted changes are persisted before sending and retried with stable keys.
+Only one pending change is supported; full offline workout recording remains pending.
 
 Use Flutter **3.47.7** (Dart 3.13.5), matching CI. Commit `pubspec.lock` for reproducible installs.
 The workspace SDK used during development is at `../tmp/sdk/flutter`; it is ignored by Git.
 
 ## Run
 
-Start the Nest backend and apply pending Flyway migrations, including V3. Add
+Start the Nest backend and apply pending Flyway migrations, including V5. Add
 `http://localhost:5174` to `CORS_ORIGIN` in `server/.env`. To send verification/reset
 links to Flutter Web, set `FRONTEND_URL=http://localhost:5174` and restart the server.
 Email delivery requires the existing SendGrid settings.
@@ -73,3 +83,19 @@ rotation, network failure, role redirects, forms and responsive layouts. Native
 secure storage still needs a device smoke test; widget tests do not verify OS storage.
 CI runs analysis, tests, Web and debug APK builds. Release signing and deployment
 are not configured by this foundation.
+
+## Live workout recovery
+
+Expand a scheduled day on Home and choose Start workout. Workout lists sessions
+and offers Reopen last workout and Retry pending workout start when applicable.
+Returning to a session fetches server logs and the plan snapshot. A rest deadline
+uses wall-clock time so closing/reopening does not restart the countdown; pause
+clears it. No background sound/notification is implemented.
+
+Session caches and pending requests are scoped by account and survive sign-out
+for later recovery by the same account. No refresh/access tokens are stored with
+workout data. Secure storage must work before a new write is sent. When the server
+response is uncertain, Retry sync replays the saved request. Editing on several
+devices concurrently is not conflict-resolved. Storage-plugin persistence and
+browser/device lifecycle behavior need a real-device smoke test in addition to
+the injected-store tests. Unsubmitted form text is not persisted.

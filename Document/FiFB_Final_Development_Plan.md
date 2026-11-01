@@ -636,3 +636,109 @@ Chạy bộ **chưa nằm trong phạm vi triển khai của giai đoạn nhật
 Wearable, theo dõi giấc ngủ tự động, dinh dưỡng và mô hình ước tính hồi phục là các phần phát triển sau. AI tóm tắt nhật ký chỉ là tùy chọn, phải dẫn lại workout/check-in liên quan và không chẩn đoán hoặc tự thay đổi plan.
 
 Tham khảo giới hạn khi diễn đạt cảm nhận và hồi phục: [Cleveland Clinic — Delayed Onset Muscle Soreness](https://my.clevelandclinic.org/health/symptoms/delayed-onset-muscle-soreness).
+
+## 17. Implementation checkpoint — 2026-10-26
+
+This checkpoint records repository evidence, not completion of the entire MVP.
+The review covered the Flutter source/tests, backend module and migration inventory,
+auth/profile/exercise/favorite/plan/session contracts, legacy React screens, and CI.
+It is not a production security audit or a device/usability sign-off.
+
+| Plan area | Current implementation | Remaining work |
+| --- | --- | --- |
+| Weeks 1–2 | Nest API v1 + legacy API, generated OpenAPI, Flyway V1–V3, isolated unit/HTTP tests, PostgreSQL/Redis integration suite | Run live integration checks in an available disposable environment; response data schemas remain generic |
+| Weeks 3–4 | Flutter native/web auth, refresh rotation, secure native refresh-token storage, User/Admin guards, responsive shell | Device management/revocation UI, native secure-storage smoke test; biometric Admin is stretch scope |
+| Weeks 5–6 | Private training-profile API + three-step onboarding/editor; Explore search, body/equipment/target-muscle filters, pagination, detail GIF/instructions, favorites | Real-device and live API walkthrough; onboarding usability measurement |
+| Weeks 7–8 | Existing backend plan CRUD, ownership checks and React editor | Flutter plan list/editor and Today Workout — next implementation milestone |
+| Weeks 9–10 | Existing session creation/completion, log insertion, history/statistics APIs and React screens | Flutter logger, rest timer, edit/delete sets, resume/draft persistence and idempotent sync |
+| Weeks 11–13 | Training preferences stored; historical exercise progression API exists | Curated metadata/templates, recommendation runs/explanations/feedback, substitution and double progression; historical charts are not smart progression |
+| Week 14 | Backend exercise moderation, taxonomy list/create, user-status changes and audit logs; legacy React Admin screens | Flutter Admin screens, template/rule moderation, complete taxonomy management |
+| Weeks 15–16 | Responsive Flutter shell and Web build; CI includes Web/APK and integration checks | Feature-wide responsive checks, E2E journey, usability testing, deployment; push/deep links remain optional |
+| Section 16 | Planning only | Keep body journal/check-ins deferred until the foundation is complete and verified |
+
+Changes in this continuation:
+
+- Added Flutter exercise discovery and authenticated favorites using existing API contracts.
+- Added `GET /api/v1/favorites/:id` for caller-specific status without downloading all favorites.
+- Fixed target/secondary muscle filter SQL alias scope and made exercise/favorite pagination ordering deterministic.
+- Added Flutter request, retry, stale-response, favorites and responsive pagination tests; backend HTTP/regression tests and a live integration scenario.
+- Preserved legacy trainer/chat features; no database migration or production data change was required.
+
+Verification and remaining environment limits are recorded in `Implementation_Checkpoint_2026-10-26.md`.
+
+Next: implement the Flutter workout-plan list and editor against the existing owned-plan API,
+then define Today Workout scheduling explicitly before connecting session creation. Do not
+present an onboarding profile as an automatically generated program before the recommendation
+engine and curated templates exist.
+
+## 18. Implementation checkpoint — 2026-10-31
+
+Weeks 7–8 now include the Flutter workout-plan list and editor: create, edit,
+archive/restore, paginated exercise selection, numbered workout days, targets
+(sets/reps/work/rest), notes, reorder/remove, save-error recovery and unsaved-change
+confirmation. Existing visibility is preserved; newly created plans are private.
+
+Today Workout is an explicit weekly schedule preview. Each weekday can map to one
+numbered day per plan. Home shows all active owned plans matching the device-local
+weekday and supports refresh/app-resume reload. Unscheduled days show an empty
+state; no exercise day is inferred from onboarding or silently assigned. Archived
+plans do not appear. Starting/completing sessions is still weeks 9–10 work.
+
+Backend changes require Flyway V4 (`V4__workout_plan_schedule.sql`). Existing plans
+default to no schedule. Updates validate that all scheduled days have exercises
+and roll back invalid replacements. Plan detail now includes exercise names and
+availability; descriptions can be cleared. API details are in `Document/API.md`.
+
+Verification for this checkpoint: 280 backend unit/HTTP tests and 31 Flutter
+unit/widget tests pass. Backend lint, type checks, production build and formatting
+pass; Flutter Web builds successfully. The live PostgreSQL/Redis integration suite
+was extended for schedules, atomic rollback, owner isolation and archive/restore,
+but was not run: the installed Docker engine did not become responsive after a
+startup attempt. The two stalled CLI checks were stopped. No production migration
+was applied. Android device/build verification remains outstanding from the prior
+checkpoint; no Android SDK was installed during this continuation.
+
+Next implementation: connect Today Workout to a live workout session, then add
+set logging/edit/delete, rest timer, previous-session results, and durable resume.
+Idempotency and offline synchronization must be designed before claiming reliable
+offline logging. Recommendation, curated program templates and body check-ins
+remain unimplemented, as recorded in the earlier checkpoint.
+
+## 19. Implementation checkpoint — 2026-11-01
+
+First weeks 9–10 slice implemented:
+
+- Home starts the selected scheduled plan day with an immutable session snapshot.
+- Live logger records reps/weight/duration/notes, copies the last set in one tap,
+  edits/deletes sets, links exercise instructions/media and shows previous completed
+  workout results. Rest uses a persisted absolute deadline; pause clears rest.
+- Workout lists sessions with completion state and supports reopening/resuming.
+- Completion is explicit and blocks further set changes. Removed sets no longer
+  count toward history/statistics.
+- V5 adds per-account session retry IDs, per-session set retry IDs, snapshot and
+  pause/rest fields, and soft-deletion tombstones. Identical retries cannot create
+  duplicate sessions/sets. Changed payloads using a consumed key return conflict.
+- Flutter caches session data and one submitted mutation per session in account-scoped
+  secure storage. A failed/uncertain request can survive app restart and be retried
+  unchanged. Storage failures prevent network writes. Tests inject storage; actual
+  native/browser persistence still needs smoke testing.
+
+Boundaries: the initial start needs connectivity. A pending mutation must resolve
+before another is accepted. Unsubmitted form text is not persisted, and this is
+not full offline logging or a multi-device conflict-resolution system. Older
+sessions freeze their current full plan during V5 because selected days and past
+plan versions were not recorded. No production migration has been applied.
+
+Verification: 287 backend unit/HTTP tests and 40 Flutter tests pass. Backend lint,
+type checks, build and formatting pass; Flutter analysis/formatting and Web build
+pass. Session-specific backend tests were rerun after the final completion guard
+changes. New tests cover scoped retry keys, snapshot selection, deleted-set replay,
+storage/network failures, account isolation, logging/copy/edit/delete, pause/finish,
+and logger layouts at 320px and 1280px. Live PostgreSQL/Redis tests were extended
+for concurrent retries and snapshots but remain unrun because the local Docker
+engine is unavailable. Android and real browser storage/lifecycle checks remain open.
+
+Next: verify V5 and lifecycle recovery on real PostgreSQL/Redis and Android/Web,
+then expand durable drafts into an offline operation queue with explicit conflicts.
+Recommendation/substitution/progression and curated program data remain separate
+weeks 11–13 work; this checkpoint does not claim them complete.

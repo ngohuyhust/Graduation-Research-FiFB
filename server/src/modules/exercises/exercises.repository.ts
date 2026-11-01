@@ -60,9 +60,9 @@ export function addTaxonomyFilter(
   role?: string,
 ) {
   values.push(`%${filters[alias]}%`);
-  let sql = `EXISTS (SELECT 1 FROM ${table} x JOIN ${nameColumn.table} n ON n.id = x.${nameColumn.fk} WHERE x.exercise_id = e.id AND n.name ILIKE $${values.length})`;
+  let sql = `EXISTS (SELECT 1 FROM ${table} x JOIN ${nameColumn.table} n ON n.id = x.${nameColumn.fk} WHERE x.exercise_id = e.id AND n.name ILIKE $${values.length}`;
   if (role) sql += ` AND x.muscle_role = '${role}'`;
-  clauses.push(sql);
+  clauses.push(`${sql})`);
 }
 
 @Injectable()
@@ -126,7 +126,7 @@ export class ExercisesRepository {
       `SELECT ${exerciseLibrarySelect("e")}
        FROM exercises e
        WHERE ${where}
-       ORDER BY e.name ASC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+       ORDER BY e.name ASC, e.id ASC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
       [...values, filters.limit, pageOffset(filters)],
     );
     return { rows: result.rows.map(camelExercise), total: count.rows[0].total };

@@ -13,6 +13,14 @@ export function pageOffset({ page, limit }: Pagination) {
 export class FavoritesRepository {
   constructor(private readonly db: DatabaseService) {}
 
+  async contains(userId: string, exerciseId: string) {
+    const result = await this.db.query("SELECT 1 FROM favorite_exercises WHERE user_id = $1 AND exercise_id = $2", [
+      userId,
+      exerciseId,
+    ]);
+    return result.rows.length > 0;
+  }
+
   async add(client: QueryExecutor, userId: string, exerciseId: string) {
     const result = await client.query<{ user_id: string; exercise_id: string }>(
       `INSERT INTO favorite_exercises (user_id, exercise_id)
@@ -41,7 +49,7 @@ export class FavoritesRepository {
        FROM favorite_exercises f
        JOIN exercises e ON e.id = f.exercise_id
        WHERE f.user_id = $1 AND e.status = 'active'
-       ORDER BY f.created_at DESC LIMIT $2 OFFSET $3`,
+       ORDER BY f.created_at DESC, e.id ASC LIMIT $2 OFFSET $3`,
       [userId, filters.limit, pageOffset(filters)],
     );
     return { rows: result.rows.map(camelExercise), total: count.rows[0].total };

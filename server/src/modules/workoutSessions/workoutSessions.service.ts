@@ -47,7 +47,11 @@ export class WorkoutSessionsService {
   constructor(private readonly repository: WorkoutSessionsRepository) {}
 
   async create(userId: string, payload: CreateSession) {
-    if (payload.workoutPlanId && !(await this.repository.findOwnedPlan(userId, payload.workoutPlanId))) {
+    if (
+      !payload.clientOperationId &&
+      payload.workoutPlanId &&
+      !(await this.repository.findOwnedPlan(userId, payload.workoutPlanId))
+    ) {
       throw new AppError(codes.NOT_FOUND, "Workout plan not found", 404);
     }
     const session = await this.repository.create(userId, payload);
@@ -74,7 +78,7 @@ export class WorkoutSessionsService {
   }
 
   async addLog(userId: string, sessionId: string, payload: ExerciseLog) {
-    if (!(await this.repository.ensureActiveExercise(payload.exerciseId))) {
+    if (!payload.clientOperationId && !(await this.repository.ensureActiveExercise(payload.exerciseId))) {
       throw new AppError(codes.BAD_REQUEST, "Exercise must be active", 400);
     }
     const log = await this.repository.addLog(userId, sessionId, payload);
@@ -100,6 +104,19 @@ export class WorkoutSessionsService {
     };
     if (redis) await redis.set(key, JSON.stringify(data), { EX: 1800 });
     return data;
+  }
+
+  async changeLog(userId: string, sessionId: string, logId: string, payload?: ExerciseLog) {
+    const log = await this.repository.changeLog(userId, sessionId, logId, payload);
+    if (!log) throw new AppError(codes.NOT_FOUND, "Active session or set not found", 404);
+    await invalidateStats(userId);
+    return { log };
+  }
+
+  async previous(userId: string, exerciseId: string, sessionId: string) {
+    if (!(await this.repository.detail(userId, sessionId)))
+      throw new AppError(codes.NOT_FOUND, "Session not found", 404);
+    return this.repository.previous(userId, exerciseId, sessionId);
   }
 
   async progression(userId: string, exerciseId: string) {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, Delete, Query, Req, UseGuards } from "@nestjs/common";
 import { AuthGuard, Roles } from "../../common/auth.guard";
 import type { AuthenticatedRequest } from "../../common/auth.guard";
 import { ZodValidationPipe, uuidParamSchema } from "../../common/zod-validation.pipe";
@@ -9,6 +9,7 @@ import {
   exerciseLogSchema,
   exerciseParam,
   updateSessionSchema,
+  logParam,
 } from "./workoutSessions.validation";
 import type { CreateSession, ExerciseLog, ExerciseParam, UpdateSession } from "./workoutSessions.validation";
 import { WorkoutSessionsService } from "./workoutSessions.service";
@@ -77,5 +78,43 @@ export class WorkoutSessionsController {
     @Body(new ZodValidationPipe(exerciseLogSchema)) body: ExerciseLog,
   ) {
     return { success: true, data: await this.service.addLog(req.auth.userId, id, body), message: "Exercise log added" };
+  }
+
+  @Put(":id/logs/:logId")
+  async replaceLog(
+    @Req() req: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(logParam)) params: { id: string; logId: string },
+    @Body(new ZodValidationPipe(exerciseLogSchema)) body: ExerciseLog,
+  ) {
+    return {
+      success: true,
+      data: await this.service.changeLog(req.auth.userId, params.id, params.logId, body),
+      message: "Set updated",
+    };
+  }
+
+  @Delete(":id/logs/:logId")
+  async deleteLog(
+    @Req() req: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(logParam)) params: { id: string; logId: string },
+  ) {
+    return {
+      success: true,
+      data: await this.service.changeLog(req.auth.userId, params.id, params.logId),
+      message: "Set removed",
+    };
+  }
+
+  @Get(":id/previous")
+  async previous(
+    @Req() req: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(uuidParamSchema)) params: { id: string },
+    @Query(new ZodValidationPipe(exerciseParam)) query: ExerciseParam,
+  ) {
+    return {
+      success: true,
+      data: await this.service.previous(req.auth.userId, query.exerciseId, params.id),
+      message: "OK",
+    };
   }
 }

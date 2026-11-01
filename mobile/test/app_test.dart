@@ -17,6 +17,9 @@ void main() {
         return ok(tokenData());
       }
       if (request.url.path.endsWith('/logout')) return http.Response('', 204);
+      if (request.url.path.endsWith('/workout-plans/today')) {
+        return ok({'items': []});
+      }
       return ok(userData());
     });
     await auth.restore();
@@ -37,6 +40,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pumpAndSettle();
     expect(find.text('Welcome, Test Member'), findsOneWidget);
+    await tester.ensureVisible(find.text('View your profile'));
     await tester.tap(find.text('View your profile'));
     await tester.pumpAndSettle();
     expect(find.text('member@example.com'), findsOneWidget);

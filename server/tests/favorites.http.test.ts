@@ -28,9 +28,23 @@ describe("Nest favorites", () => {
     jest.spyOn(repository, "list").mockResolvedValue({ rows: [{ id: exerciseId }], total: 1 });
     jest.spyOn(repository, "add").mockResolvedValue({ user_id: userId, exercise_id: exerciseId });
     jest.spyOn(repository, "remove").mockResolvedValue(undefined);
+    jest.spyOn(repository, "contains").mockResolvedValue(true);
   });
   afterEach(() => jest.restoreAllMocks());
   const token = (actor) => `Bearer ${signAccessToken(actor)}`;
+  test("favorite status is private, validated, and scoped to the authenticated user", async () => {
+    const path = `/api/v1/favorites/${exerciseId}`;
+    await request(app).get(path).expect(401);
+    await request(app).get("/api/v1/favorites/bad").set("Authorization", token(actor)).expect(400);
+    const result = await request(app).get(path).set("Authorization", token(actor)).expect(200);
+    expect(result.body.data).toEqual({ isFavorite: true });
+    expect(repository.contains).toHaveBeenCalledWith(userId, exerciseId);
+    repository.contains.mockResolvedValue(false);
+    const absent = await request(app).get(path).set("Authorization", token(actor)).expect(200);
+    expect(absent.body.data).toEqual({ isFavorite: false });
+    actor.role = "admin";
+    await request(app).get(path).set("Authorization", token(actor)).expect(403);
+  });
   test("list, idempotent add and delete preserve identity and response contract", async () => {
     const list = await request(app).get("/api/favorites?page=2&limit=5").set("Authorization", token(actor)).expect(200);
     expect(repository.list).toHaveBeenCalledWith(userId, { page: 2, limit: 5 });

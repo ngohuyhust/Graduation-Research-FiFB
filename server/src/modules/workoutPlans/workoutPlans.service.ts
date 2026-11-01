@@ -22,6 +22,11 @@ export function assertUniqueWorkoutOrder(items: WorkoutItem[] = []) {
   }
 }
 
+export function assertScheduleDays(schedule: { dayNumber: number }[] = [], days: number[]) {
+  if (schedule.some((entry) => !days.includes(entry.dayNumber)))
+    throw new AppError(codes.BAD_REQUEST, "Scheduled days must contain at least one exercise", 400);
+}
+
 @Injectable()
 export class WorkoutPlansService {
   constructor(
@@ -41,6 +46,10 @@ export class WorkoutPlansService {
   async create(userId: string, payload: WorkoutPlanPayload) {
     const plan = await this.db.withTransaction(async (client) => {
       assertUniqueWorkoutOrder(payload.items);
+      assertScheduleDays(
+        payload.schedule,
+        payload.items.map((item) => item.dayNumber),
+      );
       const created = await this.repository.createPlan(client, userId, payload);
       await this.insertItems(client, created.id, payload.items);
       return this.repository.getPlan(client, userId, created.id);
@@ -59,6 +68,10 @@ export class WorkoutPlansService {
     return paginate({ items: result.rows, page: filters.page, limit: filters.limit, total: result.total });
   }
 
+  async today(userId: string, weekday: number) {
+    return this.repository.today(userId, weekday);
+  }
+
   async update(userId: string, id: string, payload: WorkoutPlanUpdate) {
     const plan = await this.db.withTransaction(async (client) => {
       const updated = await this.repository.updatePlan(client, userId, id, payload);
@@ -68,7 +81,12 @@ export class WorkoutPlansService {
         await this.repository.deleteItems(client, id);
         await this.insertItems(client, id, payload.items);
       }
-      return this.repository.getPlan(client, userId, id);
+      const saved = await this.repository.getPlan(client, userId, id);
+      assertScheduleDays(
+        (saved!.schedule || []) as { dayNumber: number }[],
+        saved!.items.map((item) => Number(item.day_number)),
+      );
+      return saved;
     });
     return { plan };
   }

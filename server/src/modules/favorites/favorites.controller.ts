@@ -28,6 +28,14 @@ export class FavoritesController {
     };
   }
 
+  @Get(":id")
+  async status(
+    @Req() req: AuthenticatedRequest,
+    @Param(new ZodValidationPipe(uuidParamSchema)) { id }: { id: string },
+  ) {
+    return { success: true, data: await this.service.favoriteStatus(req.auth.userId, id), message: "OK" };
+  }
+
   @Delete(":id")
   @HttpCode(204)
   async remove(

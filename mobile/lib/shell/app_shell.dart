@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_controller.dart';
 import '../training/training_profile_page.dart';
+import '../exercises/exercise_library.dart';
+import '../exercises/exercise_repository.dart';
+import '../workouts/workout_repository.dart';
+import '../workouts/workout_pages.dart';
+import '../workouts/session_repository.dart';
+import '../workouts/session_history.dart';
 
 class AppDestination {
   const AppDestination(this.path, this.label, this.icon, this.description);
@@ -21,7 +27,7 @@ const userDestinations = [
     'workout',
     'Workout',
     Icons.fitness_center,
-    'Your plans and workout sessions will live here.',
+    'Build your plans and set your weekly schedule.',
   ),
   AppDestination(
     'progress',
@@ -160,7 +166,30 @@ class AppShell extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            if (tab == 'profile')
+                            if (!user.isAdmin && tab == 'home')
+                              TodayWorkout(
+                                repository: WorkoutRepository(auth.repository),
+                                sessions: SessionRepository(
+                                  auth.repository,
+                                  user.id,
+                                ),
+                              ),
+                            if (!user.isAdmin && tab == 'workout')
+                              SessionHistory(
+                                repository: SessionRepository(
+                                  auth.repository,
+                                  user.id,
+                                ),
+                              ),
+                            if (!user.isAdmin && tab == 'workout')
+                              WorkoutPlans(
+                                repository: WorkoutRepository(auth.repository),
+                              )
+                            else if (!user.isAdmin && tab == 'explore')
+                              ExerciseLibrary(
+                                repository: ExerciseRepository(auth.repository),
+                              )
+                            else if (tab == 'profile')
                               Card(
                                 child: Padding(
                                   padding: const EdgeInsets.all(24),

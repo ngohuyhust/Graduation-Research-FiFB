@@ -1,7 +1,11 @@
 # FiFB
 
 FiFB is a fitness platform built with NestJS, PostgreSQL, Redis, Socket.IO, React, Vite, and Tailwind CSS.
-This upgrade intentionally excludes chatbot and AI features.
+The current direction is a Flutter mobile-first beginner fitness app with User/Admin
+roles and a planned rule-based recommendation engine. See
+[the final development plan](Document/FiFB_Final_Development_Plan.md).
+The React trainer/chat modules remain available during the transition; they are
+not part of the Flutter graduation MVP.
 
 ## Features
 
@@ -79,7 +83,12 @@ storage. Device management and per-device revocation UI remain follow-up work.
 `mobile/` contains the Flutter app with registration, email verification, login,
 password reset, session restoration and separate User/Admin navigation. Navigation
 uses a bottom bar on phones and a rail/sidebar on larger screens. Account details
-and logout work; subsequent exercise/workout/Admin modules show coming-soon states.
+and logout work. Weeks 5–6 add onboarding, an editable training profile, exercise
+search/filtering, exercise details and favorites. Weeks 7–8 add the Flutter plan
+editor, archive/restore and a weekly scheduled Today Workout preview. Weeks 9–10
+now include the first live logger, rest timer, session history/resume and durable
+single-change retry. Apply V5 before running this version. Full offline recording
+and Admin business screens remain pending.
 
 See [Flutter setup and checks](mobile/README.md). Flutter Web runs on port 5174;
 add that origin to the backend CORS settings. Native apps use secure token storage,
@@ -132,6 +141,11 @@ indexes are in one migration: server/flyway/sql/V1__initial_schema.sql.
 V2 (`V2__optional_body_measurements.sql`) makes gender, height and weight nullable and removes
 their defaults. Registration may omit these fields. Existing values are preserved, because
 historical defaults cannot reliably be distinguished from values the user entered.
+V3 adds private training profiles and preferences. V4 adds an optional weekly
+schedule to workout plans, defaulting to an empty schedule for existing plans.
+V5 adds session snapshots, scoped retry keys, pause/rest state and deleted-set
+tombstones. It snapshots current plans for older sessions without reconstructing
+historical plan versions.
 The target is public, configured in server/flyway/flyway.conf. The existing cloud schema
 has been adopted at baseline V1 after filling its missing V1 tables and indexes.
 
