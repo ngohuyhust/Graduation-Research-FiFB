@@ -53,6 +53,117 @@ Future<void> tapVisible(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('reopening confirms a pending set and refreshes server data', (
+    tester,
+  ) async {
+    final store = MemoryWorkoutStore();
+    final methods = <String>[];
+    final body = {
+      'setNumber': 1,
+      'actualReps': 8,
+      'clientOperationId': operationId(),
+    };
+    final auth = createAuth((req) async {
+      methods.add(req.method);
+      if (req.method == 'POST') {
+        expect(jsonDecode(req.body), body);
+        return ok({});
+      }
+      return ok({'session': sessionData()});
+    });
+    final repo = SessionRepository(auth.repository, 'owner', store: store);
+    await repo.saveLocal('pending.session', {
+      'method': 'POST',
+      'suffix': '/logs',
+      'body': body,
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiveWorkoutPage(repository: repo, id: 'session'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(methods, ['GET', 'POST', 'GET']);
+    expect(await repo.local('pending.session'), isNull);
+    expect(find.text('Retry sync'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+    'app resume refreshes completed state and removes observer on close',
+    (tester) async {
+      var completed = false;
+      var reads = 0;
+      final auth = createAuth((req) async {
+        reads++;
+        return ok({
+          'session': {
+            ...sessionData(),
+            'completed_at': completed ? '2026-11-06T00:00:00Z' : null,
+          },
+        });
+      });
+      final repo = SessionRepository(
+        auth.repository,
+        'owner',
+        store: MemoryWorkoutStore(),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiveWorkoutPage(repository: repo, id: 'session'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      completed = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(reads, 2);
+      expect(find.text('Workout complete'), findsOneWidget);
+      expect(find.text('Log set'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      expect(reads, 2);
+    },
+  );
+
+  testWidgets('rejected recovery stays visible and is not retried on resume', (
+    tester,
+  ) async {
+    var writes = 0;
+    final auth = createAuth((req) async {
+      if (req.method == 'POST') {
+        writes++;
+        return failure(409, 'Workout already completed');
+      }
+      return ok({'session': sessionData()});
+    });
+    final repo = SessionRepository(
+      auth.repository,
+      'owner',
+      store: MemoryWorkoutStore(),
+    );
+    await repo.saveLocal('pending.session', {
+      'method': 'POST',
+      'suffix': '/logs',
+      'body': {'setNumber': 1},
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiveWorkoutPage(repository: repo, id: 'session'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard rejected change'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(writes, 1);
+    expect(find.text('Discard rejected change'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   for (final width in [320.0, 1280.0]) {
     testWidgets('editing and deleting sets works at width $width', (
       tester,
@@ -311,6 +422,11 @@ void main() {
     final auth = createAuth((_) async => failure(403, 'Forbidden'));
     final repo = SessionRepository(auth.repository, 'owner', store: store);
     await repo.saveLocal('session.session', sessionData());
+    await repo.saveLocal('pending.session', {
+      'method': 'POST',
+      'suffix': '/logs',
+      'body': {'setNumber': 1, 'actualReps': 8},
+    });
     await tester.pumpWidget(
       MaterialApp(
         home: LiveWorkoutPage(repository: repo, id: 'session'),
@@ -319,6 +435,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Full body'), findsNothing);
     expect(find.text('Forbidden'), findsOneWidget);
+    expect(find.text('Retry sync'), findsNothing);
+    expect(find.textContaining('Pending set'), findsNothing);
+    expect(await repo.local('pending.session'), isNotNull);
     await tester.pumpWidget(const SizedBox());
   });
 

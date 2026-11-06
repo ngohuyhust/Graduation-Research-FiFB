@@ -742,3 +742,26 @@ Next: verify V5 and lifecycle recovery on real PostgreSQL/Redis and Android/Web,
 then expand durable drafts into an offline operation queue with explicit conflicts.
 Recommendation/substitution/progression and curated program data remain separate
 weeks 11–13 work; this checkpoint does not claim them complete.
+
+## 20. Implementation checkpoint — 2026-11-06
+
+Continued weeks 9–10 lifecycle recovery. Opening the live logger or returning
+to the foreground while idle now fetches the owned session, retries an uncertain
+pending mutation using its original payload, and refreshes the confirmed state.
+Definitively rejected mutations require explicit review/discard and are not
+automatically retried. Authorization/ownership failures hide pending-set details
+as well as cached session data, while preserving the account-scoped journal.
+The lifecycle observer is removed when the page closes.
+
+Verification: all 43 Flutter tests pass, analysis reports no issues, and the Web
+production build passes with a placeholder API URL. Added
+coverage for automatic recovery ordering, remote completion on resume, observer
+cleanup, rejected-request handling, and hidden pending data after access denial.
+Docker was checked again and its engine pipe remains unavailable; live V5
+PostgreSQL/Redis integration and actual device storage/lifecycle checks remain
+outstanding. This increment makes no backend/schema changes and does not add a
+multi-operation offline queue or persist unsubmitted form text.
+
+Next: verify the existing migrations in a disposable database when available;
+continue durable form drafts and the offline queue with explicit conflict handling
+before treating weeks 9–10 as complete.

@@ -1,3 +1,12 @@
+## Báo cáo ngày 06/11/2026
+
+- Tiếp tục phần khôi phục live workout: khi mở lại logger hoặc quay về app lúc rảnh, kiểm tra quyền truy cập, gửi lại thao tác chưa được xác nhận và tải kết quả mới
+- Cập nhật trạng thái hoàn thành từ server khi app trở lại foreground; không tự gửi lại thao tác đã bị từ chối, giữ luồng xem và bỏ thay đổi rõ ràng
+- Ẩn cả thông tin set đang chờ khi mất quyền truy cập; giữ dữ liệu phục hồi riêng theo tài khoản
+- Kiểm tra: 43 Flutter tests đạt, Flutter analyze không có lỗi và build Web đạt (URL API mẫu); bổ sung test khôi phục, lifecycle, yêu cầu bị từ chối và quyền truy cập
+- Docker vẫn chưa hoạt động nên chưa chạy integration PostgreSQL/Redis; chưa kiểm chứng trên thiết bị thật, chưa triển khai hàng đợi nhiều thao tác offline hoặc lưu nội dung form chưa gửi
+- Bước tiếp theo: kiểm chứng migration khi có môi trường DB và tiếp tục durable drafts/offline queue với xử lý xung đột
+
 ## Báo cáo ngày 01/11/2026
 
 - Bổ sung live workout trên Flutter: bắt đầu ngày tập từ Today Workout, ghi rep/tạ/thời lượng/ghi chú, sao chép set trước, sửa và xóa set

@@ -95,7 +95,12 @@ clears it. No background sound/notification is implemented.
 Session caches and pending requests are scoped by account and survive sign-out
 for later recovery by the same account. No refresh/access tokens are stored with
 workout data. Secure storage must work before a new write is sent. When the server
-response is uncertain, Retry sync replays the saved request. Editing on several
-devices concurrently is not conflict-resolved. Storage-plugin persistence and
+response is uncertain, Retry sync replays the saved request. Server state is
+refreshed when the logger returns to the foreground while idle.
+Opening the logger or returning to it also retries an uncertain saved request
+after fetching the owned session, then refreshes the confirmed logs. Rejected
+requests remain available for explicit review/discard and are not automatically
+retried. Authorization failures hide both cached logs and pending-set details.
+Editing on several devices concurrently is not conflict-resolved. Storage-plugin persistence and
 browser/device lifecycle behavior need a real-device smoke test in addition to
 the injected-store tests. Unsubmitted form text is not persisted.

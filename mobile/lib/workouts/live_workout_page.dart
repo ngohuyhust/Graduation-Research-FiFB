@@ -18,15 +18,17 @@ class LiveWorkoutPage extends StatefulWidget {
   State<LiveWorkoutPage> createState() => _LiveWorkoutPageState();
 }
 
-class _LiveWorkoutPageState extends State<LiveWorkoutPage> {
+class _LiveWorkoutPageState extends State<LiveWorkoutPage>
+    with WidgetsBindingObserver {
   Map<String, dynamic>? session, pending;
-  bool busy = true, offline = false;
+  bool busy = false, offline = false;
   String? error;
   Timer? clock;
   @override
   void initState() {
     super.initState();
-    load();
+    WidgetsBinding.instance.addObserver(this);
+    load(recover: true);
     clock = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -34,20 +36,36 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     clock?.cancel();
     super.dispose();
   }
 
-  Future<void> load() async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !busy) {
+      load(recover: true);
+    }
+  }
+
+  Future<void> load({bool recover = false}) async {
     setState(() {
       busy = true;
       error = null;
     });
     try {
       pending = await widget.repository.local('pending.${widget.id}');
+      // Check ownership before displaying or replaying device-local changes.
       final data = await widget.repository.detail(widget.id);
-      if (mounted) {
+      if (recover && pending != null && pending!['rejected'] != true) {
         session = data;
+        await widget.repository.flush(widget.id);
+        pending = null;
+        session = await widget.repository.detail(widget.id);
+      } else {
+        session = data;
+      }
+      if (mounted) {
         offline = false;
       }
     } catch (e) {
@@ -57,8 +75,10 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage> {
         // Never show cached content after an authorization or ownership failure.
         if (e is ApiException && [401, 403, 404].contains(e.status)) {
           session = null;
+          pending = null;
         } else {
           try {
+            pending = await widget.repository.local('pending.${widget.id}');
             session ??= await widget.repository.local('session.${widget.id}');
           } catch (_) {
             /* Report original failure. */
