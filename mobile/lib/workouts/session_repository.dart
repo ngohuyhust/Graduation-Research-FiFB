@@ -112,8 +112,9 @@ class SessionRepository {
     String id,
     String method,
     String suffix,
-    Map<String, dynamic>? body,
-  ) async {
+    Map<String, dynamic>? body, {
+    String? draftName,
+  }) async {
     if (await local('pending.$id') != null) {
       throw const ApiException('Sync the pending change first.');
     }
@@ -121,6 +122,7 @@ class SessionRepository {
       'method': method,
       'suffix': suffix,
       'body': body,
+      'draftName': ?draftName,
     });
     await flush(id);
   }
@@ -128,6 +130,11 @@ class SessionRepository {
   Future<void> flush(String id) async {
     final pending = await local('pending.$id');
     if (pending == null) return;
+    // The durable request owns the submitted values before the form is removed.
+    // Repeat cleanup on recovery if the app stopped between these two writes.
+    if (pending['draftName'] is String) {
+      await store.delete(key(pending['draftName'] as String));
+    }
     try {
       await auth.authorized(
         pending['method'] as String,

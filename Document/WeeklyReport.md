@@ -1,3 +1,11 @@
+## Báo cáo ngày 08/11/2026
+
+- Bổ sung lưu bản nháp form set theo từng tài khoản, buổi tập, bài tập và set; mở lại form khôi phục reps/tạ/thời lượng/ghi chú đang nhập
+- Thêm Keep draft và Discard draft; lỗi lưu trữ giữ form để thử lại, tuần tự hóa ghi dữ liệu để tránh bản cũ ghi đè bản mới
+- Khi gửi set, lưu thao tác chờ xác nhận trước khi xóa draft; có thể phục hồi nếu app đóng giữa quá trình chuyển dữ liệu hoặc mất phản hồi mạng
+- Kiểm tra: 47 Flutter tests đạt, analyze/format/build Web đạt (URL API mẫu); bao gồm màn hình 320px/1280px, tách draft mới/sửa và tài khoản, lỗi lưu trữ và phục hồi thao tác gửi; chạy lại 16 logger tests sau thay đổi cuối
+- Chưa xác minh storage/lifecycle trên thiết bị thật; hàng đợi offline nhiều thao tác và xử lý xung đột vẫn là bước tiếp theo; không thay đổi backend/schema
+
 ## Báo cáo ngày 06/11/2026
 
 - Tiếp tục phần khôi phục live workout: khi mở lại logger hoặc quay về app lúc rảnh, kiểm tra quyền truy cập, gửi lại thao tác chưa được xác nhận và tải kết quả mới

@@ -765,3 +765,27 @@ multi-operation offline queue or persist unsubmitted form text.
 Next: verify the existing migrations in a disposable database when available;
 continue durable form drafts and the offline queue with explicit conflict handling
 before treating weeks 9–10 as complete.
+
+## 21. Implementation checkpoint — 2026-11-08
+
+Set forms now persist unsubmitted reps, weight, duration and note text on each
+edit. Drafts are scoped by account, session, exercise and existing set/new set;
+reopening the corresponding form restores the saved values. Explicit Keep draft
+and Discard draft actions replace cancellation. Storage failures leave the form
+open for retry, and serialized snapshots prevent earlier writes overtaking later
+typing. Submission validates and saves the form, then writes the exact pending
+request before deleting its draft. Recovery repeats interrupted draft cleanup
+before sending the request, preserving the existing idempotent retry contract.
+
+Verification: 47 Flutter tests pass, including 320px/1280px draft restoration,
+new/edit draft isolation, account isolation, storage failure and interrupted
+handoff with an uncertain network response. Flutter analysis, formatting and Web
+production build (placeholder API URL) pass; the 16 logger tests were rerun after
+the final form-opening guard. No backend or schema change is needed.
+Native/browser storage remains unverified on real devices; termination before
+an asynchronous write completes may lose the newest keystrokes. Drafts are local
+and do not provide multi-device conflict resolution. Historical checkpoints above
+describe the limitations at their original dates.
+
+Next: expand the single pending mutation to an ordered offline queue with explicit
+conflict handling, and run database/device checks in an available test environment.

@@ -325,7 +325,10 @@ scoped to the signed-in account using the secure-storage plugin. Requests are
 persisted before sending. Retry reuses the exact body/key; new changes are blocked
 until the pending operation is confirmed. Definitively rejected changes may be
 discarded explicitly. An uncertain network failure cannot be silently discarded.
-This is not a complete offline queue: initial start needs the server, and text in
-an unsubmitted set dialog is not a durable draft. Cached data is not shown after
+This is not a complete offline queue: initial start needs the server. Unsubmitted
+set forms now save local draft text per account/session/exercise/set; reopening
+the same form restores it. Submission persists the exact pending request before
+removing its draft; interrupted cleanup is repeated before replay. Draft metadata
+stays on the client and does not change the API payload. Cached data is not shown after
 401/403/404 responses. Native secure storage and Web browser persistence still
 require device/browser smoke tests (Web secure storage requires a secure context).

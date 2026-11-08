@@ -22,6 +22,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     with WidgetsBindingObserver {
   Map<String, dynamic>? session, pending;
   bool busy = false, offline = false;
+  bool formOpen = false;
   String? error;
   Timer? clock;
   @override
@@ -93,15 +94,22 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
   Future<void> mutate(
     String method,
     String suffix,
-    Map<String, dynamic>? body,
-  ) async {
+    Map<String, dynamic>? body, {
+    String? draftName,
+  }) async {
     if (busy || pending != null) return;
     setState(() {
       busy = true;
       error = null;
     });
     try {
-      await widget.repository.queue(widget.id, method, suffix, body);
+      await widget.repository.queue(
+        widget.id,
+        method,
+        suffix,
+        body,
+        draftName: draftName,
+      );
       await load();
     } catch (e) {
       try {
@@ -150,6 +158,8 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     Map<String, dynamic>? log,
     bool copy = false,
   }) async {
+    if (formOpen || busy || pending != null) return;
+    formOpen = true;
     final form = GlobalKey<FormState>();
     final values = <String, String>{
       'Reps': '${log?['actual_reps'] ?? exercise['reps'] ?? ''}',
@@ -158,95 +168,204 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
           '${log?['duration_seconds'] ?? exercise['duration_seconds'] ?? ''}',
       'Note': log?['note'] as String? ?? '',
     };
+    final draftName =
+        'draft.${widget.id}.${exercise['exercise_id']}.${log?['id'] ?? 'new'}';
+    if (!copy) {
+      try {
+        final saved = await widget.repository.local(draftName);
+        if (saved != null) {
+          for (final label in values.keys) {
+            if (saved[label] is String) values[label] = saved[label] as String;
+          }
+        }
+      } catch (e) {
+        formOpen = false;
+        if (mounted) setState(() => error = AuthController.messageFor(e));
+        return;
+      }
+      if (!mounted) return;
+    }
+    // Serialize snapshots so a slow earlier write cannot replace newer typing.
+    Future<void> writes = Future.value();
+    Future<void> persist() {
+      final snapshot = Map<String, String>.from(values);
+      final next = writes.then(
+        (_) => widget.repository.saveLocal(draftName, snapshot),
+      );
+      writes = next.catchError((Object _) {});
+      return next;
+    }
+
+    bool saving = false;
     String? formError;
     final accepted = copy
         ? true
         : await showDialog<bool>(
             context: context,
+            barrierDismissible: false,
             builder: (context) => StatefulBuilder(
-              builder: (context, update) => AlertDialog(
-                title: Text(
-                  copy
-                      ? 'Copy previous set'
-                      : log == null
-                      ? 'Log set'
-                      : 'Edit set',
-                ),
-                content: SizedBox(
-                  width: 420,
-                  child: SingleChildScrollView(
-                    child: Form(
-                      key: form,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            exercise['exercise_name'] as String? ?? 'Exercise',
-                          ),
-                          for (final label in values.keys)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: TextFormField(
-                                initialValue: values[label],
-                                decoration: InputDecoration(labelText: label),
-                                keyboardType: label == 'Note'
-                                    ? TextInputType.text
-                                    : const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                maxLength: label == 'Note' ? 1000 : 10,
-                                onChanged: (v) => values[label] = v,
-                                validator: (v) {
-                                  if (label == 'Note' ||
-                                      (v ?? '').trim().isEmpty) {
-                                    return null;
-                                  }
-                                  if (label == 'Weight (kg)') {
-                                    final n = double.tryParse(v!);
-                                    return n == null ||
-                                            !n.isFinite ||
-                                            n < 0 ||
-                                            n > 100000
-                                        ? 'Enter 0–100000 kg'
-                                        : null;
-                                  }
-                                  final n = int.tryParse(v!);
-                                  return n == null || n < 1 || n > 2147483647
-                                      ? 'Enter a positive whole number'
-                                      : null;
-                                },
-                              ),
+              builder: (context, update) => PopScope(
+                canPop: false,
+                child: AlertDialog(
+                  title: Text(
+                    copy
+                        ? 'Copy previous set'
+                        : log == null
+                        ? 'Log set'
+                        : 'Edit set',
+                  ),
+                  content: SizedBox(
+                    width: 420,
+                    child: SingleChildScrollView(
+                      child: Form(
+                        key: form,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              exercise['exercise_name'] as String? ??
+                                  'Exercise',
                             ),
-                          if (formError != null) Text(formError!),
-                        ],
+                            const Text(
+                              'Your draft is saved on this device as you type.',
+                            ),
+                            for (final label in values.keys)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: TextFormField(
+                                  enabled: !saving,
+                                  initialValue: values[label],
+                                  decoration: InputDecoration(labelText: label),
+                                  keyboardType: label == 'Note'
+                                      ? TextInputType.text
+                                      : const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                  maxLength: label == 'Note' ? 1000 : 10,
+                                  onChanged: (v) async {
+                                    values[label] = v;
+                                    try {
+                                      await persist();
+                                    } catch (_) {
+                                      if (context.mounted) {
+                                        update(
+                                          () => formError =
+                                              'Could not save draft. Keep this form open and retry.',
+                                        );
+                                      }
+                                    }
+                                  },
+                                  validator: (v) {
+                                    if (label == 'Note' ||
+                                        (v ?? '').trim().isEmpty) {
+                                      return null;
+                                    }
+                                    if (label == 'Weight (kg)') {
+                                      final n = double.tryParse(v!);
+                                      return n == null ||
+                                              !n.isFinite ||
+                                              n < 0 ||
+                                              n > 100000
+                                          ? 'Enter 0–100000 kg'
+                                          : null;
+                                    }
+                                    final n = int.tryParse(v!);
+                                    return n == null || n < 1 || n > 2147483647
+                                        ? 'Enter a positive whole number'
+                                        : null;
+                                  },
+                                ),
+                              ),
+                            if (formError != null) Text(formError!),
+                          ],
+                        ),
                       ),
                     ),
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              update(() => saving = true);
+                              try {
+                                await writes;
+                                await widget.repository.store.delete(
+                                  widget.repository.key(draftName),
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context, false);
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  update(() {
+                                    saving = false;
+                                    formError =
+                                        'Could not discard draft. Retry.';
+                                  });
+                                }
+                              }
+                            },
+                      child: const Text('Discard draft'),
+                    ),
+                    TextButton(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              update(() => saving = true);
+                              try {
+                                await persist();
+                                if (context.mounted) {
+                                  Navigator.pop(context, false);
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  update(() {
+                                    saving = false;
+                                    formError = 'Could not save draft. Retry.';
+                                  });
+                                }
+                              }
+                            },
+                      child: const Text('Keep draft'),
+                    ),
+                    FilledButton(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              if (!form.currentState!.validate()) return;
+                              if (values.entries
+                                  .where((e) => e.key != 'Note')
+                                  .every((e) => e.value.trim().isEmpty)) {
+                                update(
+                                  () => formError =
+                                      'Enter reps, weight, or duration.',
+                                );
+                                return;
+                              }
+                              update(() => saving = true);
+                              try {
+                                await persist();
+                                if (context.mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  update(() {
+                                    saving = false;
+                                    formError = 'Could not save draft. Retry.';
+                                  });
+                                }
+                              }
+                            },
+                      child: const Text('Save set'),
+                    ),
+                  ],
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      if (!form.currentState!.validate()) return;
-                      if (values.entries
-                          .where((e) => e.key != 'Note')
-                          .every((e) => e.value.trim().isEmpty)) {
-                        update(
-                          () => formError = 'Enter reps, weight, or duration.',
-                        );
-                        return;
-                      }
-                      Navigator.pop(context, true);
-                    },
-                    child: const Text('Save set'),
-                  ),
-                ],
               ),
             ),
           );
+    formOpen = false;
     if (accepted != true || !mounted) return;
     final editing = log != null && !copy;
     final exerciseId = exercise['exercise_id'];
@@ -278,6 +397,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
               : null,
         },
       },
+      draftName: copy ? null : draftName,
     );
   }
 

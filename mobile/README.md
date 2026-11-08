@@ -103,4 +103,14 @@ requests remain available for explicit review/discard and are not automatically
 retried. Authorization failures hide both cached logs and pending-set details.
 Editing on several devices concurrently is not conflict-resolved. Storage-plugin persistence and
 browser/device lifecycle behavior need a real-device smoke test in addition to
-the injected-store tests. Unsubmitted form text is not persisted.
+the injected-store tests.
+
+Set forms now save draft text on each edit, separately for each account, session,
+exercise and existing set (or a new set). Reopen the same Log set/Edit set action
+to restore it. Keep draft closes after saving; Discard draft explicitly removes
+it. Save set validates and persists the form before handing it to the pending
+request journal. The journal is written before removing the draft, so recovery
+can finish an interrupted handoff. Storage failures keep the form available for
+retry. Abrupt termination before an asynchronous storage write finishes can still
+lose the latest keystrokes; real storage/lifecycle verification remains pending.
+Drafts do not synchronize across devices and are not a multi-operation offline queue.

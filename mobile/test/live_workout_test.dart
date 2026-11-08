@@ -10,6 +10,7 @@ import 'helpers.dart';
 class MemoryWorkoutStore implements WorkoutStore {
   final values = <String, String>{};
   bool failWrite = false;
+  bool failDelete = false;
   @override
   Future<String?> read(String key) async => values[key];
   @override
@@ -20,6 +21,7 @@ class MemoryWorkoutStore implements WorkoutStore {
 
   @override
   Future<void> delete(String key) async {
+    if (failDelete) throw Exception('Storage unavailable');
     values.remove(key);
   }
 }
@@ -53,6 +55,150 @@ Future<void> tapVisible(WidgetTester tester, String label) async {
 }
 
 void main() {
+  for (final width in [320.0, 1280.0]) {
+    testWidgets(
+      'draft survives reopening and is consumed on submit at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final store = MemoryWorkoutStore();
+        final requests = <Map<String, dynamic>>[];
+        final auth = createAuth((req) async {
+          if (req.method == 'POST') {
+            requests.add(jsonDecode(req.body) as Map<String, dynamic>);
+            return ok({});
+          }
+          return ok({'session': sessionData()});
+        });
+        SessionRepository repo() =>
+            SessionRepository(auth.repository, 'owner', store: store);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiveWorkoutPage(repository: repo(), id: 'session'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tapVisible(tester, 'Log set');
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Reps'),
+          '13',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Weight (kg)'),
+          '0',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Note'),
+          'slow tempo',
+        );
+        await tester.pumpAndSettle();
+        // Simulate closing the app without pressing Keep draft.
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiveWorkoutPage(repository: repo(), id: 'session'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tapVisible(tester, 'Log set');
+        expect(find.text('13'), findsOneWidget);
+        expect(find.text('slow tempo'), findsOneWidget);
+        expect(
+          await SessionRepository(
+            auth.repository,
+            'other',
+            store: store,
+          ).local('draft.session.exercise.new'),
+          isNull,
+        );
+        await tapVisible(tester, 'Save set');
+        expect(requests.single['actualReps'], 13);
+        expect(requests.single['actualWeightKg'], 0);
+        expect(requests.single['note'], 'slow tempo');
+        expect(await repo().local('draft.session.exercise.new'), isNull);
+        await tapVisible(tester, 'Log set');
+        expect(find.text('13'), findsNothing);
+        await tapVisible(tester, 'Discard draft');
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
+  testWidgets('draft storage failure keeps form open and prevents submission', (
+    tester,
+  ) async {
+    final store = MemoryWorkoutStore();
+    var posts = 0;
+    final auth = createAuth((req) async {
+      if (req.method == 'POST') posts++;
+      return ok({'session': sessionData()});
+    });
+    final repo = SessionRepository(auth.repository, 'owner', store: store);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LiveWorkoutPage(repository: repo, id: 'session'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tapVisible(tester, 'Log set');
+    store.failWrite = true;
+    await tester.enterText(find.widgetWithText(TextFormField, 'Reps'), '11');
+    await tester.pumpAndSettle();
+    await tapVisible(tester, 'Save set');
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(posts, 0);
+    store.failWrite = false;
+    await tapVisible(tester, 'Keep draft');
+    expect((await repo.local('draft.session.exercise.new'))!['Reps'], '11');
+    await tapVisible(tester, 'Log set');
+    await tapVisible(tester, 'Discard draft');
+    expect(await repo.local('draft.session.exercise.new'), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  test(
+    'interrupted draft handoff recovers exact request before clearing journal',
+    () async {
+      final store = MemoryWorkoutStore();
+      final requests = <String>[];
+      final auth = createAuth((req) async {
+        requests.add(req.body);
+        if (requests.length == 1) throw http.ClientException('response lost');
+        return ok({});
+      });
+      final repo = SessionRepository(auth.repository, 'owner', store: store);
+      const name = 'draft.session.exercise.new';
+      await repo.saveLocal(name, {'Reps': '12'});
+      final body = {'actualReps': 12, 'clientOperationId': operationId()};
+      store.failDelete = true;
+      await expectLater(
+        repo.queue('session', 'POST', '/logs', body, draftName: name),
+        throwsException,
+      );
+      expect(requests, isEmpty);
+      expect(await repo.local(name), isNotNull);
+      expect((await repo.local('pending.session'))!['body'], body);
+      store.failDelete = false;
+      final recreated = SessionRepository(
+        auth.repository,
+        'owner',
+        store: store,
+      );
+      await expectLater(
+        recreated.flush('session'),
+        throwsA(isA<ApiException>()),
+      );
+      expect(await repo.local(name), isNull);
+      expect(await repo.local('pending.session'), isNotNull);
+      await recreated.flush('session');
+      expect(requests[0], requests[1]);
+      expect(await repo.local('pending.session'), isNull);
+    },
+  );
+
   testWidgets('reopening confirms a pending set and refreshes server data', (
     tester,
   ) async {
@@ -210,8 +356,22 @@ void main() {
       await tester.pumpAndSettle();
       await tapVisible(tester, 'Edit set');
       await tester.enterText(find.widgetWithText(TextFormField, 'Reps'), '12');
+      await tapVisible(tester, 'Keep draft');
+      await tapVisible(tester, 'Log set');
+      expect(find.text('12'), findsNothing);
+      await tapVisible(tester, 'Discard draft');
+      await tapVisible(tester, 'Edit set');
+      expect(find.text('12'), findsOneWidget);
       await tapVisible(tester, 'Save set');
       expect(logs[0]['actual_reps'], 12);
+      expect(
+        await SessionRepository(
+          auth.repository,
+          'owner',
+          store: store,
+        ).local('draft.session.exercise.set'),
+        isNull,
+      );
       await tapVisible(tester, 'Delete set');
       await tapVisible(tester, 'Confirm');
       expect(logs, isEmpty);
