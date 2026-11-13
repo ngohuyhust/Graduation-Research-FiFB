@@ -789,3 +789,31 @@ describe the limitations at their original dates.
 
 Next: expand the single pending mutation to an ordered offline queue with explicit
 conflict handling, and run database/device checks in an available test environment.
+
+## 22. Implementation checkpoint — 2026-11-13
+
+Existing cached sessions now accept multiple new sets offline. Pending sets are
+visible in the logger, participate in numbering/copy, and retain exact request
+bodies and operation IDs. The account-scoped journal stores an ordered queue while
+remaining compatible with old single-request records. Writes/replays are serialized
+within a repository instance. Confirmed logs are cached before each queue advance,
+so partial sync can resume after reopening. Draft cleanup is recorded before replay
+so retrying an older set cannot erase a newer unsubmitted draft.
+
+Rejected requests stop synchronization and expose the server reason. Explicit
+discard removes only the rejected head and preserves later sets; uncertain requests
+cannot be silently removed. Authorization failures hide cached/pending content.
+Edit/delete, pause/rest changes and finish remain blocked while sets await sync;
+starting a session still needs connectivity. This does not resolve concurrent edits
+across devices/tabs or provide a general offline queue for every mutation.
+
+Verification: 51 Flutter tests pass, including concurrent append serialization,
+partial sync/restart, rejected-head preservation, multiple offline sets in the UI,
+failed append persistence and protection of newer drafts during retry. Flutter
+analysis/formatting and Web production build (placeholder API URL) pass; the
+20 logger tests also pass after the final access-check refinement. Missing
+local package-cache files were restored with pub get without changing the lockfile.
+Backend/schema are unchanged. Database integration and real device/browser storage
+verification remain outstanding. Next: verify these flows in a real test environment
+and address remaining weeks 9–10 recovery/conflict boundaries before moving to
+curated recommendation data and program generation.

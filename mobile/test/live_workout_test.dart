@@ -55,6 +55,218 @@ Future<void> tapVisible(WidgetTester tester, String label) async {
 }
 
 void main() {
+  test(
+    'failed append preserves queue and retry does not remove a newer draft',
+    () async {
+      final store = MemoryWorkoutStore();
+      var online = false;
+      var requests = 0;
+      final auth = createAuth((req) async {
+        requests++;
+        if (!online) throw http.ClientException('offline');
+        return ok({});
+      });
+      final repo = SessionRepository(auth.repository, 'owner', store: store);
+      const draftName = 'draft.session.exercise.new';
+      await repo.saveLocal(draftName, {'Reps': '8'});
+      final body = {
+        'exerciseId': 'exercise',
+        'setNumber': 1,
+        'actualReps': 8,
+        'clientOperationId': operationId(),
+      };
+      await expectLater(
+        repo.queue('session', 'POST', '/logs', body, draftName: draftName),
+        throwsA(isA<ApiException>()),
+      );
+      final original = await repo.local('pending.session');
+      store.failWrite = true;
+      await expectLater(
+        repo.queue('session', 'POST', '/logs', {
+          ...body,
+          'setNumber': 2,
+          'clientOperationId': operationId(),
+        }),
+        throwsException,
+      );
+      expect(await repo.local('pending.session'), original);
+      expect(requests, 1);
+      store.failWrite = false;
+      await repo.saveLocal(draftName, {'Reps': '15'});
+      online = true;
+      await repo.flush('session');
+      expect((await repo.local(draftName))!['Reps'], '15');
+    },
+  );
+
+  test(
+    'offline queue serializes appends and resumes after partial sync',
+    () async {
+      final store = MemoryWorkoutStore();
+      var online = false;
+      var failSecond = true;
+      final accepted = <int>[];
+      final auth = createAuth((req) async {
+        final body = jsonDecode(req.body) as Map<String, dynamic>;
+        final number = body['setNumber'] as int;
+        if (!online || (number == 2 && failSecond)) {
+          throw http.ClientException('offline');
+        }
+        accepted.add(number);
+        return ok({
+          'log': {
+            'id': 'set$number',
+            'exercise_id': 'exercise',
+            'set_number': number,
+            'client_operation_id': body['clientOperationId'],
+          },
+        });
+      });
+      final repo = SessionRepository(auth.repository, 'owner', store: store);
+      await repo.saveLocal('session.session', sessionData());
+      Future<void> add(int n) async {
+        await expectLater(
+          repo.queue('session', 'POST', '/logs', {
+            'exerciseId': 'exercise',
+            'setNumber': n,
+            'actualReps': 8,
+            'clientOperationId': operationId(),
+          }),
+          throwsA(isA<ApiException>()),
+        );
+      }
+
+      await Future.wait([add(1), add(2), add(3)]);
+      expect(
+        SessionRepository.operations(
+          await repo.local('pending.session'),
+        ).length,
+        3,
+      );
+      online = true;
+      await expectLater(repo.flush('session'), throwsA(isA<ApiException>()));
+      expect(accepted, [1]);
+      expect((await repo.local('session.session'))!['logs'], hasLength(1));
+      expect(
+        SessionRepository.operations(
+          await repo.local('pending.session'),
+        ).map((e) => e['body']['setNumber']),
+        [2, 3],
+      );
+      failSecond = false;
+      await SessionRepository(
+        auth.repository,
+        'owner',
+        store: store,
+      ).flush('session');
+      expect(accepted, [1, 2, 3]);
+      expect(await repo.local('pending.session'), isNull);
+      expect((await repo.local('session.session'))!['logs'], hasLength(3));
+    },
+  );
+
+  test('rejection blocks queue and discard preserves later sets', () async {
+    final store = MemoryWorkoutStore();
+    final calls = <int>[];
+    final auth = createAuth((req) async {
+      final number = jsonDecode(req.body)['setNumber'] as int;
+      calls.add(number);
+      return number == 1 ? failure(409, 'Session completed elsewhere') : ok({});
+    });
+    final repo = SessionRepository(auth.repository, 'owner', store: store);
+    Map<String, dynamic> item(int n) => {
+      'method': 'POST',
+      'suffix': '/logs',
+      'body': {'setNumber': n, 'clientOperationId': operationId()},
+    };
+    await repo.saveLocal('pending.session', {
+      ...item(1),
+      'remaining': [item(2)],
+    });
+    await expectLater(repo.flush('session'), throwsA(isA<ApiException>()));
+    await expectLater(repo.flush('session'), throwsA(isA<ApiException>()));
+    expect(calls, [1]);
+    await expectLater(
+      repo.queue('session', 'POST', '/logs', item(3)['body']),
+      throwsA(isA<ApiException>()),
+    );
+    await repo.dismissRejected('session');
+    expect(
+      SessionRepository.operations(await repo.local('pending.session')).length,
+      1,
+    );
+    await repo.flush('session');
+    expect(calls, [1, 2]);
+  });
+
+  testWidgets(
+    'offline sets remain visible, number consecutively and sync after reopening',
+    (tester) async {
+      final store = MemoryWorkoutStore();
+      var online = false;
+      final serverLogs = <Map<String, dynamic>>[];
+      final auth = createAuth((req) async {
+        if (!online) throw http.ClientException('offline');
+        if (req.method == 'POST') {
+          final body = jsonDecode(req.body);
+          final log = {
+            'id': 'set${body['setNumber']}',
+            'exercise_id': 'exercise',
+            'set_number': body['setNumber'],
+            'actual_reps': body['actualReps'],
+            'client_operation_id': body['clientOperationId'],
+          };
+          serverLogs.add(log);
+          return ok({'log': log});
+        }
+        return ok({'session': sessionData(logs: serverLogs)});
+      });
+      final repo = SessionRepository(auth.repository, 'owner', store: store);
+      await repo.saveLocal('session.session', sessionData());
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiveWorkoutPage(repository: repo, id: 'session'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tapVisible(tester, 'Log set');
+      await tapVisible(tester, 'Save set');
+      await tapVisible(tester, 'Copy previous set');
+      expect(find.textContaining('Pending sync'), findsNWidgets(2));
+      final queued = SessionRepository.operations(
+        await repo.local('pending.session'),
+      );
+      expect(queued.map((e) => e['body']['setNumber']), [1, 2]);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Finish workout'),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.pumpWidget(const SizedBox());
+      online = true;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LiveWorkoutPage(
+            repository: SessionRepository(
+              auth.repository,
+              'owner',
+              store: store,
+            ),
+            id: 'session',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(serverLogs.length, 2);
+      expect(find.textContaining('Pending sync'), findsNothing);
+      expect(await repo.local('pending.session'), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   for (final width in [320.0, 1280.0]) {
     testWidgets(
       'draft survives reopening and is consumed on submit at $width',

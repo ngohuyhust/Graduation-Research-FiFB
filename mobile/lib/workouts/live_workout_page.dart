@@ -50,6 +50,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
   }
 
   Future<void> load({bool recover = false}) async {
+    var accessChecked = false;
     setState(() {
       busy = true;
       error = null;
@@ -58,10 +59,12 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
       pending = await widget.repository.local('pending.${widget.id}');
       // Check ownership before displaying or replaying device-local changes.
       final data = await widget.repository.detail(widget.id);
+      accessChecked = true;
       if (recover && pending != null && pending!['rejected'] != true) {
         session = data;
         await widget.repository.flush(widget.id);
         pending = null;
+        accessChecked = false;
         session = await widget.repository.detail(widget.id);
       } else {
         session = data;
@@ -74,13 +77,17 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
         error = AuthController.messageFor(e);
         offline = true;
         // Never show cached content after an authorization or ownership failure.
-        if (e is ApiException && [401, 403, 404].contains(e.status)) {
+        if (e is ApiException &&
+            ([401, 403].contains(e.status) ||
+                (e.status == 404 && !accessChecked))) {
           session = null;
           pending = null;
         } else {
           try {
             pending = await widget.repository.local('pending.${widget.id}');
-            session ??= await widget.repository.local('session.${widget.id}');
+            session =
+                await widget.repository.local('session.${widget.id}') ??
+                session;
           } catch (_) {
             /* Report original failure. */
           }
@@ -97,7 +104,11 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     Map<String, dynamic>? body, {
     String? draftName,
   }) async {
-    if (busy || pending != null) return;
+    if (busy ||
+        (pending != null &&
+            (method != 'POST' || suffix != '/logs' || !canAppend))) {
+      return;
+    }
     setState(() {
       busy = true;
       error = null;
@@ -114,11 +125,17 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     } catch (e) {
       try {
         pending = await widget.repository.local('pending.${widget.id}');
+        session =
+            await widget.repository.local('session.${widget.id}') ?? session;
       } catch (_) {
         /* Keep error visible. */
       }
       if (mounted) {
         setState(() {
+          if (e is ApiException && e.isUnauthorized) {
+            session = null;
+            pending = null;
+          }
           error = AuthController.messageFor(e);
           busy = false;
         });
@@ -138,11 +155,17 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     } catch (e) {
       try {
         pending = await widget.repository.local('pending.${widget.id}');
+        session =
+            await widget.repository.local('session.${widget.id}') ?? session;
       } catch (_) {
         /* Keep original failure. */
       }
       if (mounted) {
         setState(() {
+          if (e is ApiException && e.isUnauthorized) {
+            session = null;
+            pending = null;
+          }
           error = AuthController.messageFor(e);
           busy = false;
         });
@@ -150,15 +173,50 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     }
   }
 
-  List<Map<String, dynamic>> get logs =>
-      (session?['logs'] as List? ?? []).cast<Map<String, dynamic>>();
+  List<Map<String, dynamic>> get queued =>
+      SessionRepository.operations(pending);
+  bool get canAppend => queued.every(
+    (item) =>
+        SessionRepository.isQueuedSet(item) &&
+        item['rejected'] != true &&
+        !item.containsKey('draftName'),
+  );
+  List<Map<String, dynamic>> get logs {
+    final confirmed = (session?['logs'] as List? ?? [])
+        .cast<Map<String, dynamic>>();
+    return [
+      ...confirmed,
+      for (final item in queued)
+        if (SessionRepository.isQueuedSet(item) &&
+            !confirmed.any(
+              (row) =>
+                  row['client_operation_id'] ==
+                  item['body']['clientOperationId'],
+            ))
+          {
+            'id': 'local:${item['body']['clientOperationId']}',
+            'exercise_id': item['body']['exerciseId'],
+            'set_number': item['body']['setNumber'],
+            'actual_reps': item['body']['actualReps'],
+            'actual_weight_kg': item['body']['actualWeightKg'],
+            'duration_seconds': item['body']['durationSeconds'],
+            'note': item['body']['note'],
+            'local_pending': true,
+          },
+    ];
+  }
 
   Future<void> record(
     Map<String, dynamic> exercise, {
     Map<String, dynamic>? log,
     bool copy = false,
   }) async {
-    if (formOpen || busy || pending != null) return;
+    if (formOpen ||
+        busy ||
+        !canAppend ||
+        (pending != null && log != null && !copy)) {
+      return;
+    }
     formOpen = true;
     final form = GlobalKey<FormState>();
     final values = <String, String>{
@@ -480,8 +538,13 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     final completed = session?['completed_at'] != null,
         paused = session?['paused'] == true;
     final disabled = busy || pending != null || completed || paused;
+    final addDisabled = busy || !canAppend || completed || paused;
     final deadline = DateTime.tryParse(
-      session?['rest_ends_at'] as String? ?? '',
+      (queued.isNotEmpty && SessionRepository.isQueuedSet(queued.last)
+                  ? queued.last['body']['restEndsAt']
+                  : session?['rest_ends_at'])
+              as String? ??
+          '',
     );
     final remaining = deadline == null
         ? 0
@@ -513,12 +576,13 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                 if (error != null) Text(error!),
                 if (offline && session != null)
                   const Text(
-                    'Showing saved data. New changes need sync before you can continue.',
+                    'Showing saved data. Sync to confirm the latest workout state.',
                   ),
                 if (pending != null) ...[
-                  const Text(
-                    'A change is saved on this device and awaiting confirmation. Retry sync before continuing.',
+                  Text(
+                    '${queued.length} changes saved on this device, awaiting confirmation.',
                   ),
+                  if (pending!['error'] is String) Text(pending!['error']),
                   if (pending!['body']?['setNumber'] != null)
                     Text(
                       'Pending set ${pending!['body']['setNumber']}: ${pending!['body']['actualReps'] ?? '—'} reps · ${pending!['body']['actualWeightKg'] ?? '—'} kg',
@@ -534,7 +598,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                           : () async {
                               if (await confirm(
                                     'Discard rejected change?',
-                                    'The server rejected this change. Discard it to continue with the saved workout.',
+                                    'Only this rejected change will be discarded. Later queued sets will be kept for sync.',
                                   ) &&
                                   mounted) {
                                 try {
@@ -668,7 +732,9 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                             ))
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                title: Text(setText(log)),
+                                title: Text(
+                                  '${setText(log)}${log['local_pending'] == true ? ' · Pending sync' : ''}',
+                                ),
                                 subtitle: completed
                                     ? null
                                     : Wrap(
@@ -696,7 +762,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                                 spacing: 8,
                                 children: [
                                   FilledButton(
-                                    onPressed: disabled
+                                    onPressed: addDisabled
                                         ? null
                                         : () => record(exercise),
                                     child: const Text('Log set'),
@@ -707,7 +773,7 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                                         exercise['exercise_id'],
                                   ))
                                     OutlinedButton(
-                                      onPressed: disabled
+                                      onPressed: addDisabled
                                           ? null
                                           : () => record(
                                               exercise,

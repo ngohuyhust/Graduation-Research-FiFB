@@ -1,3 +1,11 @@
+## Báo cáo ngày 13/11/2026
+
+- Thêm hàng đợi nhiều set mới khi offline cho session đã lưu: hiển thị Pending sync, đánh số liên tiếp và sao chép set đang chờ
+- Đồng bộ theo thứ tự với mã retry giữ nguyên; lưu set đã xác nhận trước khi chuyển sang set kế tiếp để phục hồi khi đồng bộ được một phần
+- Thao tác bị từ chối dừng hàng đợi và hiển thị lý do; bỏ thao tác đó vẫn giữ các set phía sau; retry không xóa nhầm bản nháp mới
+- Kiểm tra: 51 Flutter tests, analyze/format/build Web đạt (URL API mẫu); gồm ghi đồng thời, lỗi lưu trữ, khôi phục sau đồng bộ một phần, xử lý từ chối và luồng ghi nhiều set offline; 20 logger tests đạt sau chỉnh sửa cuối
+- Không đổi backend/schema; sửa/xóa, pause/rest và hoàn thành vẫn chờ hàng đợi rỗng; chưa xử lý đồng thời nhiều tab/thiết bị và chưa xác minh storage trên thiết bị thật
+
 ## Báo cáo ngày 08/11/2026
 
 - Bổ sung lưu bản nháp form set theo từng tài khoản, buổi tập, bài tập và set; mở lại form khôi phục reps/tạ/thời lượng/ghi chú đang nhập

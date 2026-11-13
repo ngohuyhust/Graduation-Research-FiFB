@@ -113,4 +113,15 @@ request journal. The journal is written before removing the draft, so recovery
 can finish an interrupted handoff. Storage failures keep the form available for
 retry. Abrupt termination before an asynchronous storage write finishes can still
 lose the latest keystrokes; real storage/lifecycle verification remains pending.
-Drafts do not synchronize across devices and are not a multi-operation offline queue.
+Drafts do not synchronize across devices.
+
+An existing cached session can now accept multiple new sets while offline. Sets
+appear as Pending sync and count toward the next set number. Retry sync, reopening,
+or returning to the foreground sends them in order using their original retry IDs.
+Acknowledged sets are cached before the queue advances, allowing partial recovery.
+A rejected request stops the queue and shows the server reason; discarding it
+removes only that request and keeps later sets. Uncertain requests cannot be discarded.
+Edits/deletes, pause/rest changes and completion wait until the queue is empty;
+new sessions still require the server. Old single-request journals remain readable.
+Repository calls are serialized within one instance; simultaneous browser tabs or
+devices are not coordinated and edits are not automatically merged.

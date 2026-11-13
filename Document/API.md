@@ -320,15 +320,18 @@ V5 freezes the current full plan for older sessions, whose selected day was neve
 recorded. It cannot reconstruct plan versions lost before migration. New selected-day
 sessions use immutable snapshots. Existing response field names remain snake_case.
 
-Flutter keeps cached session data and one pending submitted mutation under keys
+Flutter keeps cached session data and an ordered pending-set queue under keys
 scoped to the signed-in account using the secure-storage plugin. Requests are
-persisted before sending. Retry reuses the exact body/key; new changes are blocked
-until the pending operation is confirmed. Definitively rejected changes may be
-discarded explicitly. An uncertain network failure cannot be silently discarded.
-This is not a complete offline queue: initial start needs the server. Unsubmitted
+persisted before sending. Retry reuses the exact body/key. Multiple new keyed set
+POSTs can wait offline; edits/deletes and session state changes wait until these
+are confirmed. A rejected head stops replay and exposes its server reason;
+explicit discard removes only that head, preserving later requests. An uncertain
+network failure cannot be silently discarded. Confirmed logs are cached before
+advancing the queue. Existing single-request journals remain readable, and no
+server contract changes are required. Initial start still needs the server. Unsubmitted
 set forms now save local draft text per account/session/exercise/set; reopening
 the same form restores it. Submission persists the exact pending request before
 removing its draft; interrupted cleanup is repeated before replay. Draft metadata
 stays on the client and does not change the API payload. Cached data is not shown after
-401/403/404 responses. Native secure storage and Web browser persistence still
+authorization failures or a missing session lookup. Native secure storage and Web browser persistence still
 require device/browser smoke tests (Web secure storage requires a secure context).
