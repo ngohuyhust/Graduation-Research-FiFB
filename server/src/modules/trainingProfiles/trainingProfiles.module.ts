@@ -7,6 +7,7 @@ import { TrainingProfilesController } from "./trainingProfiles.controller";
 @Module({
   imports: [DatabaseModule, HttpModule],
   controllers: [TrainingProfilesController],
+  exports: [TrainingProfilesService],
   providers: [TrainingProfilesService],
 })
 export class TrainingProfilesModule {}

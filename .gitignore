@@ -10,3 +10,6 @@ logs/
 tmp/
 dist/
 .DS_Store
+.specify/
+.agents/
+specs/

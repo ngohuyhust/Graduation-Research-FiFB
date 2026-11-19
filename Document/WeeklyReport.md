@@ -1,3 +1,18 @@
+## Báo cáo ngày 19/11/2026
+
+- Chọn iOS làm nền tảng mobile chính để phát triển trên Mac và chạy trên iPhone; Flutter Web tiếp tục phục vụ màn hình lớn.
+- Hoàn thành phần lập trình tuần 11–13. Trên Flutter, người dùng có thể xem lịch, thời lượng và lý do chọn từng bài trước khi lưu kế hoạch riêng tư 2, 3 hoặc 4 buổi mỗi tuần. Danh mục gồm 64 bài thuộc 8 mẫu chuyển động.
+- Cho phép thay một bài chưa ghi set trong buổi đang tập. Các set đã ghi và kế hoạch gốc được giữ nguyên. Nếu thiết bị khác gửi lại set offline cho bài đã thay, ứng dụng báo xung đột để người dùng xử lý.
+- Sau buổi tập, người dùng có thể đánh giá độ khó và đánh dấu thích hoặc không thích bài. Ở lần tập sau, ứng dụng giải thích gợi ý rep/tạ và chỉ cập nhật mục tiêu khi người dùng xác nhận.
+- Đánh giá trên 5 hồ sơ mẫu cho kết quả 3 kế hoạch hợp lệ và 2 trường hợp được giải thích do thiếu thiết bị hoặc thời gian. Bộ luật có 0 vi phạm ràng buộc. Cách chọn chỉ theo nhóm cơ có 44 vi phạm khi đếm các vị trí bài không phù hợp và các ngày vượt thời lượng.
+- Trong quá trình triển khai, 13 kịch bản tích hợp PostgreSQL/Redis và 55 test Flutter đã đạt. Đã chạy các luồng chính trên Chrome với API cục bộ. T016 được miễn nghiệm thu theo yêu cầu của chủ dự án.
+
+## Báo cáo ngày 18/11/2026
+
+- Tổ chức công việc tuần 11–13 thành các task Spec Kit theo ba luồng tạo kế hoạch, thay bài và gợi ý tiến bộ.
+- Chạy integration trên PostgreSQL/Redis và sửa lỗi HTTP 500 khi lưu hồ sơ tập luyện do truy vấn tham chiếu cột không tồn tại. Cả 9 kịch bản đạt trên V5 và đạt lại sau khi nâng lên V6.
+- Sửa bộ xếp hạng để luôn loại bài người dùng đã loại trừ trong hồ sơ, kể cả khi bài từng được đánh dấu thích.
+
 ## Báo cáo ngày 13/11/2026
 
 - Thêm hàng đợi nhiều set mới khi offline cho session đã lưu: hiển thị Pending sync, đánh số liên tiếp và sao chép set đang chờ
