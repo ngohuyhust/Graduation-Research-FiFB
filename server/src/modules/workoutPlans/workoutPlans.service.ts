@@ -44,17 +44,19 @@ export class WorkoutPlansService {
   }
 
   async create(userId: string, payload: WorkoutPlanPayload) {
-    const plan = await this.db.withTransaction(async (client) => {
-      assertUniqueWorkoutOrder(payload.items);
-      assertScheduleDays(
-        payload.schedule,
-        payload.items.map((item) => item.dayNumber),
-      );
-      const created = await this.repository.createPlan(client, userId, payload);
-      await this.insertItems(client, created.id, payload.items);
-      return this.repository.getPlan(client, userId, created.id);
-    });
+    const plan = await this.db.withTransaction((client) => this.createInTransaction(client, userId, payload));
     return { plan };
+  }
+
+  async createInTransaction(client: QueryExecutor, userId: string, payload: WorkoutPlanPayload) {
+    assertUniqueWorkoutOrder(payload.items);
+    assertScheduleDays(
+      payload.schedule,
+      payload.items.map((item) => item.dayNumber),
+    );
+    const created = await this.repository.createPlan(client, userId, payload);
+    await this.insertItems(client, created.id, payload.items);
+    return this.repository.getPlan(client, userId, created.id);
   }
 
   async detail(userId: string, id: string) {

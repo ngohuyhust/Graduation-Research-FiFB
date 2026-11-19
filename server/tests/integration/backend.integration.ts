@@ -1,3 +1,11 @@
+import {
+  generatePlan,
+  type Candidate,
+  type Movement,
+  type Profile,
+  type Selection,
+  type Template,
+} from "../../src/modules/recommendations/recommendation.rules";
 import { randomUUID } from "crypto";
 import request from "supertest";
 import type { Express } from "express";
@@ -24,7 +32,7 @@ describe("migrated PostgreSQL and Redis backend", () => {
     const migrations = await pool.query(
       "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank",
     );
-    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(migrations.rows.map((row) => row.version)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8"]);
     await pool.query(
       "INSERT INTO app_users (id, email, password_hash, email_verified_at) VALUES ($1, $2, $5, now()), ($3, $4, $5, now())",
       [
@@ -51,6 +59,11 @@ describe("migrated PostgreSQL and Redis backend", () => {
         await nest.close();
       }
       await pool.query("DELETE FROM workout_sessions WHERE user_id IN ($1, $2)", [userId, otherId]);
+      await pool.query(
+        "DELETE FROM workout_plan_items WHERE workout_plan_id IN (SELECT id FROM workout_plans WHERE owner_id=$1)",
+        [userId],
+      );
+      await pool.query("DELETE FROM workout_plans WHERE owner_id=$1", [userId]);
       await pool.query("DELETE FROM exercises WHERE id = $1", [exerciseId]);
       await pool.query("DELETE FROM app_users WHERE id IN ($1, $2)", [userId, otherId]);
     } finally {
@@ -362,5 +375,277 @@ describe("migrated PostgreSQL and Redis backend", () => {
       .expect(404);
     const stats = await request(app).get("/api/v1/workout-sessions/stats").auth(token, { type: "bearer" }).expect(200);
     expect(stats.body.data).toMatchObject({ totalSessions: 1, totalVolumeKg: 200 });
+  });
+  test("catalog covers all eight patterns and rejects invalid schedules and classifications", async () => {
+    const rows = await pool.query(
+      "SELECT movement_pattern,count(*)::int AS n FROM recommendation_exercises WHERE review_status='approved' GROUP BY movement_pattern",
+    );
+    expect(rows.rows).toHaveLength(8);
+    expect(rows.rows.every((r) => r.n >= 8)).toBe(true);
+    for (const schedule of ["[1,1]", "[0,4]", "[1]"]) {
+      await expect(
+        pool.query("UPDATE recommendation_templates SET schedule=$1 WHERE days_per_week=2", [schedule]),
+      ).rejects.toMatchObject({ code: "23514" });
+    }
+    await expect(
+      pool.query("UPDATE recommendation_templates SET slots='[[\"unknown\"],[]]' WHERE days_per_week=2"),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(pool.query("UPDATE recommendation_exercises SET replacement_group=''")).rejects.toMatchObject({
+      code: "23514",
+    });
+  });
+
+  test("recommendations replay across three schedules, recheck availability, isolate owners and save exactly once", async () => {
+    const profilePath = "/api/v1/users/me/training-profile";
+    const path = "/api/v1/recommendations";
+    const gear = (await pool.query("SELECT id FROM equipments")).rows.map((r) => r.id);
+    const profile = {
+      goal: "strength",
+      experienceLevel: "beginner",
+      daysPerWeek: 2,
+      sessionMinutes: 30,
+      location: "gym",
+      limitations: "",
+      equipmentIds: gear,
+      priorityMuscleIds: [],
+      dislikedExerciseIds: [],
+    };
+    const save = (overrides: Record<string, unknown>) =>
+      request(app)
+        .put(profilePath)
+        .auth(token, { type: "bearer" })
+        .send({ ...profile, ...overrides })
+        .expect(200);
+    const post = (suffix = "", actor = token) =>
+      request(app)
+        .post(path + suffix)
+        .auth(actor, { type: "bearer" });
+    await save({ equipmentIds: [] });
+    expect((await post().expect(201)).body.data.problem).toMatch(/eligible/i);
+    await save({ sessionMinutes: 15 });
+    expect((await post().expect(201)).body.data.problem).toMatch(/minutes/i);
+    for (const days of [2, 3, 4]) {
+      await save({ daysPerWeek: days });
+      const preview = (await post().expect(201)).body.data;
+      const { input, result } = (
+        await pool.query("SELECT input,result FROM recommendation_runs WHERE id=$1", [preview.runId])
+      ).rows[0];
+      expect(generatePlan(input.profile, input.template, input.candidates)).toEqual(result);
+      expect(preview.plan.schedule).toHaveLength(days);
+      for (const { dayNumber } of preview.plan.schedule) {
+        const picks = preview.selections.filter((s: Selection) => s.dayNumber === dayNumber);
+        expect(picks.length).toBe(input.template.slots[dayNumber - 1].length);
+        expect(picks.reduce((sum: number, s: Selection) => sum + s.minutes, 0)).toBeLessThanOrEqual(
+          profile.sessionMinutes,
+        );
+        expect(picks.every((s: Selection) => s.reason.length)).toBe(true);
+      }
+      await post("/" + preview.runId + "/accept", otherToken).expect(404);
+      const discarded = (await post()).body.data;
+      await post("/" + discarded.runId + "/dismiss").expect(201);
+      await post("/" + discarded.runId + "/accept").expect(409);
+      const first = preview.selections[0].exerciseId;
+      await pool.query("UPDATE recommendation_exercises SET review_status='pending' WHERE exercise_id=$1", [first]);
+      try {
+        await post("/" + preview.runId + "/accept").expect(409);
+      } finally {
+        await pool.query("UPDATE recommendation_exercises SET review_status='approved' WHERE exercise_id=$1", [first]);
+      }
+      const [a, b] = await Promise.all([1, 2].map(() => post("/" + preview.runId + "/accept").expect(201)));
+      expect(a.body.data.planId).toBe(b.body.data.planId);
+      const today = await request(app)
+        .get("/api/v1/workout-plans/today?weekday=1")
+        .auth(token, { type: "bearer" })
+        .expect(200);
+      expect(today.body.data.items.some((r: { planId: string }) => r.planId === a.body.data.planId)).toBe(true);
+    }
+    expect(
+      (await pool.query("SELECT id FROM workout_plans WHERE owner_id=$1 AND visibility='private'", [userId])).rows,
+    ).toHaveLength(3);
+  });
+
+  test("replacement preserves other slots, recorded sets and the saved plan; feedback drives only confirmed future targets", async () => {
+    const post = (path: string, body: Record<string, unknown> = {}, actor = token) =>
+      request(app)
+        .post("/api/v1" + path)
+        .auth(actor, { type: "bearer" })
+        .send(body);
+    const get = async (path: string) =>
+      (
+        await request(app)
+          .get("/api/v1" + path)
+          .auth(token, { type: "bearer" })
+          .expect(200)
+      ).body.data;
+    const equipmentIds = (await pool.query("SELECT id FROM equipments")).rows.map((r) => r.id);
+    await request(app)
+      .put("/api/v1/users/me/training-profile")
+      .auth(token, { type: "bearer" })
+      .send({
+        goal: "strength",
+        experienceLevel: "beginner",
+        daysPerWeek: 4,
+        sessionMinutes: 30,
+        location: "gym",
+        limitations: "",
+        equipmentIds,
+        priorityMuscleIds: [],
+        dislikedExerciseIds: [],
+      })
+      .expect(200);
+    const runId = (await post("/recommendations").expect(201)).body.data.runId;
+    const planId = (await post("/recommendations/" + runId + "/accept").expect(201)).body.data.planId;
+    const plan = (await get("/workout-plans/" + planId)).plan;
+    const start = async () =>
+      (await post("/workout-sessions", { title: "Adapt", workoutPlanId: planId, dayNumber: 1 }).expect(201)).body.data
+        .session.id;
+    const id = await start(),
+      path = "/workout-sessions/" + id;
+    const initial = (await get(path)).session.planned_exercises;
+    const [a, b] = initial;
+    await post(path + "/logs", { exerciseId: a.exercise_id, actualReps: 12, actualWeightKg: 20 }).expect(201);
+    const change = { slotId: b.id, expectedExerciseId: b.exercise_id, reason: "disliked" };
+    const blocked = (
+      await post(path + "/substitutions", { ...change, slotId: a.id, expectedExerciseId: a.exercise_id }).expect(201)
+    ).body.data;
+    expect(blocked.problem).toMatch(/logged/);
+    await post(path + "/substitutions", change, otherToken).expect(404);
+    expect((await post(path + "/substitutions", { ...change, remainingMinutes: 1 })).body.data.problem).toBeTruthy();
+    const first = (await post(path + "/substitutions", change).expect(201)).body.data;
+    const second = (await post(path + "/substitutions", change).expect(201)).body.data;
+    expect(first.replacement.exercise_id).not.toBe(b.exercise_id);
+    await post(path + "/substitutions/accept", { runId: first.runId }, otherToken).expect(404);
+    await post(path + "/substitutions/accept", { runId: first.runId }).expect(201);
+    await post(path + "/substitutions/accept", { runId: second.runId }).expect(409);
+    // A set queued by another client against the old exercise must stop on replay.
+    await post(path + "/logs", { exerciseId: b.exercise_id, actualReps: 8, clientOperationId: randomUUID() }).expect(
+      409,
+    );
+    const changed = (await get(path)).session;
+    expect(changed.planned_exercises).toEqual(
+      initial.map((s: { id: string }) => (s.id === b.id ? first.replacement : s)),
+    );
+    expect(changed.logs).toHaveLength(1);
+    expect((await get("/workout-plans/" + planId)).plan).toEqual(plan);
+    const feedback = (actor: string, difficulty: string) =>
+      request(app)
+        .put("/api/v1" + path + "/exercises/" + a.exercise_id + "/feedback")
+        .auth(actor, { type: "bearer" })
+        .send({ difficulty, preference: "disliked" });
+    await feedback(token, "easy").expect(409);
+    await request(app)
+      .patch("/api/v1" + path)
+      .auth(token, { type: "bearer" })
+      .send({ completed: true })
+      .expect(200);
+    await feedback(otherToken, "easy").expect(404);
+    await feedback(token, "hard").expect(200);
+    const next = "/workout-sessions/" + (await start());
+    const suggestion = next + "/exercises/" + a.exercise_id + "/suggestion";
+    const hard = await get(suggestion);
+    expect(hard.action).toBe("hold_or_reduce");
+    await post("/recommendations/" + hard.runId + "/dismiss").expect(201);
+    await post(suggestion + "/accept", { runId: hard.runId }).expect(409);
+    await feedback(token, "easy").expect(200);
+    const proposed = await get(suggestion);
+    expect(proposed.action).toBe("increase_load");
+    const before = (await get(next)).session.planned_exercises;
+    expect(before[0]).toEqual(a);
+    await post(suggestion + "/accept", { runId: proposed.runId }).expect(201);
+    const after = (await get(next)).session.planned_exercises;
+    expect(after).toEqual([{ ...a, ...proposed.target }, ...before.slice(1)]);
+    expect((await get(path)).session.logs).toEqual(changed.logs);
+    const preview = (await post("/recommendations").expect(201)).body.data;
+    expect(preview.exclusions).toContainEqual({
+      exerciseId: a.exercise_id,
+      reason: "Excluded from the training profile",
+    });
+  });
+  test("compares the versioned rules against a muscle-only selector on five fixed profiles", async () => {
+    const catalog = (await pool.query("SELECT id,name FROM equipments")).rows;
+    const muscles = (await pool.query("SELECT id,name FROM muscles")).rows;
+    const muscleId = (name: string) => muscles.find((m) => m.name === name).id;
+    const slotMuscle: Record<Movement, string> = {
+      squat: "quadriceps",
+      hinge: "glutes",
+      core: "abdominals",
+      horizontal_pull: "middle back",
+      horizontal_push: "chest",
+      vertical_push: "shoulders",
+      vertical_pull: "lats",
+      single_leg: "quadriceps",
+    };
+    const scenarios = [
+      { days: 2, gear: catalog, minutes: 30 },
+      {
+        days: 3,
+        gear: catalog.filter((e) => ["lat pulldown machine", "dumbbell", "bands", "bench"].includes(e.name)),
+        minutes: 30,
+      },
+      { days: 4, gear: catalog, minutes: 20 },
+      { days: 2, gear: [], minutes: 30 },
+      { days: 3, gear: catalog, minutes: 15 },
+    ];
+    const metrics = { rules: { plans: 0, violations: 0 }, baseline: { plans: 0, violations: 0 } };
+    for (const { days, gear, minutes } of scenarios) {
+      const profile: Profile = {
+        goal: "strength",
+        experienceLevel: "beginner",
+        daysPerWeek: days,
+        location: "home",
+        sessionMinutes: minutes,
+        equipmentIds: gear.map((e) => e.id),
+        priorityMuscleIds: [muscleId("glutes")],
+        dislikedExerciseIds: [],
+        limitations: "",
+      };
+      await request(app)
+        .put("/api/v1/users/me/training-profile")
+        .auth(token, { type: "bearer" })
+        .send(profile)
+        .expect(200);
+      const run = (await request(app).post("/api/v1/recommendations").auth(token, { type: "bearer" }).expect(201)).body
+        .data;
+      const { template, candidates } = (
+        await pool.query("SELECT input FROM recommendation_runs WHERE id=$1", [run.runId])
+      ).rows[0].input as { template: Template; candidates: Candidate[] };
+      const ordered = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
+      // The baseline fills each slot by its conventional primary muscle; tie-break by name.
+      const baseline = template.slots.map((day) =>
+        day.map((pattern) => ordered.find((c) => c.targetIds.includes(muscleId(slotMuscle[pattern])))!),
+      );
+      const adaptive = run.plan
+        ? template.slots.map((_, day) =>
+            run.selections
+              .filter((s: Selection) => s.dayNumber === day + 1)
+              .map((s: Selection) => ordered.find((c) => c.id === s.exerciseId)!),
+          )
+        : null;
+      for (const [strategy, result] of [
+        ["baseline", baseline],
+        ["rules", adaptive],
+      ] as const) {
+        if (!result) continue;
+        metrics[strategy].plans++;
+        result.forEach((picks: Candidate[], day: number) => {
+          for (const [i, pick] of picks.entries()) {
+            if (
+              pick.pattern !== template.slots[day][i] ||
+              pick.difficulty > 1 ||
+              !pick.beginnerFriendly ||
+              !pick.equipmentKnown ||
+              pick.equipmentIds.some((id) => !profile.equipmentIds.includes(id)) ||
+              profile.dislikedExerciseIds.includes(pick.id)
+            )
+              metrics[strategy].violations++;
+          }
+          if (picks.reduce((n, c) => n + c.minutes, 0) > minutes) metrics[strategy].violations++;
+        });
+      }
+    }
+    expect(metrics.rules).toEqual({ plans: 3, violations: 0 });
+    expect(metrics.baseline.plans).toBe(5);
+    expect(metrics.baseline.violations).toBeGreaterThan(0);
+    console.info("Five-profile recommendation evaluation", metrics);
   });
 });

@@ -11,8 +11,7 @@ Một Flutter codebase phục vụ hai vai trò:
 
 Nền tảng triển khai:
 
-- Android là sản phẩm chính.
-- iOS có thể build từ cùng codebase.
+- iOS là nền tảng mobile chính. Phát triển trên Mac và chạy ứng dụng trên iPhone.
 - Flutter Web cung cấp giao diện màn hình lớn.
 - Tái sử dụng NestJS, PostgreSQL và Redis hiện có; Socket.IO không phải thành phần bắt buộc khi không triển khai chat.
 
@@ -420,7 +419,7 @@ Nếu tiến độ chậm, giữ User, Recommendation và chất lượng workou
 ### 12.1. Graduation MVP bắt buộc
 
 - Một Flutter app cho User và Admin.
-- Android và Flutter Web.
+- iOS và Flutter Web.
 - Onboarding.
 - Exercise library.
 - Ba program template.
@@ -817,3 +816,50 @@ Backend/schema are unchanged. Database integration and real device/browser stora
 verification remain outstanding. Next: verify these flows in a real test environment
 and address remaining weeks 9–10 recovery/conflict boundaries before moving to
 curated recommendation data and program generation.
+
+## 23. Implementation checkpoint — 2026-11-18
+
+Verified the checkpoint 22 backend on disposable PostgreSQL 18.6 and Redis
+8.0.5. On V5, saving a training profile returned HTTP 500 because the exercise
+query referenced a nonexistent deletion timestamp. The query now uses the
+exercise status and retains existing exclusions for retired exercises. All nine
+integration scenarios passed on V5 and again after upgrading the same database
+to V6. Flyway 13.10.0 validated all six migrations and a repeat migrate had
+nothing to apply. Android/Web storage and cross-device conflict handling still
+need verification.
+
+Started the week 11–13 recommendation work from the existing Spec Kit plan.
+The candidate ranking now reads the training profile's excluded exercise IDs
+even when a candidate has no negative feedback. Unit tests cover the exclusion
+alongside equipment, experience, preference, history and deterministic ordering.
+The next task is to complete the V6 data constraints and their integration tests
+before loading reviewed exercises. Track implementation and acceptance in the
+[Spec Kit task list](../specs/001-adaptive-recommendations/tasks.md).
+
+## 24. Weeks 11–13 implementation — 2026-11-19
+
+Flutter Workout now previews, dismisses and saves private programs for 2, 3
+and 4 training days. The live logger supports slot-specific substitution and
+confirmed next-workout targets. Completed sessions accept feedback. Decisions,
+rule versions and scoring inputs are stored per account. Later offline replay
+of a removed exercise returns a conflict for explicit review.
+
+V7 adds constraints to the V6 schema. V8 seeds eight exercises per movement
+pattern with source IDs, instructions, equipment and target muscles from the
+[public-domain Free Exercise DB snapshot](https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5).
+The 64 classifications are project seed decisions. Independent trainer review
+and calibration with real user choices remain future evidence.
+
+The week 13 five-profile fixture produced three valid plans and two explained
+constraint failures (missing equipment and insufficient time). The rules
+had zero violations. The muscle-only baseline produced five plans with 44
+violations, counting invalid exercise slots and over-budget days. Synthetic
+accept/dismiss actions verify event recording; they do not measure user adoption.
+For observed choice rates, group decided recommendation_runs by kind and
+decision, using accepted / (accepted + dismissed) within each kind.
+
+During implementation, PostgreSQL/Redis integration passed 13 scenarios and
+Flutter passed 55 tests. In Chrome with a local API, the two-day plan appeared
+in Today Workout, substitution preserved a logged set, and an easy rating
+after 12 reps at 20 kg yielded a confirmed 20.5 kg target. Formal Android/Web
+acceptance was waived by the project owner. No Android device run is claimed.

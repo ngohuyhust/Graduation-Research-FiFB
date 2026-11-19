@@ -3,6 +3,7 @@ import '../auth/auth_controller.dart';
 import '../exercises/exercise_detail_page.dart';
 import '../exercises/exercise_repository.dart';
 import 'plan_editor.dart';
+import 'recommendation_page.dart';
 import 'workout_repository.dart';
 import 'session_repository.dart';
 import 'live_workout_page.dart';
@@ -105,6 +106,26 @@ class _WorkoutPlansState extends State<WorkoutPlans> {
         onPressed: loading || mutating ? null : () => edit(),
         icon: const Icon(Icons.add),
         label: const Text('Create plan'),
+      ),
+      OutlinedButton(
+        onPressed: loading || mutating
+            ? null
+            : () async {
+                final saved = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RecommendationPage(
+                      auth: widget.repository.auth,
+                      mode: WorkoutAdvice.plan,
+                    ),
+                  ),
+                );
+                if (saved == true && mounted) {
+                  page = 1;
+                  await load();
+                }
+              },
+        child: const Text('Suggest a plan'),
       ),
       const SizedBox(height: 16),
       if (loading)

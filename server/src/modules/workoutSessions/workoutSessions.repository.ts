@@ -174,6 +174,12 @@ export class WorkoutSessionsRepository {
         }
       }
       if (session.completed_at) return null;
+      const slots: { exercise_id: string; replaced_exercise_ids?: string[] }[] = session.planned_snapshot ?? [];
+      if (
+        slots.some((slot) => slot.replaced_exercise_ids?.includes(payload.exerciseId)) &&
+        !slots.some((slot) => slot.exercise_id === payload.exerciseId)
+      )
+        throw new ConflictException("This exercise was replaced. Review the pending set.");
       const active = await db.query("SELECT id FROM exercises WHERE id = $1 AND status = 'active'", [
         payload.exerciseId,
       ]);

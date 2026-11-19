@@ -1,3 +1,4 @@
+import { RecommendationsModule } from "./modules/recommendations/recommendations.module";
 import { HealthController } from "./common/health.controller";
 import { TrainingProfilesModule } from "./modules/trainingProfiles/trainingProfiles.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
@@ -20,6 +21,7 @@ import { AdminModule } from "./modules/admin/admin.module";
   controllers: [HealthController],
   imports: [
     TrainingProfilesModule,
+    RecommendationsModule,
     NotificationsModule,
     ChatModule,
     WorkoutSessionsModule,

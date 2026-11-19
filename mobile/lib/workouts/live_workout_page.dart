@@ -5,6 +5,7 @@ import '../core/api_client.dart';
 import '../exercises/exercise_detail_page.dart';
 import '../exercises/exercise_repository.dart';
 import 'session_repository.dart';
+import 'recommendation_page.dart';
 
 class LiveWorkoutPage extends StatefulWidget {
   const LiveWorkoutPage({
@@ -221,7 +222,8 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     final form = GlobalKey<FormState>();
     final values = <String, String>{
       'Reps': '${log?['actual_reps'] ?? exercise['reps'] ?? ''}',
-      'Weight (kg)': '${log?['actual_weight_kg'] ?? ''}',
+      'Weight (kg)':
+          '${log?['actual_weight_kg'] ?? (log == null ? exercise['target_weight_kg'] : null) ?? ''}',
       'Duration (seconds)':
           '${log?['duration_seconds'] ?? exercise['duration_seconds'] ?? ''}',
       'Note': log?['note'] as String? ?? '',
@@ -533,6 +535,21 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
     if ((row['note'] as String? ?? '').isNotEmpty) row['note'] as String,
   ].join(' · ');
 
+  Future<void> advice(WorkoutAdvice mode, Map<String, dynamic> exercise) async {
+    final applied = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecommendationPage(
+          auth: widget.repository.auth,
+          sessionId: widget.id,
+          exercise: exercise,
+          mode: mode,
+        ),
+      ),
+    );
+    if (mounted && applied == true) await load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final completed = session?['completed_at'] != null,
@@ -696,6 +713,54 @@ class _LiveWorkoutPageState extends State<LiveWorkoutPage>
                             if (exercise['sets'] != null)
                               Text(
                                 'Target: ${exercise['sets']} sets · ${exercise['reps'] ?? '—'} reps',
+                              ),
+                            if (exercise['target_weight_kg'] != null)
+                              Text(
+                                'Target load: ${exercise['target_weight_kg']} kg',
+                              ),
+                            if (completed &&
+                                logs.any(
+                                  (l) =>
+                                      l['exercise_id'] ==
+                                      exercise['exercise_id'],
+                                ))
+                              TextButton(
+                                onPressed: busy || offline
+                                    ? null
+                                    : () => advice(
+                                        WorkoutAdvice.feedback,
+                                        exercise,
+                                      ),
+                                child: const Text('Rate exercise'),
+                              ),
+                            if (!completed &&
+                                exercise['id'] != null &&
+                                !logs.any(
+                                  (l) =>
+                                      l['exercise_id'] ==
+                                      exercise['exercise_id'],
+                                ))
+                              Wrap(
+                                children: [
+                                  TextButton(
+                                    onPressed: disabled || offline
+                                        ? null
+                                        : () => advice(
+                                            WorkoutAdvice.replacement,
+                                            exercise,
+                                          ),
+                                    child: const Text('Replace exercise'),
+                                  ),
+                                  TextButton(
+                                    onPressed: disabled || offline
+                                        ? null
+                                        : () => advice(
+                                            WorkoutAdvice.progression,
+                                            exercise,
+                                          ),
+                                    child: const Text('Next target'),
+                                  ),
+                                ],
                               ),
                             if ((exercise['note'] as String? ?? '').isNotEmpty)
                               Text(exercise['note']),
